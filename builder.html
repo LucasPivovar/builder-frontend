@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Builder - Drag & Drop Sandbox</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="builder-header">
+    <div class="header-brand">
+      <div class="brand-icon">B</div>
+      <span class="brand-title">Visual Builder Studio</span>
+    </div>
+
+    <div class="header-viewports">
+      <button class="viewport-btn active" data-width="100%" title="Tela Cheia (100%)">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        100% Full
+      </button>
+      <button class="viewport-btn" data-width="1024px" title="Desktop">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+        1024px
+      </button>
+      <button class="viewport-btn" data-width="768px" title="Tablet">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        Tablet
+      </button>
+      <button class="viewport-btn" data-width="375px" title="Mobile">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+        Mobile
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="btnClearCanvas">Limpar Canvas</button>
+      <button class="btn btn-primary" id="btnExport">📥 Salvar / Exportar HTML</button>
+    </div>
+  </header>
+
+  <!-- App Body Layout -->
+  <div class="app-container">
+
+    <!-- Central Sandbox Area -->
+    <main class="sandbox-workspace" id="sandboxWorkspace">
+      <div class="sandbox-canvas" id="sandboxCanvas">
+        <div class="sandbox-placeholder" id="sandboxPlaceholder">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 4"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8m-4-4h8" />
+          </svg>
+          <h3>Área de Sandbox Vazia</h3>
+          <p>Clique em <strong>Grid</strong> para adicionar colunas ou arraste um objeto/componente para o canvas.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Sidebar Right with 2 Tabs -->
+    <aside class="sidebar-right">
+      <!-- Tabs Navigation -->
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="tab-objects">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          Objetos
+        </button>
+        <button class="tab-btn" data-tab="tab-properties" id="btnTabProperties">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+          Propriedades
+        </button>
+      </div>
+
+      <!-- Tabs Body Container -->
+      <div class="tabs-body">
+        
+        <!-- Tab 1: Objetos -->
+        <div class="tab-content active" id="tab-objects">
+          
+          <!-- Sub-panel 1A: Main Objects List -->
+          <div id="objectsMainView">
+            <div class="section-title">Objetos & Estruturas</div>
+            <div class="objects-grid">
+              
+              <!-- Standard Grid Card -->
+              <div class="object-card" id="btnOpenGridSelector">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 4"/><path d="M12 3v18"/></svg>
+                <span>Grid</span>
+              </div>
+
+              <!-- Other Standard Object Cards -->
+              <div class="object-card" draggable="true" data-type="heading">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
+                <span>Título</span>
+              </div>
+              <div class="object-card" draggable="true" data-type="paragraph">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h10"/></svg>
+                <span>Parágrafo</span>
+              </div>
+              <div class="object-card" draggable="true" data-type="button">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="4"/><path d="M8 12h8"/></svg>
+                <span>Botão</span>
+              </div>
+              <div class="object-card" draggable="true" data-type="image">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>Imagem</span>
+              </div>
+              <div class="object-card" draggable="true" data-type="video">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                <span>Vídeo</span>
+              </div>
+            </div>
+
+            <!-- Componentes Section -->
+            <div class="section-title">Componentes Dinâmicos</div>
+            <div class="objects-grid">
+              
+              <div class="object-card" draggable="true" data-type="top-banner">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="2" y="4" width="20" height="6" rx="1"/>
+                  <path d="M6 14h12M8 18h8"/>
+                </svg>
+                <span>Banner Superior</span>
+              </div>
+
+              <div class="object-card" draggable="true" data-type="vturb-player">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="2" y="4" width="20" height="16" rx="3"/>
+                  <polygon points="10 8 16 12 10 16 10 8"/>
+                </svg>
+                <span>Player VTurb</span>
+              </div>
+
+              <div class="object-card" draggable="true" data-type="pitch-button">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="2" y="6" width="20" height="12" rx="3"/>
+                  <path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>Botão de Pitch</span>
+              </div>
+
+              <div class="object-card" draggable="true" data-type="live-viewers">
+                <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Pessoas Assistindo</span>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Sub-panel 1B: Grid Selector Subpanel -->
+          <div id="objectsGridView" style="display: none;">
+            <div class="subpanel-header">
+              <button class="btn-back" id="btnBackToObjects">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
+                Voltar
+              </button>
+              <span class="subpanel-title">Selecione o Tipo de Grid</span>
+            </div>
+
+            <div class="grid-presets-list">
+              
+              <div class="grid-preset-card" draggable="true" data-type="grid" data-preset="1-col">
+                <div class="grid-preset-info">
+                  <span class="grid-preset-title">1 Coluna</span>
+                  <span class="grid-preset-cols-text">100% Largura</span>
+                </div>
+                <div class="grid-preview-visual">
+                  <div class="grid-preview-col" style="flex: 1;">100%</div>
+                </div>
+              </div>
+
+              <div class="grid-preset-card" draggable="true" data-type="grid" data-preset="2-col">
+                <div class="grid-preset-info">
+                  <span class="grid-preset-title">2 Colunas Iguais</span>
+                  <span class="grid-preset-cols-text">50% / 50%</span>
+                </div>
+                <div class="grid-preview-visual">
+                  <div class="grid-preview-col" style="flex: 1;">50%</div>
+                  <div class="grid-preview-col" style="flex: 1;">50%</div>
+                </div>
+              </div>
+
+              <div class="grid-preset-card" draggable="true" data-type="grid" data-preset="3-col">
+                <div class="grid-preset-info">
+                  <span class="grid-preset-title">3 Colunas Iguais</span>
+                  <span class="grid-preset-cols-text">33% / 33% / 33%</span>
+                </div>
+                <div class="grid-preview-visual">
+                  <div class="grid-preview-col" style="flex: 1;">33%</div>
+                  <div class="grid-preview-col" style="flex: 1;">33%</div>
+                  <div class="grid-preview-col" style="flex: 1;">33%</div>
+                </div>
+              </div>
+
+              <div class="grid-preset-card" draggable="true" data-type="grid" data-preset="4-col">
+                <div class="grid-preset-info">
+                  <span class="grid-preset-title">4 Colunas Iguais</span>
+                  <span class="grid-preset-cols-text">25% x4</span>
+                </div>
+                <div class="grid-preview-visual">
+                  <div class="grid-preview-col" style="flex: 1;">25%</div>
+                  <div class="grid-preview-col" style="flex: 1;">25%</div>
+                  <div class="grid-preview-col" style="flex: 1;">25%</div>
+                  <div class="grid-preview-col" style="flex: 1;">25%</div>
+                </div>
+              </div>
+
+              <div class="grid-preset-card" draggable="true" data-type="grid" data-preset="col-1-2">
+                <div class="grid-preset-info">
+                  <span class="grid-preset-title">Lateral Esquerda</span>
+                  <span class="grid-preset-cols-text">33% / 67%</span>
+                </div>
+                <div class="grid-preview-visual">
+                  <div class="grid-preview-col" style="flex: 1;">33%</div>
+                  <div class="grid-preview-col" style="flex: 2;">67%</div>
+                </div>
+              </div>
+
+              <div class="grid-preset-card" draggable="true" data-type="grid" data-preset="col-2-1">
+                <div class="grid-preset-info">
+                  <span class="grid-preset-title">Lateral Direita</span>
+                  <span class="grid-preset-cols-text">67% / 33%</span>
+                </div>
+                <div class="grid-preview-visual">
+                  <div class="grid-preview-col" style="flex: 2;">67%</div>
+                  <div class="grid-preview-col" style="flex: 1;">33%</div>
+                </div>
+              </div>
+
+              <div class="grid-preset-card" draggable="true" data-type="grid" data-preset="col-1-2-1">
+                <div class="grid-preset-info">
+                  <span class="grid-preset-title">Destaque Central</span>
+                  <span class="grid-preset-cols-text">25% / 50% / 25%</span>
+                </div>
+                <div class="grid-preview-visual">
+                  <div class="grid-preview-col" style="flex: 1;">25%</div>
+                  <div class="grid-preview-col" style="flex: 2;">50%</div>
+                  <div class="grid-preview-col" style="flex: 1;">25%</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tab 2: Propriedades -->
+        <div class="tab-content" id="tab-properties">
+          <div class="section-title">Editar Elemento</div>
+          
+          <div id="propertiesForm" style="display: none;">
+            
+            <!-- Standard Text Props -->
+            <div class="prop-group" id="propGroupContent">
+              <label class="prop-label">Conteúdo / Texto</label>
+              <textarea id="propContent" class="prop-textarea" placeholder="Digite o conteúdo..."></textarea>
+            </div>
+
+            <!-- Pitch Button Specific Props -->
+            <div id="propGroupPitch" style="display: none;">
+              <div class="prop-group">
+                <label class="prop-label">Link de Redirecionamento (Checkout/Oferta)</label>
+                <input type="url" id="propPitchUrl" class="prop-input" placeholder="https://checkout.exemplo.com/sua-oferta" />
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-label">Texto Principal do Botão (CTA)</label>
+                <input type="text" id="propPitchText" class="prop-input" value="QUERO GARANTIR MINHA VAGA AGORA" />
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-label">Subtexto do Botão (Garantia/Segurança)</label>
+                <input type="text" id="propPitchSubtext" class="prop-input" value="🔒 Compra 100% Segura e Garantia de 30 Dias" />
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-label">Tempo do Pitch (Formato MM:SS)</label>
+                <input type="text" id="propPitchTime" class="prop-input" value="12:30" placeholder="12:30" maxlength="5" />
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-checkbox-label">
+                  <input type="checkbox" id="propPitchPulse" checked />
+                  <span>Ativar Efeito Pulsar (Animação de Destaque)</span>
+                </label>
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-label">Modo de Exibição no Builder</label>
+                <select id="propPitchMode" class="prop-select">
+                  <option value="visible">👁️ Mostrar Sempre no Builder (Edição Fácil)</option>
+                  <option value="test">▶️ Testar Delay (Esconder até o tempo do vídeo)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Top Banner Specific Props -->
+            <div id="propGroupTopBanner" style="display: none;">
+              <div class="prop-group">
+                <label class="prop-label">Formato do Prefixo Dinâmico (JS)</label>
+                <select id="propBannerDateStyle" class="prop-select">
+                  <option value="full">Hoje, {dia-da-semana}, {dia} de {mês} de {ano}</option>
+                  <option value="warning">⚠️ ATENÇÃO: Última chance em {dd/mm/aaaa}</option>
+                  <option value="valid_today">🔥 VÁLIDO SOMENTE HOJE ({dia-da-semana})</option>
+                  <option value="vagas">⚡ AVISO IMPORTANTE: Vagas limitadas para {mês} de {ano}</option>
+                  <option value="live">🔴 AO VIVO HOJE ({dia} de {mês})</option>
+                  <option value="none">Nenhum (Somente texto customizado)</option>
+                </select>
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-label">Texto Complementar da Mensagem</label>
+                <textarea id="propBannerText" class="prop-textarea" placeholder="é a última oportunidade para assistir a este vídeo"></textarea>
+              </div>
+            </div>
+
+            <!-- Viewer Component Specific Props -->
+            <div id="propGroupViewer" style="display: none;">
+              <div class="prop-group">
+                <label class="prop-label">Formato do Texto ({count} = número)</label>
+                <input type="text" id="propViewerTemplate" class="prop-input" value="{count} espectadores estão vendo este conteúdo simultaneamente com você" />
+              </div>
+              <div class="prop-row-2col prop-group">
+                <div>
+                  <label class="prop-label">Mínimo</label>
+                  <input type="number" id="propMinViewers" class="prop-input" value="1150" />
+                </div>
+                <div>
+                  <label class="prop-label">Máximo</label>
+                  <input type="number" id="propMaxViewers" class="prop-input" value="1280" />
+                </div>
+              </div>
+            </div>
+
+            <!-- VTurb Player Specific Props (2 Inputs) -->
+            <div id="propGroupVturb" style="display: none;">
+              <div class="prop-group">
+                <label class="prop-label">1. Código do Player (Embed Body)</label>
+                <textarea id="propVturbBody" class="prop-textarea" style="min-height: 110px;" placeholder="Cole o código do player VTurb aqui (<vturb-smartplayer>...)"></textarea>
+              </div>
+              <div class="prop-group">
+                <label class="prop-label">2. Código de Otimização de Velocidade (Head)</label>
+                <textarea id="propVturbHead" class="prop-textarea" style="min-height: 110px;" placeholder="Cole o código de velocidade do VTurb aqui (<link rel='preload'...>)"></textarea>
+              </div>
+            </div>
+
+            <!-- Video Orientation & Sizing Controls -->
+            <div id="propGroupVideoSize" style="display: none;">
+              
+              <div class="prop-group">
+                <label class="prop-label">Orientação do Vídeo</label>
+                <select id="propVideoOrientation" class="prop-select">
+                  <option value="horizontal">Horizontal (16:9 - Widescreen VSL)</option>
+                  <option value="vertical">📱 Vertical (9:16 - Reels / TikTok / Short VSL)</option>
+                </select>
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-label">Tamanho / Largura (Presets)</label>
+                <select id="propVideoPreset" class="prop-select">
+                  <option value="300px">📱 300px (Vertical Padrão - Recomendado)</option>
+                  <option value="800px">800px (VSL Horizontal Padrão)</option>
+                  <option value="650px">650px (Médio)</option>
+                  <option value="400px">400px (Pequeno)</option>
+                  <option value="100%">100% (Largura Total)</option>
+                  <option value="custom">Personalizado (Digitar em Pixels)</option>
+                </select>
+              </div>
+
+              <div class="prop-group">
+                <label class="prop-label">Largura da Vídeo (px)</label>
+                <input type="number" id="propVideoWidthNum" class="prop-input" min="100" max="2500" placeholder="Ex: 300" />
+              </div>
+
+            </div>
+
+            <div class="prop-group" id="propGroupAlign">
+              <label class="prop-label">Alinhamento</label>
+              <select id="propAlign" class="prop-select">
+                <option value="center">Centralizado</option>
+                <option value="left">Esquerda</option>
+                <option value="right">Direita</option>
+              </select>
+            </div>
+
+            <div class="prop-group" id="propGroupFontSize">
+              <label class="prop-label">Tamanho do Texto (px)</label>
+              <input type="number" id="propFontSize" class="prop-input" min="10" max="100" />
+            </div>
+
+            <div class="prop-group" id="propGroupTextColor">
+              <label class="prop-label">Cor do Texto</label>
+              <input type="color" id="propTextColor" class="prop-input" style="height: 38px; cursor: pointer;" />
+            </div>
+
+            <div class="prop-group" id="propGroupBg" style="display: none;">
+              <label class="prop-label">Cor de Fundo</label>
+              <input type="color" id="propBgColor" class="prop-input" value="#22c55e" style="height: 38px; cursor: pointer;" />
+            </div>
+          </div>
+
+          <div class="prop-empty-state" id="propertiesEmptyState">
+            <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+            <p>Selecione um elemento ou coluna no sandbox para visualizar e alterar suas propriedades.</p>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Interactive Export Modal -->
+  <div class="modal-overlay" id="exportModal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🎉 HTML Exportado com Sucesso!</h3>
+        <button class="modal-close" id="btnCloseExportModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.4;">
+          O download do arquivo <strong>pagina-vsl.html</strong> foi iniciado. Você também pode copiar todo o código pronto abaixo para colar no seu servidor:
+        </p>
+        <textarea id="exportCodeTextarea" class="prop-textarea" style="height: 240px; font-family: monospace; font-size: 12px; margin-top: 12px;" readonly></textarea>
+      </div>
+      <div class="modal-footer" style="margin-top: 16px; display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn btn-secondary" id="btnCopyExportCode">📋 Copiar Código HTML</button>
+        <button class="btn btn-primary" id="btnDownloadExportAgain">📥 Baixar Novamente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Builder Interactive Script -->
+  <script>
+    // Helper: Dynamic PT-BR Date String Generator
+    function getDynamicDateString(styleKey) {
+      const now = new Date();
+      const weekdayStr = now.toLocaleDateString('pt-BR', { weekday: 'long' });
+      const dayNum = now.getDate();
+      const monthStr = now.toLocaleDateString('pt-BR', { month: 'long' });
+      const yearNum = now.getFullYear();
+      const dateFormatted = now.toLocaleDateString('pt-BR');
+
+      if (styleKey === 'warning') {
+        return '⚠️ ATENÇÃO: Última chance em ' + dateFormatted;
+      } else if (styleKey === 'valid_today') {
+        return '🔥 VÁLIDO SOMENTE HOJE (' + weekdayStr + ')';
+      } else if (styleKey === 'vagas') {
+        return '⚡ AVISO IMPORTANTE: Vagas limitadas para ' + monthStr + ' de ' + yearNum;
+      } else if (styleKey === 'live') {
+        return '🔴 AO VIVO HOJE (' + dayNum + ' de ' + monthStr + ')';
+      } else if (styleKey === 'none') {
+        return '';
+      } else {
+        return 'Hoje, ' + weekdayStr + ', ' + dayNum + ' de ' + monthStr + ' de ' + yearNum;
+      }
+    }
+
+    // Elements DOM References
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const btnOpenGridSelector = document.getElementById('btnOpenGridSelector');
+    const btnBackToObjects = document.getElementById('btnBackToObjects');
+    const objectsMainView = document.getElementById('objectsMainView');
+    const objectsGridView = document.getElementById('objectsGridView');
+    
+    const sandboxWorkspace = document.getElementById('sandboxWorkspace');
+    const sandboxCanvas = document.getElementById('sandboxCanvas');
+    const sandboxPlaceholder = document.getElementById('sandboxPlaceholder');
+    const btnClearCanvas = document.getElementById('btnClearCanvas');
+    const btnExport = document.getElementById('btnExport');
+
+    // Export Modal References
+    const exportModal = document.getElementById('exportModal');
+    const btnCloseExportModal = document.getElementById('btnCloseExportModal');
+    const exportCodeTextarea = document.getElementById('exportCodeTextarea');
+    const btnCopyExportCode = document.getElementById('btnCopyExportCode');
+    const btnDownloadExportAgain = document.getElementById('btnDownloadExportAgain');
+
+    let currentExportedHTML = "";
+
+    const btnTabProperties = document.getElementById('btnTabProperties');
+    const propertiesForm = document.getElementById('propertiesForm');
+    const propertiesEmptyState = document.getElementById('propertiesEmptyState');
+    const propGroupContent = document.getElementById('propGroupContent');
+    const propContent = document.getElementById('propContent');
+
+    const propGroupPitch = document.getElementById('propGroupPitch');
+    const propPitchUrl = document.getElementById('propPitchUrl');
+    const propPitchText = document.getElementById('propPitchText');
+    const propPitchSubtext = document.getElementById('propPitchSubtext');
+    const propPitchTime = document.getElementById('propPitchTime');
+    const propPitchPulse = document.getElementById('propPitchPulse');
+    const propPitchMode = document.getElementById('propPitchMode');
+
+    const propGroupTopBanner = document.getElementById('propGroupTopBanner');
+    const propBannerDateStyle = document.getElementById('propBannerDateStyle');
+    const propBannerText = document.getElementById('propBannerText');
+
+    const propGroupViewer = document.getElementById('propGroupViewer');
+    const propViewerTemplate = document.getElementById('propViewerTemplate');
+    const propMinViewers = document.getElementById('propMinViewers');
+    const propMaxViewers = document.getElementById('propMaxViewers');
+
+    const propGroupVturb = document.getElementById('propGroupVturb');
+    const propVturbBody = document.getElementById('propVturbBody');
+    const propVturbHead = document.getElementById('propVturbHead');
+
+    const propGroupVideoSize = document.getElementById('propGroupVideoSize');
+    const propVideoOrientation = document.getElementById('propVideoOrientation');
+    const propVideoPreset = document.getElementById('propVideoPreset');
+    const propVideoWidthNum = document.getElementById('propVideoWidthNum');
+
+    const propGroupAlign = document.getElementById('propGroupAlign');
+    const propGroupFontSize = document.getElementById('propGroupFontSize');
+    const propGroupTextColor = document.getElementById('propGroupTextColor');
+    const propAlign = document.getElementById('propAlign');
+    const propFontSize = document.getElementById('propFontSize');
+    const propTextColor = document.getElementById('propTextColor');
+    const propGroupBg = document.getElementById('propGroupBg');
+    const propBgColor = document.getElementById('propBgColor');
+
+    let activeSelectedElement = null;
+    let justDragged = false;
+
+    // Viewport Mode Switching
+    const viewportBtns = document.querySelectorAll('.viewport-btn');
+    viewportBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        viewportBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        sandboxCanvas.style.maxWidth = btn.getAttribute('data-width');
+      });
+    });
+
+    // Tab Navigation
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(targetTab).classList.add('active');
+      });
+    });
+
+    // Subpanel Navigation: Open & Close Grid Selector
+    btnOpenGridSelector.addEventListener('click', () => {
+      objectsMainView.style.display = 'none';
+      objectsGridView.style.display = 'block';
+    });
+
+    btnBackToObjects.addEventListener('click', () => {
+      objectsGridView.style.display = 'none';
+      objectsMainView.style.display = 'block';
+    });
+
+    // Event Delegation: Support 1-CLICK to add any Object or Grid Preset (Ignored if triggered by drag end)
+    document.addEventListener('click', (e) => {
+      if (justDragged) return;
+
+      const card = e.target.closest('.object-card[data-type], .grid-preset-card[data-preset]');
+      if (!card || e.target.closest('#sandboxCanvas')) return;
+      if (card.id === 'btnOpenGridSelector') return;
+
+      const type = card.getAttribute('data-type');
+      const preset = card.getAttribute('data-preset');
+
+      if (type === 'grid') {
+        createGridRow(preset);
+        updatePlaceholderVisibility();
+      } else if (type) {
+        const newRow = createGridRow('1-col');
+        const targetCol = newRow.querySelector('.builder-col');
+        createElementInColumn(targetCol, type);
+        updatePlaceholderVisibility();
+      }
+    });
+
+    // Helper: Remove Placeholder if canvas has content
+    function updatePlaceholderVisibility() {
+      const rows = sandboxCanvas.querySelectorAll('.builder-row');
+      if (rows.length > 0) {
+        sandboxPlaceholder.style.display = 'none';
+      } else {
+        sandboxPlaceholder.style.display = 'block';
+      }
+    }
+
+    // Universal Event-Delegated HTML5 Drag and Drop Handlers
+    let draggedData = null;
+    let draggedCanvasElement = null;
+
+    document.addEventListener('dragstart', (e) => {
+      justDragged = false;
+      const target = e.target.closest('[draggable="true"]');
+      if (!target) return;
+
+      if (target.classList.contains('canvas-element')) {
+        draggedCanvasElement = target;
+        target.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      } else {
+        draggedCanvasElement = null;
+        draggedData = {
+          type: target.getAttribute('data-type'),
+          preset: target.getAttribute('data-preset')
+        };
+        try {
+          e.dataTransfer.setData('text/plain', JSON.stringify(draggedData));
+        } catch(err) {}
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    });
+
+    document.addEventListener('dragend', (e) => {
+      justDragged = true;
+      setTimeout(() => { justDragged = false; }, 300);
+
+      document.querySelectorAll('.canvas-element').forEach(el => {
+        el.classList.remove('dragging');
+      });
+      document.querySelectorAll('.drag-over, .drag-over-canvas').forEach(el => {
+        el.classList.remove('drag-over', 'drag-over-canvas');
+      });
+      draggedCanvasElement = null;
+      draggedData = null;
+    });
+
+    // Single Unified Workspace Drop Listener
+    sandboxWorkspace.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      sandboxCanvas.classList.add('drag-over-canvas');
+    });
+
+    sandboxWorkspace.addEventListener('dragleave', (e) => {
+      if (e.target === sandboxWorkspace) {
+        sandboxCanvas.classList.remove('drag-over-canvas');
+      }
+    });
+
+    sandboxWorkspace.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sandboxCanvas.classList.remove('drag-over-canvas');
+
+      const targetCol = e.target.closest('.builder-col');
+      handleUniversalDrop(e, targetCol);
+    });
+
+    function handleUniversalDrop(e, targetCol) {
+      document.querySelectorAll('.canvas-element').forEach(el => {
+        el.classList.remove('dragging');
+      });
+      if (draggedCanvasElement) {
+        if (targetCol) {
+          targetCol.appendChild(draggedCanvasElement);
+          const emptyLabel = targetCol.querySelector('.builder-col-empty');
+          if (emptyLabel) emptyLabel.style.display = 'none';
+
+          const pRow = targetCol.closest('.builder-row');
+          if (pRow) {
+            if (pRow.querySelector('.canvas-element[data-element-type="top-banner"]')) {
+              pRow.classList.add('has-top-banner');
+            } else {
+              pRow.classList.remove('has-top-banner');
+            }
+          }
+        }
+        draggedCanvasElement = null;
+        return;
+      }
+
+      let data = draggedData;
+      try {
+        const raw = e.dataTransfer.getData('text/plain');
+        if (raw) data = JSON.parse(raw);
+      } catch(err) {}
+
+      if (!data) return;
+
+      if (data.type === 'grid') {
+        createGridRow(data.preset);
+        updatePlaceholderVisibility();
+      } else {
+        if (targetCol) {
+          createElementInColumn(targetCol, data.type);
+        } else {
+          const newRow = createGridRow('1-col');
+          const col = newRow.querySelector('.builder-col');
+          createElementInColumn(col, data.type);
+        }
+        updatePlaceholderVisibility();
+      }
+
+      draggedData = null;
+      draggedCanvasElement = null;
+    }
+
+    // Create Row Grid with Columns
+    function createGridRow(presetKey) {
+      const row = document.createElement('div');
+      row.className = 'builder-row';
+
+      // Action toolbar for Row
+      const actions = document.createElement('div');
+      actions.className = 'element-actions';
+      actions.innerHTML = `
+        <button class="action-btn delete-btn" title="Excluir Linha">✕</button>
+      `;
+      actions.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        row.remove();
+        deselectElement();
+        updatePlaceholderVisibility();
+      });
+      row.appendChild(actions);
+
+      // Define column ratios
+      let colRatios = [1];
+      if (presetKey === '2-col') colRatios = [1, 1];
+      else if (presetKey === '3-col') colRatios = [1, 1, 1];
+      else if (presetKey === '4-col') colRatios = [1, 1, 1, 1];
+      else if (presetKey === 'col-1-2') colRatios = [1, 2];
+      else if (presetKey === 'col-2-1') colRatios = [2, 1];
+      else if (presetKey === 'col-1-2-1') colRatios = [1, 2, 1];
+
+      colRatios.forEach(ratio => {
+        const col = document.createElement('div');
+        col.className = 'builder-col';
+        col.style.flex = ratio;
+        
+        const emptyLabel = document.createElement('div');
+        emptyLabel.className = 'builder-col-empty';
+        emptyLabel.textContent = 'Arraste ou clique para adicionar';
+        col.appendChild(emptyLabel);
+
+        row.appendChild(col);
+      });
+
+      sandboxCanvas.appendChild(row);
+      return row;
+    }
+
+    // Create Element inside Column
+    function createElementInColumn(columnElem, elementType) {
+      const emptyLabel = columnElem.querySelector('.builder-col-empty');
+      if (emptyLabel) emptyLabel.style.display = 'none';
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'canvas-element';
+      wrapper.setAttribute('data-element-type', elementType);
+      wrapper.setAttribute('draggable', 'true');
+
+      // Element Action Toolbar
+      const actions = document.createElement('div');
+      actions.className = 'element-actions';
+      actions.innerHTML = `
+        <button class="action-btn delete-btn" title="Excluir Elemento">✕</button>
+      `;
+      actions.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (wrapper.viewerTimer) clearInterval(wrapper.viewerTimer);
+        const parentRow = wrapper.closest('.builder-row');
+        wrapper.remove();
+        deselectElement();
+        if (parentRow && parentRow.querySelectorAll('.canvas-element[data-element-type="top-banner"]').length === 0) {
+          parentRow.classList.remove('has-top-banner');
+        }
+        if (columnElem.querySelectorAll('.canvas-element').length === 0 && emptyLabel) {
+          emptyLabel.style.display = 'block';
+        }
+      });
+      wrapper.appendChild(actions);
+
+      // Content Inner Element Generation
+      let inner;
+      if (elementType === 'pitch-button') {
+        inner = document.createElement('div');
+        inner.className = 'canvas-pitch-wrapper';
+
+        wrapper.dataset.url = "https://checkout.exemplo.com/sua-oferta";
+        wrapper.dataset.mainText = "QUERO GARANTIR MINHA VAGA AGORA";
+        wrapper.dataset.subtext = "🔒 Compra 100% Segura e Garantia de 30 Dias";
+        wrapper.dataset.pitchMin = "12";
+        wrapper.dataset.pitchSec = "30";
+        wrapper.dataset.pulse = "true";
+        wrapper.dataset.previewMode = "visible";
+
+        renderPitchButton(wrapper, inner);
+        initPitchSmartScript(wrapper);
+      } else if (elementType === 'top-banner') {
+        inner = document.createElement('div');
+        inner.className = 'canvas-top-banner';
+
+        wrapper.dataset.dateStyle = "full";
+        wrapper.dataset.bannerText = "é a última oportunidade para assistir a este vídeo";
+
+        // Mark parent row as flush top banner row
+        const parentRow = columnElem.closest('.builder-row');
+        if (parentRow) parentRow.classList.add('has-top-banner');
+
+        renderTopBanner(wrapper, inner);
+      } else if (elementType === 'heading') {
+        inner = document.createElement('h2');
+        inner.className = 'canvas-heading';
+        inner.textContent = 'Título em Destaque';
+      } else if (elementType === 'paragraph') {
+        inner = document.createElement('p');
+        inner.className = 'canvas-paragraph';
+        inner.textContent = 'Escreva aqui o seu texto explicativo ou mensagem para seus visitantes.';
+      } else if (elementType === 'button') {
+        inner = document.createElement('a');
+        inner.className = 'canvas-button';
+        inner.href = '#';
+        inner.textContent = 'Clique Aqui';
+      } else if (elementType === 'image') {
+        inner = document.createElement('div');
+        inner.className = 'canvas-image-wrap';
+        inner.innerHTML = `<img src="https://picsum.photos/800/400" alt="Demonstração" />`;
+      } else if (elementType === 'video') {
+        inner = document.createElement('div');
+        inner.className = 'canvas-video-wrap';
+        inner.style.maxWidth = "800px";
+        inner.innerHTML = `
+          <svg width="40" height="40" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span style="margin-left: 8px; font-weight:600;">Vídeo Demonstrativo</span>
+        `;
+      } else if (elementType === 'vturb-player') {
+        inner = document.createElement('div');
+        inner.className = 'canvas-vturb-wrapper';
+        inner.style.maxWidth = "800px";
+
+        wrapper.dataset.vturbBody = "";
+        wrapper.dataset.vturbHead = "";
+
+        renderVturbPlayer(wrapper, inner);
+      } else if (elementType === 'live-viewers') {
+        inner = document.createElement('div');
+        inner.className = 'canvas-viewer-widget';
+        
+        wrapper.dataset.minViewers = "1150";
+        wrapper.dataset.maxViewers = "1280";
+        wrapper.dataset.templateText = "{count} espectadores estão vendo este conteúdo simultaneamente com você";
+
+        inner.innerHTML = `<span class="viewer-text"><strong class="viewer-count">1208</strong> espectadores estão vendo este conteúdo simultaneamente com você</span>`;
+
+        const updateViewersCount = () => {
+          const min = parseInt(wrapper.dataset.minViewers) || 1150;
+          const max = parseInt(wrapper.dataset.maxViewers) || 1280;
+          const randomCount = Math.floor(Math.random() * (max - min + 1)) + min;
+          const template = wrapper.dataset.templateText || "{count} espectadores estão vendo este conteúdo simultaneamente com você";
+          const viewerTextSpan = inner.querySelector('.viewer-text');
+          
+          if (viewerTextSpan) {
+            const formatted = template.replace('{count}', `<strong class="viewer-count">${randomCount}</strong>`);
+            viewerTextSpan.innerHTML = formatted;
+          }
+        };
+
+        updateViewersCount();
+        wrapper.viewerTimer = setInterval(updateViewersCount, 3500);
+      }
+
+      wrapper.appendChild(inner);
+
+      // Click event to select element and bind Properties panel
+      wrapper.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectElement(wrapper);
+      });
+
+      columnElem.appendChild(wrapper);
+      selectElement(wrapper);
+    }
+
+    // Helper: Render Pitch CTA Button (Badge Removed per user request)
+    function renderPitchButton(wrapper, pitchNode) {
+      const url = wrapper.dataset.url || "#";
+      const mainText = wrapper.dataset.mainText || "QUERO GARANTIR MINHA VAGA AGORA";
+      const subtext = wrapper.dataset.subtext || "";
+      const pulse = wrapper.dataset.pulse === "true";
+      const mode = wrapper.dataset.previewMode || "visible";
+
+      pitchNode.innerHTML = `
+        <a href="${url}" target="_blank" class="canvas-pitch-btn ${pulse ? 'is-pulsing' : ''}">
+          <span class="pitch-main-text">${mainText}</span>
+          ${subtext ? `<span class="pitch-subtext">${subtext}</span>` : ''}
+        </a>
+      `;
+
+      if (mode === "test") {
+        pitchNode.style.display = "none";
+      } else {
+        pitchNode.style.display = "block";
+      }
+    }
+
+    // Smart Pitch Script: Intercepts VTurb & HTML5 Video Time + Resets on Restart/Clear Cache
+    function initPitchSmartScript(wrapper) {
+      function checkVideoProgress() {
+        const mode = wrapper.dataset.previewMode;
+        if (mode === "visible") return;
+
+        const min = parseInt(wrapper.dataset.pitchMin) || 0;
+        const sec = parseInt(wrapper.dataset.pitchSec) || 0;
+        const pitchTargetSec = (min * 60) + sec;
+        const pitchNode = wrapper.querySelector('.canvas-pitch-wrapper');
+        if (!pitchNode) return;
+
+        const videoTag = document.querySelector('video');
+
+        let currentSec = 0;
+        if (videoTag && !isNaN(videoTag.currentTime)) {
+          currentSec = videoTag.currentTime;
+        }
+
+        if (currentSec >= pitchTargetSec) {
+          pitchNode.style.display = "block";
+        } else {
+          pitchNode.style.display = "none";
+        }
+      }
+
+      // Listen for VTurb postMessage events
+      window.addEventListener('message', (e) => {
+        try {
+          if (!e.data) return;
+          const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+          const min = parseInt(wrapper.dataset.pitchMin) || 0;
+          const sec = parseInt(wrapper.dataset.pitchSec) || 0;
+          const pitchTargetSec = (min * 60) + sec;
+          const pitchNode = wrapper.querySelector('.canvas-pitch-wrapper');
+
+          if (data && data.currentTime !== undefined && pitchNode) {
+            if (data.currentTime >= pitchTargetSec) {
+              pitchNode.style.display = "block";
+            } else if (wrapper.dataset.previewMode === "test") {
+              pitchNode.style.display = "none";
+            }
+          }
+        } catch(err) {}
+      });
+
+      if (wrapper.pitchCheckTimer) clearInterval(wrapper.pitchCheckTimer);
+      wrapper.pitchCheckTimer = setInterval(checkVideoProgress, 1000);
+    }
+
+    // Helper: Render Banner Superior
+    function renderTopBanner(wrapper, bannerNode) {
+      const dateStyle = wrapper.dataset.dateStyle || "full";
+      const bannerText = wrapper.dataset.bannerText || "";
+      const prefix = getDynamicDateString(dateStyle);
+
+      if (prefix) {
+        bannerNode.textContent = bannerText ? `${prefix}, ${bannerText}` : prefix;
+      } else {
+        bannerNode.textContent = bannerText || "Banner de Notificação";
+      }
+    }
+
+    // Helper: Render VTurb SmartPlayer inside element & apply orientation
+    function renderVturbPlayer(wrapper, containerNode) {
+      const bodyCode = wrapper.dataset.vturbBody ? wrapper.dataset.vturbBody.trim() : "";
+      
+      if (!bodyCode) {
+        containerNode.innerHTML = `
+          <div class="vturb-placeholder-box">
+            <div class="vturb-play-icon">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div>
+              <div style="font-size: 15px; font-weight:700; color:#fff; margin-bottom: 4px;">Player VTurb / ConverteAI</div>
+              <div class="vturb-badge-text">Cole os códigos nas Propriedades para carregar seu vídeo de alta conversão</div>
+            </div>
+          </div>
+        `;
+      } else {
+        containerNode.innerHTML = bodyCode;
+        
+        // Auto detect vertical format in VTurb embed code
+        if (bodyCode.includes('177') || bodyCode.includes('vertical') || bodyCode.includes('9:16')) {
+          containerNode.classList.add('is-vertical');
+          containerNode.style.maxWidth = '300px';
+          if (propVideoOrientation) propVideoOrientation.value = 'vertical';
+          if (propVideoPreset) propVideoPreset.value = '300px';
+          if (propVideoWidthNum) propVideoWidthNum.value = 300;
+        }
+
+        // Execute any embedded script tags inside bodyCode dynamically
+        const scripts = containerNode.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+          const newScript = document.createElement('script');
+          Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+          newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+          oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+      }
+
+      applyOrientationToContainer(containerNode);
+    }
+
+    // Apply orientation styles (177.77% padding-top for Vertical 9:16, 56.25% for Horizontal 16:9)
+    function applyOrientationToContainer(containerNode) {
+      const isVert = containerNode.classList.contains('is-vertical');
+      const placeholder = containerNode.querySelector('.vturb-player-placeholder, div[class*="placeholder"]');
+      if (placeholder) {
+        if (isVert) {
+          placeholder.style.setProperty('padding-top', '177.777777%', 'important');
+        } else {
+          placeholder.style.setProperty('padding-top', '56.25%', 'important');
+        }
+      }
+    }
+
+    // Select Element & Populate Properties Form
+    function selectElement(elem) {
+      if (activeSelectedElement) {
+        activeSelectedElement.classList.remove('selected-element');
+      }
+
+      activeSelectedElement = elem;
+      activeSelectedElement.classList.add('selected-element');
+
+      // Switch to Properties Tab
+      btnTabProperties.click();
+      propertiesEmptyState.style.display = 'none';
+      propertiesForm.style.display = 'block';
+
+      const type = elem.getAttribute('data-element-type');
+      const inner = elem.querySelector('.canvas-heading, .canvas-paragraph, .canvas-button, .canvas-viewer-widget, .canvas-vturb-wrapper, .canvas-video-wrap, .canvas-top-banner, .canvas-pitch-wrapper, img');
+
+      if (type === 'pitch-button') {
+        propGroupContent.style.display = 'none';
+        propGroupViewer.style.display = 'none';
+        propGroupVturb.style.display = 'none';
+        propGroupVideoSize.style.display = 'none';
+        propGroupTopBanner.style.display = 'none';
+        propGroupPitch.style.display = 'block';
+
+        propGroupAlign.style.display = 'block';
+        propGroupFontSize.style.display = 'none';
+        propGroupTextColor.style.display = 'block';
+        propGroupBg.style.display = 'block';
+
+        propPitchUrl.value = elem.dataset.url || "";
+        propPitchText.value = elem.dataset.mainText || "";
+        propPitchSubtext.value = elem.dataset.subtext || "";
+
+        const minVal = parseInt(elem.dataset.pitchMin) || 0;
+        const secVal = parseInt(elem.dataset.pitchSec) || 0;
+        const mStr = minVal.toString().padStart(2, '0');
+        const sStr = secVal.toString().padStart(2, '0');
+        propPitchTime.value = `${mStr}:${sStr}`;
+
+        propPitchPulse.checked = elem.dataset.pulse === "true";
+        propPitchMode.value = elem.dataset.previewMode || "visible";
+
+        const btnAnchor = elem.querySelector('.canvas-pitch-btn');
+        if (btnAnchor) {
+          propBgColor.value = rgbToHex(window.getComputedStyle(btnAnchor).backgroundColor) || "#22c55e";
+        }
+      } else if (type === 'top-banner') {
+        propGroupContent.style.display = 'none';
+        propGroupViewer.style.display = 'none';
+        propGroupVturb.style.display = 'none';
+        propGroupVideoSize.style.display = 'none';
+        propGroupPitch.style.display = 'none';
+        propGroupTopBanner.style.display = 'block';
+
+        propGroupAlign.style.display = 'block';
+        propGroupFontSize.style.display = 'block';
+        propGroupTextColor.style.display = 'block';
+        propGroupBg.style.display = 'block';
+
+        propBannerDateStyle.value = elem.dataset.dateStyle || "full";
+        propBannerText.value = elem.dataset.bannerText || "";
+        propBgColor.value = rgbToHex(window.getComputedStyle(inner).backgroundColor) || "#c59b43";
+      } else if (type === 'vturb-player' || type === 'video') {
+        propGroupContent.style.display = 'none';
+        propGroupViewer.style.display = 'none';
+        propGroupTopBanner.style.display = 'none';
+        propGroupPitch.style.display = 'none';
+        
+        if (type === 'vturb-player') {
+          propGroupVturb.style.display = 'block';
+          propVturbBody.value = elem.dataset.vturbBody || "";
+          propVturbHead.value = elem.dataset.vturbHead || "";
+        } else {
+          propGroupVturb.style.display = 'none';
+        }
+
+        propGroupVideoSize.style.display = 'block';
+        propGroupAlign.style.display = 'block';
+        propGroupFontSize.style.display = 'none';
+        propGroupTextColor.style.display = 'none';
+        propGroupBg.style.display = 'none';
+
+        if (inner) {
+          const isVert = inner.classList.contains('is-vertical');
+          propVideoOrientation.value = isVert ? 'vertical' : 'horizontal';
+
+          const mw = inner.style.maxWidth || (isVert ? "300px" : "800px");
+          const numericMw = parseInt(mw);
+
+          if (mw === "100%") {
+            propVideoPreset.value = "100%";
+            propVideoWidthNum.value = "";
+          } else if (["800px", "650px", "500px", "400px", "300px"].includes(mw)) {
+            propVideoPreset.value = mw;
+            propVideoWidthNum.value = numericMw || "";
+          } else {
+            propVideoPreset.value = "custom";
+            propVideoWidthNum.value = numericMw || "";
+          }
+        }
+      } else if (type === 'live-viewers') {
+        propGroupContent.style.display = 'none';
+        propGroupVturb.style.display = 'none';
+        propGroupVideoSize.style.display = 'none';
+        propGroupTopBanner.style.display = 'none';
+        propGroupPitch.style.display = 'none';
+        propGroupViewer.style.display = 'block';
+
+        propGroupAlign.style.display = 'block';
+        propGroupFontSize.style.display = 'block';
+        propGroupTextColor.style.display = 'block';
+        propGroupBg.style.display = 'none';
+
+        propViewerTemplate.value = elem.dataset.templateText || "{count} espectadores estão vendo este conteúdo simultaneamente com você";
+        propMinViewers.value = elem.dataset.minViewers || "1150";
+        propMaxViewers.value = elem.dataset.maxViewers || "1280";
+      } else {
+        propGroupContent.style.display = 'block';
+        propGroupViewer.style.display = 'none';
+        propGroupVturb.style.display = 'none';
+        propGroupVideoSize.style.display = 'none';
+        propGroupTopBanner.style.display = 'none';
+        propGroupPitch.style.display = 'none';
+
+        propGroupAlign.style.display = 'block';
+        propGroupFontSize.style.display = 'block';
+        propGroupTextColor.style.display = 'block';
+
+        if (type === 'heading' || type === 'paragraph' || type === 'button') {
+          propContent.value = inner.textContent;
+          propContent.disabled = false;
+        } else {
+          propContent.value = `[Elemento: ${type}]`;
+          propContent.disabled = true;
+        }
+      }
+
+      // Font size, align & color reading
+      if (inner && type !== 'vturb-player' && type !== 'video') {
+        const computedSize = window.getComputedStyle(inner).fontSize;
+        propFontSize.value = parseInt(computedSize) || 14;
+        propAlign.value = inner.style.textAlign || elem.style.textAlign || 'center';
+
+        const computedColor = window.getComputedStyle(inner).color;
+        propTextColor.value = rgbToHex(computedColor) || '#0f172a';
+      }
+
+      // Show/Hide Background Color for Button
+      if (type === 'button') {
+        propGroupBg.style.display = 'block';
+      }
+    }
+
+    // Helper: Convert RGB to Hex for color input
+    function rgbToHex(rgbStr) {
+      if (!rgbStr) return '#0f172a';
+      if (rgbStr.startsWith('#')) return rgbStr;
+      if (!rgbStr.startsWith('rgb')) return '#0f172a';
+      const vals = rgbStr.match(/\d+/g);
+      if (!vals || vals.length < 3) return '#0f172a';
+      return "#" + ((1 << 24) + (parseInt(vals[0]) << 16) + (parseInt(vals[1]) << 8) + parseInt(vals[2])).toString(16).slice(1);
+    }
+
+    function deselectElement() {
+      if (activeSelectedElement) {
+        activeSelectedElement.classList.remove('selected-element');
+        activeSelectedElement = null;
+      }
+      propertiesForm.style.display = 'none';
+      propertiesEmptyState.style.display = 'block';
+    }
+
+    // Click outside to deselect
+    sandboxCanvas.addEventListener('click', (e) => {
+      if (e.target === sandboxCanvas || e.target.classList.contains('builder-row') || e.target.classList.contains('builder-col')) {
+        deselectElement();
+      }
+    });
+
+    // Two-Way Binding: Property Inputs Update Canvas Element Live
+    propContent.addEventListener('input', () => {
+      if (!activeSelectedElement) return;
+      const inner = activeSelectedElement.querySelector('.canvas-heading, .canvas-paragraph, .canvas-button');
+      if (inner) inner.textContent = propContent.value;
+    });
+
+    // Botão de Pitch Form Binding
+    propPitchUrl.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'pitch-button') return;
+      activeSelectedElement.dataset.url = propPitchUrl.value;
+      const pitchNode = activeSelectedElement.querySelector('.canvas-pitch-wrapper');
+      if (pitchNode) renderPitchButton(activeSelectedElement, pitchNode);
+    });
+
+    propPitchText.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'pitch-button') return;
+      activeSelectedElement.dataset.mainText = propPitchText.value;
+      const pitchNode = activeSelectedElement.querySelector('.canvas-pitch-wrapper');
+      if (pitchNode) renderPitchButton(activeSelectedElement, pitchNode);
+    });
+
+    propPitchSubtext.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'pitch-button') return;
+      activeSelectedElement.dataset.subtext = propPitchSubtext.value;
+      const pitchNode = activeSelectedElement.querySelector('.canvas-pitch-wrapper');
+      if (pitchNode) renderPitchButton(activeSelectedElement, pitchNode);
+    });
+
+    let lastPitchLength = 0;
+    propPitchTime.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'pitch-button') return;
+      let val = propPitchTime.value.replace(/[^\d:]/g, '');
+      if (val.length === 2 && !val.includes(':') && val.length > lastPitchLength) {
+        val = val + ':';
+      }
+      lastPitchLength = val.length;
+      propPitchTime.value = val;
+
+      const parts = val.split(':');
+      const min = parseInt(parts[0]) || 0;
+      const sec = parseInt(parts[1]) || 0;
+
+      activeSelectedElement.dataset.pitchMin = min;
+      activeSelectedElement.dataset.pitchSec = sec;
+
+      const pitchNode = activeSelectedElement.querySelector('.canvas-pitch-wrapper');
+      if (pitchNode) renderPitchButton(activeSelectedElement, pitchNode);
+    });
+
+    propPitchPulse.addEventListener('change', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'pitch-button') return;
+      activeSelectedElement.dataset.pulse = propPitchPulse.checked ? "true" : "false";
+      const pitchNode = activeSelectedElement.querySelector('.canvas-pitch-wrapper');
+      if (pitchNode) renderPitchButton(activeSelectedElement, pitchNode);
+    });
+
+    propPitchMode.addEventListener('change', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'pitch-button') return;
+      activeSelectedElement.dataset.previewMode = propPitchMode.value;
+      const pitchNode = activeSelectedElement.querySelector('.canvas-pitch-wrapper');
+      if (pitchNode) renderPitchButton(activeSelectedElement, pitchNode);
+      initPitchSmartScript(activeSelectedElement);
+    });
+
+    // Banner Superior Binding
+    propBannerDateStyle.addEventListener('change', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'top-banner') return;
+      activeSelectedElement.dataset.dateStyle = propBannerDateStyle.value;
+      const bannerNode = activeSelectedElement.querySelector('.canvas-top-banner');
+      if (bannerNode) renderTopBanner(activeSelectedElement, bannerNode);
+    });
+
+    propBannerText.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'top-banner') return;
+      activeSelectedElement.dataset.bannerText = propBannerText.value;
+      const bannerNode = activeSelectedElement.querySelector('.canvas-top-banner');
+      if (bannerNode) renderTopBanner(activeSelectedElement, bannerNode);
+    });
+
+    // Video Orientation Binding (Horizontal vs Vertical 9:16)
+    propVideoOrientation.addEventListener('change', () => {
+      if (!activeSelectedElement) return;
+      const videoContainer = activeSelectedElement.querySelector('.canvas-vturb-wrapper, .canvas-video-wrap');
+      if (!videoContainer) return;
+
+      if (propVideoOrientation.value === 'vertical') {
+        videoContainer.classList.add('is-vertical');
+        if (!propVideoWidthNum.value || propVideoWidthNum.value > 450) {
+          videoContainer.style.maxWidth = '300px';
+          propVideoPreset.value = '300px';
+          propVideoWidthNum.value = 300;
+        }
+      } else {
+        videoContainer.classList.remove('is-vertical');
+        if (propVideoWidthNum.value === '300') {
+          videoContainer.style.maxWidth = '800px';
+          propVideoPreset.value = '800px';
+          propVideoWidthNum.value = 800;
+        }
+      }
+
+      applyOrientationToContainer(videoContainer);
+    });
+
+    // Video Sizing Preset Handling
+    propVideoPreset.addEventListener('change', () => {
+      if (!activeSelectedElement) return;
+      const videoContainer = activeSelectedElement.querySelector('.canvas-vturb-wrapper, .canvas-video-wrap');
+      const val = propVideoPreset.value;
+
+      if (!videoContainer || val === 'custom') return;
+
+      if (val === '100%') {
+        videoContainer.style.maxWidth = '100%';
+        propVideoWidthNum.value = "";
+      } else {
+        videoContainer.style.maxWidth = val;
+        propVideoWidthNum.value = parseInt(val);
+      }
+    });
+
+    propVideoWidthNum.addEventListener('input', () => {
+      if (!activeSelectedElement) return;
+      const videoContainer = activeSelectedElement.querySelector('.canvas-vturb-wrapper, .canvas-video-wrap');
+      const val = propVideoWidthNum.value;
+      
+      if (videoContainer) {
+        if (val && val > 0) {
+          videoContainer.style.maxWidth = val + 'px';
+          if (["800px", "650px", "500px", "400px", "300px"].includes(val + 'px')) {
+            propVideoPreset.value = val + 'px';
+          } else {
+            propVideoPreset.value = "custom";
+          }
+        } else {
+          videoContainer.style.maxWidth = '100%';
+          propVideoPreset.value = "100%";
+        }
+      }
+    });
+
+    // VTurb Player Specific Props Binding
+    propVturbBody.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'vturb-player') return;
+      activeSelectedElement.dataset.vturbBody = propVturbBody.value;
+      const containerNode = activeSelectedElement.querySelector('.canvas-vturb-wrapper');
+      if (containerNode) renderVturbPlayer(activeSelectedElement, containerNode);
+    });
+
+    propVturbHead.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'vturb-player') return;
+      activeSelectedElement.dataset.vturbHead = propVturbHead.value;
+    });
+
+    // Pessoas Assistindo Specific Props Binding
+    propViewerTemplate.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'live-viewers') return;
+      activeSelectedElement.dataset.templateText = propViewerTemplate.value;
+    });
+
+    propMinViewers.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'live-viewers') return;
+      activeSelectedElement.dataset.minViewers = propMinViewers.value;
+    });
+
+    propMaxViewers.addEventListener('input', () => {
+      if (!activeSelectedElement || activeSelectedElement.getAttribute('data-element-type') !== 'live-viewers') return;
+      activeSelectedElement.dataset.maxViewers = propMaxViewers.value;
+    });
+
+    propAlign.addEventListener('change', () => {
+      if (!activeSelectedElement) return;
+      activeSelectedElement.style.textAlign = propAlign.value;
+      const inner = activeSelectedElement.querySelector('.canvas-heading, .canvas-paragraph, .canvas-button, .canvas-viewer-widget, .canvas-vturb-wrapper, .canvas-video-wrap, .canvas-top-banner, .canvas-pitch-wrapper');
+      if (inner) inner.style.textAlign = propAlign.value;
+    });
+
+    propFontSize.addEventListener('input', () => {
+      if (!activeSelectedElement) return;
+      const inner = activeSelectedElement.querySelector('.canvas-heading, .canvas-paragraph, .canvas-button, .canvas-viewer-widget, .canvas-top-banner');
+      if (inner) inner.style.fontSize = propFontSize.value + 'px';
+    });
+
+    propTextColor.addEventListener('input', () => {
+      if (!activeSelectedElement) return;
+      const inner = activeSelectedElement.querySelector('.canvas-heading, .canvas-paragraph, .canvas-button, .canvas-viewer-widget, .canvas-top-banner, .pitch-main-text');
+      if (inner) inner.style.color = propTextColor.value;
+    });
+
+    propBgColor.addEventListener('input', () => {
+      if (!activeSelectedElement) return;
+      const btn = activeSelectedElement.querySelector('.canvas-button');
+      if (btn) btn.style.backgroundColor = propBgColor.value;
+      const bannerNode = activeSelectedElement.querySelector('.canvas-top-banner');
+      if (bannerNode) bannerNode.style.backgroundColor = propBgColor.value;
+      const pitchBtn = activeSelectedElement.querySelector('.canvas-pitch-btn');
+      if (pitchBtn) pitchBtn.style.background = propBgColor.value;
+    });
+
+    // Clear Canvas Action
+    btnClearCanvas.addEventListener('click', () => {
+      const elements = sandboxCanvas.querySelectorAll('.canvas-element');
+      elements.forEach(el => {
+        if (el.viewerTimer) clearInterval(el.viewerTimer);
+        if (el.pitchCheckTimer) clearInterval(el.pitchCheckTimer);
+      });
+      const rows = sandboxCanvas.querySelectorAll('.builder-row');
+      rows.forEach(r => r.remove());
+      deselectElement();
+      updatePlaceholderVisibility();
+    });
+
+    // Trigger File Download
+    function triggerDownload(htmlStr) {
+      try {
+        var blob = new Blob([htmlStr], { type: 'text/html' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'pagina-vsl.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+      } catch (err) {}
+    }
+
+    // Modal Close & Actions Handlers
+    btnCloseExportModal.addEventListener('click', function() {
+      exportModal.style.display = 'none';
+    });
+
+    btnCopyExportCode.addEventListener('click', function() {
+      if (!exportCodeTextarea.value) return;
+      navigator.clipboard.writeText(exportCodeTextarea.value).then(function() {
+        btnCopyExportCode.textContent = "✅ Código Copiado!";
+        setTimeout(function() {
+          btnCopyExportCode.textContent = "📋 Copiar Código HTML";
+        }, 2000);
+      }).catch(function() {
+        exportCodeTextarea.select();
+        document.execCommand('copy');
+        btnCopyExportCode.textContent = "✅ Código Copiado!";
+        setTimeout(function() {
+          btnCopyExportCode.textContent = "📋 Copiar Código HTML";
+        }, 2000);
+      });
+    });
+
+    btnDownloadExportAgain.addEventListener('click', function() {
+      if (currentExportedHTML) triggerDownload(currentExportedHTML);
+    });
+
+    // Main HTML Exporter
+    btnExport.addEventListener('click', function() {
+      var cloneCanvas = sandboxCanvas.cloneNode(true);
+      var uiElements = cloneCanvas.querySelectorAll('.element-actions, .sandbox-placeholder, .builder-col-empty');
+      for (var i = 0; i < uiElements.length; i++) {
+        uiElements[i].parentNode.removeChild(uiElements[i]);
+      }
+      var selectedElements = cloneCanvas.querySelectorAll('.selected-element, .dragging, .drag-over');
+      for (var j = 0; j < selectedElements.length; j++) {
+        selectedElements[j].classList.remove('selected-element', 'dragging', 'drag-over');
+      }
+
+      var vturbHeadScripts = "";
+      var vturbEls = sandboxCanvas.querySelectorAll('[data-element-type="vturb-player"]');
+      for (var k = 0; k < vturbEls.length; k++) {
+        if (vturbEls[k].dataset && vturbEls[k].dataset.vturbHead) {
+          vturbHeadScripts += "\n" + vturbEls[k].dataset.vturbHead;
+        }
+      }
+
+      var sOpen = '<' + 'script>';
+      var sClose = '<' + '/script>';
+
+      var headHTML = '<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n' +
+        '<meta charset="UTF-8">\n' +
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+        '<title>Página de Vendas - VSL</title>\n' +
+        vturbHeadScripts + '\n' +
+        '<style>\n' +
+        '@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");\n' +
+        '* { box-sizing: border-box; margin: 0; padding: 0; }\n' +
+        'body { font-family: "Plus Jakarta Sans", sans-serif; background-color: #ffffff; color: #1f2937; min-height: 100vh; width: 100%; margin: 0; padding: 0; }\n' +
+        '.vsl-container { width: 100%; max-width: 100%; min-height: 100vh; background: #ffffff; padding: 20px; display: flex; flex-direction: column; gap: 12px; }\n' +
+        '.builder-row { display: flex; gap: 12px; width: 100%; padding: 4px 8px; }\n' +
+        '.builder-row.has-top-banner { margin: -20px -20px 4px -20px !important; width: calc(100% + 40px) !important; padding: 0 !important; }\n' +
+        '.builder-row.has-top-banner .builder-col { padding: 0 !important; }\n' +
+        '.builder-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }\n' +
+        '.canvas-top-banner { width: 100%; background: #c59b43; color: #ffffff; text-align: center; font-size: 13.5px; font-weight: 500; padding: 10px 16px; line-height: 1.3; position: relative; z-index: 10; }\n' +
+        '.canvas-heading { font-size: 26px; font-weight: 700; color: #1e293b; text-align: center; position: relative; z-index: 10; }\n' +
+        '.canvas-paragraph { font-size: 14.5px; color: #475569; text-align: center; line-height: 1.5; position: relative; z-index: 10; }\n' +
+        '.canvas-button { display: inline-block; padding: 10px 20px; background: #6366f1; color: #fff; border-radius: 6px; font-weight: 600; text-decoration: none; text-align: center; position: relative; z-index: 10; }\n' +
+        '.canvas-viewer-widget { display: block; font-size: 14.5px; text-align: center; color: #1e293b; position: relative; z-index: 10; }\n' +
+        '.canvas-viewer-widget .viewer-count { font-weight: 700; }\n' +
+        '.canvas-vturb-wrapper { width: 100%; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; background: #000; position: relative; z-index: 10; }\n' +
+        '.canvas-vturb-wrapper.is-vertical { max-width: 300px; }\n' +
+        '.canvas-vturb-wrapper.is-vertical .vturb-player-placeholder, .canvas-vturb-wrapper.is-vertical div[class*="placeholder"] { padding-top: 177.777777% !important; }\n' +
+        '.canvas-pitch-wrapper { width: 100%; text-align: center; margin: 16px 0; display: none; }\n' +
+        '.canvas-pitch-btn { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 650px; padding: 18px 28px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #ffffff; border-radius: 12px; text-decoration: none; box-shadow: 0 10px 25px rgba(34,197,94,0.4); margin: 0 auto; }\n' +
+        '.canvas-pitch-btn.is-pulsing { animation: pitch-pulse 2s infinite ease-in-out; }\n' +
+        '@keyframes pitch-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1.025); box-shadow: 0 0 0 16px rgba(34, 197, 94, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }\n' +
+        '.pitch-main-text { font-size: 20px; font-weight: 800; text-transform: uppercase; }\n' +
+        '.pitch-subtext { font-size: 13px; opacity: 0.92; margin-top: 4px; }\n' +
+        '@media (max-width: 768px) { .builder-row { flex-direction: column; } .vsl-container { padding: 12px; } }\n' +
+        '</style>\n<' + '/head>\n<' + 'body>\n' +
+        '<div class="vsl-container">\n' +
+        cloneCanvas.innerHTML +
+        '\n</div>\n';
+
+      var jsCode = [
+        'function updateBanners() {',
+        '  var now = new Date();',
+        '  var options = { weekday: "long", day: "numeric", month: "long", year: "numeric" };',
+        '  var fullDateStr = "Hoje, " + now.toLocaleDateString("pt-BR", options);',
+        '  var dateFormatted = now.toLocaleDateString("pt-BR");',
+        '  document.querySelectorAll("[data-element-type=\\"top-banner\\"]").forEach(function(wrapper) {',
+        '    var styleKey = wrapper.dataset.dateStyle || "full";',
+        '    var bannerText = wrapper.dataset.bannerText || "";',
+        '    var bannerNode = wrapper.querySelector(".canvas-top-banner");',
+        '    if (!bannerNode) return;',
+        '    var prefix = fullDateStr;',
+        '    if (styleKey === "warning") prefix = "⚠️ ATENÇÃO: Última chance em " + dateFormatted;',
+        '    else if (styleKey === "valid_today") prefix = "🔥 VÁLIDO SOMENTE HOJE (" + now.toLocaleDateString("pt-BR", { weekday: "long" }) + ")";',
+        '    else if (styleKey === "vagas") prefix = "⚡ AVISO IMPORTANTE: Vagas limitadas para " + now.toLocaleDateString("pt-BR", { month: "long" }) + " de " + now.getFullYear();',
+        '    else if (styleKey === "live") prefix = "🔴 AO VIVO HOJE (" + now.getDate() + " de " + now.toLocaleDateString("pt-BR", { month: "long" }) + ")";',
+        '    else if (styleKey === "none") prefix = "";',
+        '    if (prefix) bannerNode.textContent = bannerText ? prefix + ", " + bannerText : prefix;',
+        '    else bannerNode.textContent = bannerText || "Banner de Notificação";',
+        '  });',
+        '}',
+        'updateBanners();',
+        'function getAnyVideoTime() {',
+        '  if (window.smartplayer && window.smartplayer.instances && window.smartplayer.instances[0]) {',
+        '    var inst = window.smartplayer.instances[0];',
+        '    if (inst.video && !isNaN(inst.video.currentTime)) return inst.video.currentTime;',
+        '    if (!isNaN(inst.currentTime)) return inst.currentTime;',
+        '  }',
+        '  var vturbEl = document.querySelector("vturb-smartplayer");',
+        '  if (vturbEl && vturbEl.shadowRoot) {',
+        '    var shadowVid = vturbEl.shadowRoot.querySelector("video");',
+        '    if (shadowVid && !isNaN(shadowVid.currentTime)) return shadowVid.currentTime;',
+        '  }',
+        '  var v = document.querySelector("video");',
+        '  if (v && !isNaN(v.currentTime)) return v.currentTime;',
+        '  return 0;',
+        '}',
+        'document.querySelectorAll("[data-element-type=\\"live-viewers\\"]").forEach(function(wrapper) {',
+        '  var updateViewersCount = function() {',
+        '    var min = parseInt(wrapper.dataset.minViewers) || 1150;',
+        '    var max = parseInt(wrapper.dataset.maxViewers) || 1280;',
+        '    var randomCount = Math.floor(Math.random() * (max - min + 1)) + min;',
+        '    var template = wrapper.dataset.templateText || "{count} espectadores estão vendo este conteúdo simultaneamente com você";',
+        '    var viewerTextSpan = wrapper.querySelector(".viewer-text");',
+        '    if (viewerTextSpan) {',
+        '      viewerTextSpan.innerHTML = template.replace("{count}", "<strong class=\\"viewer-count\\">" + randomCount + "</strong>");',
+        '    }',
+        '  };',
+        '  updateViewersCount();',
+        '  setInterval(updateViewersCount, 3500);',
+        '});',
+        'document.querySelectorAll("[data-element-type=\\"pitch-button\\"]").forEach(function(wrapper) {',
+        '  var min = parseInt(wrapper.dataset.pitchMin) || 0;',
+        '  var sec = parseInt(wrapper.dataset.pitchSec) || 0;',
+        '  var targetSec = (min * 60) + sec;',
+        '  var pitchWrap = wrapper.querySelector(".canvas-pitch-wrapper");',
+        '  if (!pitchWrap) return;',
+        '  var storageKey = "vsl_pitch_revealed_" + min + "_" + sec;',
+        '  var isRevealedInCache = false;',
+        '  try { isRevealedInCache = localStorage.getItem(storageKey) === "true"; } catch(e) {}',
+        '  if (isRevealedInCache) {',
+        '    pitchWrap.style.display = "block";',
+        '  } else {',
+        '    pitchWrap.style.display = "none";',
+        '  }',
+        '  var revealPitch = function() {',
+        '    pitchWrap.style.display = "block";',
+        '    try { localStorage.setItem(storageKey, "true"); } catch(e) {}',
+        '  };',
+        '  var checkTime = function() {',
+        '    var t = getAnyVideoTime();',
+        '    if (t >= targetSec && targetSec > 0) {',
+        '      revealPitch();',
+        '    }',
+        '  };',
+        '  window.addEventListener("message", function(e) {',
+        '    try {',
+        '      if (!e.data) return;',
+        '      var data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;',
+        '      var curr = data.currentTime || data.time || (data.payload && data.payload.currentTime);',
+        '      if (curr !== undefined && curr >= targetSec && targetSec > 0) revealPitch();',
+        '    } catch(err) {}',
+        '  });',
+        '  setInterval(checkTime, 1000);',
+        '});'
+      ].join('\n');
+
+      currentExportedHTML = headHTML + sOpen + '\n' + jsCode + '\n' + sClose + '\n<' + '/body>\n<' + '/html>';
+
+      // 1. Automatic Download
+      triggerDownload(currentExportedHTML);
+
+      // 2. Open Modal & Display Code with 1-Click Copy
+      exportCodeTextarea.value = currentExportedHTML;
+      exportModal.style.display = 'flex';
+    });
+  </script>
+</body>
+</html>

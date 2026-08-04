@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Página de Vendas - VSL</title>
+
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Plus Jakarta Sans", sans-serif; background-color: #ffffff; color: #1f2937; min-height: 100vh; width: 100%; margin: 0; padding: 0; }
+.vsl-container { width: 100%; max-width: 100%; min-height: 100vh; background: #ffffff; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.builder-row { display: flex; gap: 12px; width: 100%; padding: 4px 8px; }
+.builder-row.has-top-banner { margin: -20px -20px 4px -20px !important; width: calc(100% + 40px) !important; padding: 0 !important; }
+.builder-row.has-top-banner .builder-col { padding: 0 !important; }
+.builder-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.canvas-top-banner { width: 100%; background: #c59b43; color: #ffffff; text-align: center; font-size: 13.5px; font-weight: 500; padding: 10px 16px; line-height: 1.3; position: relative; z-index: 10; }
+.canvas-heading { font-size: 26px; font-weight: 700; color: #1e293b; text-align: center; position: relative; z-index: 10; }
+.canvas-paragraph { font-size: 14.5px; color: #475569; text-align: center; line-height: 1.5; position: relative; z-index: 10; }
+.canvas-button { display: inline-block; padding: 10px 20px; background: #6366f1; color: #fff; border-radius: 6px; font-weight: 600; text-decoration: none; text-align: center; position: relative; z-index: 10; }
+.canvas-viewer-widget { display: block; font-size: 14.5px; text-align: center; color: #1e293b; position: relative; z-index: 10; }
+.canvas-viewer-widget .viewer-count { font-weight: 700; }
+.canvas-vturb-wrapper { width: 100%; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; background: #000; position: relative; z-index: 10; }
+.canvas-vturb-wrapper.is-vertical { max-width: 300px; }
+.canvas-vturb-wrapper.is-vertical .vturb-player-placeholder, .canvas-vturb-wrapper.is-vertical div[class*="placeholder"] { padding-top: 177.777777% !important; }
+.canvas-pitch-wrapper { width: 100%; text-align: center; margin: 16px 0; display: none; }
+.canvas-pitch-btn { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 650px; padding: 18px 28px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #ffffff; border-radius: 12px; text-decoration: none; box-shadow: 0 10px 25px rgba(34,197,94,0.4); margin: 0 auto; }
+.canvas-pitch-btn.is-pulsing { animation: pitch-pulse 2s infinite ease-in-out; }
+@keyframes pitch-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1.025); box-shadow: 0 0 0 16px rgba(34, 197, 94, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+.pitch-main-text { font-size: 20px; font-weight: 800; text-transform: uppercase; }
+.pitch-subtext { font-size: 13px; opacity: 0.92; margin-top: 4px; }
+@media (max-width: 768px) { .builder-row { flex-direction: column; } .vsl-container { padding: 12px; } }
+</style>
+</head>
+<body>
+<div class="vsl-container">
+
+<div class="builder-row has-top-banner"><div class="builder-col" style="flex: 1 1 0%;"><div class="canvas-element" data-element-type="top-banner" draggable="true" data-date-style="full" data-banner-text="é a última oportunidade para assistir a este vídeo"><div class="canvas-top-banner">Hoje, terça-feira, 4 de agosto de 2026, é a última oportunidade para assistir a este vídeo</div></div></div></div>
+<div class="builder-row"><div class="builder-col" style="flex: 1 1 0%;"><div class="canvas-element" data-element-type="heading" draggable="true" style="text-align: center;"><h2 class="canvas-heading" style="text-align: center;">Apenas hoje nao perca</h2></div></div></div>
+<div class="builder-row"><div class="builder-col" style="flex: 1 1 0%;"><div class="canvas-element" data-element-type="vturb-player" draggable="true" data-vturb-body='<vturb-smartplayer id="vid-6a5149f10bbb981f25a98911" style="display: block; margin: 0 auto; width: 100%; max-width: 400px;"><div class="vturb-player-placeholder" style="position: relative; width: 100%; padding: 177.77777777777777% 0 0; z-index: 0; background-color: black;"></div></vturb-smartplayer> <script type="text/javascript"> var s=document.createElement("script"); s.src="https://scripts.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a5149f10bbb981f25a98911/v4/player.js", s.async=!0,document.head.appendChild(s); </script>' data-vturb-head=""><div class="canvas-vturb-wrapper is-vertical" style="max-width: 300px;"><vturb-smartplayer id="vid-6a5149f10bbb981f25a98911" style="display: block; margin: 0px auto; width: 100%; max-width: var(--player-vertical-width, 400px); --fakebar-background-color: #99cc33; --fakebar-height: 10px; --resume-background-color: #99cc33; --resume-foreground-color: #FFFFFF; --style-background: #1890FF; --style-background-100: #1890FFff; --style-background-90: #1890FFe6; --style-background-80: #1890FFcc; --style-background-70: #1890FFb3; --style-background-60: #1890FF99; --style-background-50: #1890FF80; --style-background-opacity: var(--style-background-80); --style-foreground: #FFFFFF; --style-foreground-100: #FFFFFFff; --style-foreground-90: #FFFFFFe6; --style-foreground-80: #FFFFFFcc; --style-foreground-70: #FFFFFFb3; --style-foreground-60: #FFFFFF99; --style-foreground-50: #FFFFFF80; --style-foreground-opacity: var(--style-foreground-80); --player-border-radius: 0px; --bigplay-background: #1890FF; --bigplay-background-hover: rgb(0, 113, 218);" original-id="vid-6a5149f10bbb981f25a98911" vturb-player-intersection-element=""><div class="thumbnail" style="position: relative; width: 100%; padding: 177.78% 0 0; z-index: 0;"><img class="thumbnail-image" src="https://images.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a5149f10bbb981f25a98911/thumbnail.jpg" style=" position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block;  "></div></vturb-smartplayer> <script type="text/javascript"> var s=document.createElement("script"); s.src="https://scripts.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a5149f10bbb981f25a98911/v4/player.js", s.async=!0,document.head.appendChild(s); </script></div></div></div></div>
+<div class="builder-row"><div class="builder-col" style="flex: 1 1 0%;"><div class="canvas-element" data-element-type="pitch-button" draggable="true" data-url="https://checkout.exemplo.com/sua-oferta" data-main-text="QUERO GARANTIR MINHA VAGA AGORA" data-subtext="🔒 Compra 100% Segura e Garantia de 30 Dias" data-pitch-min="0" data-pitch-sec="10" data-pulse="true" data-preview-mode="visible"><div class="canvas-pitch-wrapper" style="display: block;">
+        <a href="https://checkout.exemplo.com/sua-oferta" target="_blank" class="canvas-pitch-btn is-pulsing">
+          <span class="pitch-main-text">QUERO GARANTIR MINHA VAGA AGORA</span>
+          <span class="pitch-subtext">🔒 Compra 100% Segura e Garantia de 30 Dias</span>
+        </a>
+      </div></div></div></div>
+</div>
+
+<script>
+function updateBanners() {
+  var now = new Date();
+  var options = { weekday: "long", day: "numeric", month: "long", year: "numeric" };
+  var fullDateStr = "Hoje, " + now.toLocaleDateString("pt-BR", options);
+  var dateFormatted = now.toLocaleDateString("pt-BR");
+  document.querySelectorAll("[data-element-type=\"top-banner\"]").forEach(function(wrapper) {
+    var styleKey = wrapper.dataset.dateStyle || "full";
+    var bannerText = wrapper.dataset.bannerText || "";
+    var bannerNode = wrapper.querySelector(".canvas-top-banner");
+    if (!bannerNode) return;
+    var prefix = fullDateStr;
+    if (styleKey === "warning") prefix = "⚠️ ATENÇÃO: Última chance em " + dateFormatted;
+    else if (styleKey === "valid_today") prefix = "🔥 VÁLIDO SOMENTE HOJE (" + now.toLocaleDateString("pt-BR", { weekday: "long" }) + ")";
+    else if (styleKey === "vagas") prefix = "⚡ AVISO IMPORTANTE: Vagas limitadas para " + now.toLocaleDateString("pt-BR", { month: "long" }) + " de " + now.getFullYear();
+    else if (styleKey === "live") prefix = "🔴 AO VIVO HOJE (" + now.getDate() + " de " + now.toLocaleDateString("pt-BR", { month: "long" }) + ")";
+    else if (styleKey === "none") prefix = "";
+    if (prefix) bannerNode.textContent = bannerText ? prefix + ", " + bannerText : prefix;
+    else bannerNode.textContent = bannerText || "Banner de Notificação";
+  });
+}
+updateBanners();
+
+function getAnyVideoTime() {
+  if (window.smartplayer && window.smartplayer.instances && window.smartplayer.instances[0]) {
+    var inst = window.smartplayer.instances[0];
+    if (inst.video && !isNaN(inst.video.currentTime)) return inst.video.currentTime;
+    if (!isNaN(inst.currentTime)) return inst.currentTime;
+  }
+  var vturbEl = document.querySelector("vturb-smartplayer");
+  if (vturbEl && vturbEl.shadowRoot) {
+    var shadowVid = vturbEl.shadowRoot.querySelector("video");
+    if (shadowVid && !isNaN(shadowVid.currentTime)) return shadowVid.currentTime;
+  }
+  var v = document.querySelector("video");
+  if (v && !isNaN(v.currentTime)) return v.currentTime;
+  return 0;
+}
+
+document.querySelectorAll("[data-element-type=\"pitch-button\"]").forEach(function(wrapper) {
+  var min = parseInt(wrapper.dataset.pitchMin) || 0;
+  var sec = parseInt(wrapper.dataset.pitchSec) || 0;
+  var targetSec = (min * 60) + sec;
+  var pitchWrap = wrapper.querySelector(".canvas-pitch-wrapper");
+  if (!pitchWrap) return;
+
+  var storageKey = "vsl_pitch_revealed_" + min + "_" + sec;
+  var isRevealedInCache = false;
+  try { isRevealedInCache = localStorage.getItem(storageKey) === "true"; } catch(e) {}
+
+  if (isRevealedInCache) {
+    pitchWrap.style.display = "block";
+  } else {
+    pitchWrap.style.display = "none";
+  }
+
+  var revealPitch = function() {
+    pitchWrap.style.display = "block";
+    try { localStorage.setItem(storageKey, "true"); } catch(e) {}
+  };
+
+  var checkTime = function() {
+    var t = getAnyVideoTime();
+    if (t >= targetSec && targetSec > 0) {
+      revealPitch();
+    }
+  };
+
+  window.addEventListener("message", function(e) {
+    try {
+      if (!e.data) return;
+      var data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
+      var curr = data.currentTime || data.time || (data.payload && data.payload.currentTime);
+      if (curr !== undefined && curr >= targetSec && targetSec > 0) revealPitch();
+    } catch(err) {}
+  });
+
+  setInterval(checkTime, 1000);
+});
+</script>
+</body>
+</html>
