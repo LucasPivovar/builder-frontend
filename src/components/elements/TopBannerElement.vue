@@ -8,7 +8,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { parseAtomitags, hexToRgba } from '../../utils/atomitags';
+import { parseAtomitags, hexToRgba, getNum } from '../../utils/atomitags';
 
 const props = defineProps({
   element: { type: Object, required: true }
@@ -20,17 +20,20 @@ const computedStyle = computed(() => {
   let bg = s.bgColor || '#dc2626';
   if (s.hasTransparentBg) {
     bg = 'transparent';
-  } else if (s.bgOpacity !== undefined && s.bgOpacity < 1) {
-    bg = hexToRgba(bg, s.bgOpacity);
+  } else if (s.bgOpacity !== undefined && s.bgOpacity !== null && s.bgOpacity !== '' && Number(s.bgOpacity) < 1) {
+    bg = hexToRgba(bg, Number(s.bgOpacity));
   }
 
   let border = 'none';
   if (s.hasBorder) {
-    border = `${s.borderWidth || 2}px ${s.borderStyle || 'solid'} ${s.borderColor || '#ffffff'}`;
+    border = `${getNum(s.borderWidth, 2)}px ${s.borderStyle || 'solid'} ${s.borderColor || '#ffffff'}`;
   }
 
-  const py = s.paddingVertical !== undefined ? s.paddingVertical : 12;
-  const px = s.paddingHorizontal !== undefined ? s.paddingHorizontal : 16;
+  const py = getNum(s.paddingVertical, 12);
+  const px = getNum(s.paddingHorizontal, 16);
+  const mt = getNum(s.marginTop, 0);
+  const mb = getNum(s.marginBottom, 0);
+  const br = getNum(s.borderRadius, 0);
 
   return {
     backgroundColor: bg,
@@ -38,9 +41,13 @@ const computedStyle = computed(() => {
     fontWeight: s.fontWeight || '800',
     fontSize: s.fontSize || '15px',
     padding: `${py}px ${px}px`,
-    borderRadius: (s.borderRadius || 0) + 'px',
+    marginTop: `${mt}px`,
+    marginBottom: `${mb}px`,
+    borderRadius: `${br}px`,
     border: border,
     textAlign: s.align || 'center',
+    maxWidth: (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim() : '100%',
+    maxHeight: (s.maxHeight && s.maxHeight.trim()) ? s.maxHeight.trim() : undefined,
     width: '100%',
     boxSizing: 'border-box'
   };
@@ -54,7 +61,8 @@ const parsedContent = computed(() => {
     {
       cityName: props.element.cityName,
       minViewers: props.element.minViewers,
-      maxViewers: props.element.maxViewers
+      maxViewers: props.element.maxViewers,
+      countColor: props.element.style?.countColor
     }
   );
 });

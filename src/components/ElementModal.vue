@@ -113,7 +113,10 @@
             <!-- PREVIEW -->
             <div
               :class="isVerticalPreview ? 'em-preview-side' : 'em-preview-top'"
-              :style="{ backgroundColor: state.pageSettings.bgColor || '#141722' }"
+              :style="{
+                backgroundColor: state.pageSettings.bgColor || '#141722',
+                fontFamily: `'${state.pageSettings.fontFamily || 'Roboto'}', -apple-system, BlinkMacSystemFont, sans-serif`
+              }"
             >
               <!-- BOTÃO DE TOGGLE ORIENTAÇÃO (só VTurb) -->
               <div v-if="elem.type === 'vturb-player'" class="em-orientation-toggle">
@@ -134,14 +137,45 @@
                   title="Detectar automático"
                 ><i class="bi bi-magic"></i> Auto</button>
               </div>
-              <TopBannerElement v-if="elem.type === 'top-banner'" :element="elem" />
-              <HeadingElement v-else-if="elem.type === 'heading'" :element="elem" />
-              <ParagraphElement v-else-if="elem.type === 'paragraph'" :element="elem" />
-              <ButtonElement v-else-if="elem.type === 'button'" :element="elem" />
-              <VturbModalPreview v-else-if="elem.type === 'vturb-player'" :element="elem" />
-              <PitchButtonElement v-else-if="elem.type === 'pitch-button'" :element="elem" />
-              <UpsellButtonsElement v-else-if="elem.type === 'upsell-buttons'" :element="elem" />
-              <LiveViewersElement v-else-if="elem.type === 'live-viewers'" :element="elem" />
+              <TopBannerElement v-if="elem.type === 'top-banner'" :key="elem.id + '-tb-prev'" :element="elem" />
+              <HeadingElement v-else-if="elem.type === 'heading'" :key="elem.id + '-hd-prev'" :element="elem" />
+              <ParagraphElement v-else-if="elem.type === 'paragraph'" :key="elem.id + '-pr-prev'" :element="elem" />
+              <ButtonElement v-else-if="elem.type === 'button'" :key="elem.id + '-bt-prev'" :element="elem" />
+              <VturbModalPreview v-else-if="elem.type === 'vturb-player'" :key="elem.id + '-vt-prev'" :element="elem" />
+              <PitchButtonElement v-else-if="elem.type === 'pitch-button'" :key="elem.id + '-pb-prev'" :element="elem" />
+              <UpsellButtonsElement v-else-if="elem.type === 'upsell-buttons'" :key="elem.id + '-ub-prev'" :element="elem" />
+              <LiveViewersElement v-else-if="elem.type === 'live-viewers'" :key="elem.id + '-lv-prev'" :element="elem" />
+
+              <!-- EMAIL HEADER PREVIEW -->
+              <div v-else-if="elem.type === 'email-header'" style="width: 100%; max-width: 600px; margin: 0 auto;">
+                <div :style="{ background: elem.style?.bgColor || '#27272a', padding: `${getNum(elem.style?.paddingVertical, 26)}px ${getNum(elem.style?.paddingHorizontal, 44)}px`, marginTop: `${getNum(elem.style?.marginTop, 0)}px`, marginBottom: `${getNum(elem.style?.marginBottom, 24)}px`, borderRadius: '8px', textAlign: elem.style?.align || 'left' }">
+                  <img v-if="elem.logoType === 'image' && elem.logoImageUrl" :src="elem.logoImageUrl" alt="Logo" style="max-height: 40px; max-width: 150px; display: inline-block;" />
+                  <div v-else :style="{ color: elem.style?.logoColor || '#ffffff', fontSize: elem.style?.fontSize || '20px', fontWeight: elem.style?.fontWeight || '700' }">
+                    {{ elem.logoText || 'Rappu' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- EMAIL FOOTER PREVIEW -->
+              <div v-else-if="elem.type === 'email-footer'" style="width: 100%; max-width: 600px; margin: 0 auto;">
+                <div :style="{ background: elem.style?.bgColor || '#27272a', padding: `${getNum(elem.style?.paddingVertical, 24)}px ${getNum(elem.style?.paddingHorizontal, 44)}px`, marginTop: `${getNum(elem.style?.marginTop, 24)}px`, marginBottom: `${getNum(elem.style?.marginBottom, 0)}px`, borderRadius: '8px', textAlign: elem.style?.align || 'center' }">
+                  <img v-if="elem.logoType === 'image' && elem.logoImageUrl" :src="elem.logoImageUrl" alt="Logo" style="max-height: 36px; max-width: 120px; display: block; margin: 0 auto 8px;" />
+                  <div v-else :style="{ color: elem.style?.logoColor || '#ffffff', fontSize: '14px', fontWeight: '700', marginBottom: '6px' }">
+                    {{ elem.logoText || 'Rappu' }}
+                  </div>
+                  <p :style="{ color: elem.style?.textColor || '#a1a1aa', fontSize: elem.style?.fontSize || '12px', margin: 0 }">
+                    {{ elem.copyrightText || '© 2026 Rappu. Todos os direitos reservados.' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- EMAIL TAG PREVIEW -->
+              <div v-else-if="elem.type === 'email-tag'" :style="{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '16px', background: '#ffffff', borderRadius: '8px', textAlign: elem.style?.align || 'left' }">
+                <div :style="{ display: 'inline-block', background: elem.style?.bgColor || '#f4f4f5', color: elem.style?.textColor || '#27272a', fontSize: elem.style?.fontSize || '11px', fontWeight: elem.style?.fontWeight || '500', padding: `${getNum(elem.style?.paddingVertical, 5)}px ${getNum(elem.style?.paddingHorizontal, 12)}px`, borderRadius: `${getNum(elem.style?.borderRadius, 999)}px`, marginTop: `${getNum(elem.style?.marginTop, 0)}px`, marginBottom: `${getNum(elem.style?.marginBottom, 12)}px`, border: '1px solid #e4e4e7', letterSpacing: '0.6px' }">
+                  {{ elem.content || 'ARTES PRONTAS' }}
+                </div>
+              </div>
+
               <div v-else-if="elem.type === 'meta-pixel'" class="meta-pixel-preview">
                 ⚡ Meta Pixel &nbsp;·&nbsp; ID: {{ elem.pixelId || '—' }} &nbsp;·&nbsp; Evento: {{ elem.pixelEvent || 'PageView' }}
               </div>
@@ -182,6 +216,68 @@
                         <option value="InitiateCheckout">InitiateCheckout</option>
                         <option value="Purchase">Purchase</option>
                       </select>
+                    </div>
+                  </div>
+
+                  <!-- EMAIL HEADER -->
+                  <div v-else-if="elem.type === 'email-header'" class="em-field-stack">
+                    <div class="em-field">
+                      <label class="em-lbl">Tipo de Logo</label>
+                      <select v-model="elem.logoType" class="em-select">
+                        <option value="text">Texto / Escrita</option>
+                        <option value="image">Imagem (URL / Upload)</option>
+                      </select>
+                    </div>
+                    <div v-if="elem.logoType === 'text'" class="em-field">
+                      <label class="em-lbl">Texto da Logo / Marca</label>
+                      <input v-model="elem.logoText" class="em-input" type="text" placeholder="Rappu" />
+                    </div>
+                    <div v-else class="em-field-stack">
+                      <div class="em-field">
+                        <label class="em-lbl">📁 Upload de Arquivo de Imagem</label>
+                        <input type="file" accept="image/*" class="em-input" @change="handleLogoFileUpload" />
+                      </div>
+                      <div class="em-field">
+                        <label class="em-lbl">🔗 ou Cole a URL / Base64 da Logo</label>
+                        <input v-model="elem.logoImageUrl" class="em-input" type="text" placeholder="https://exemplo.com/logo.png" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- EMAIL FOOTER -->
+                  <div v-else-if="elem.type === 'email-footer'" class="em-field-stack">
+                    <div class="em-field">
+                      <label class="em-lbl">Tipo de Logo</label>
+                      <select v-model="elem.logoType" class="em-select">
+                        <option value="text">Texto / Escrita</option>
+                        <option value="image">Imagem (URL / Upload)</option>
+                      </select>
+                    </div>
+                    <div v-if="elem.logoType === 'text'" class="em-field">
+                      <label class="em-lbl">Texto da Logo</label>
+                      <input v-model="elem.logoText" class="em-input" type="text" placeholder="Rappu" />
+                    </div>
+                    <div v-else class="em-field-stack">
+                      <div class="em-field">
+                        <label class="em-lbl">📁 Upload de Arquivo de Imagem</label>
+                        <input type="file" accept="image/*" class="em-input" @change="handleLogoFileUpload" />
+                      </div>
+                      <div class="em-field">
+                        <label class="em-lbl">🔗 ou Cole a URL / Base64 da Logo</label>
+                        <input v-model="elem.logoImageUrl" class="em-input" type="text" placeholder="https://exemplo.com/logo.png" />
+                      </div>
+                    </div>
+                    <div class="em-field">
+                      <label class="em-lbl">Texto do Rodapé / Copyright</label>
+                      <input v-model="elem.copyrightText" class="em-input" type="text" placeholder="© 2026 Rappu. Todos os direitos reservados." />
+                    </div>
+                  </div>
+
+                  <!-- EMAIL TAG / PILL -->
+                  <div v-else-if="elem.type === 'email-tag'" class="em-field-stack">
+                    <div class="em-field">
+                      <label class="em-lbl">Texto do Pill / Label</label>
+                      <input v-model="elem.content" class="em-input" type="text" placeholder="ARTES PRONTAS" />
                     </div>
                   </div>
 
@@ -265,7 +361,7 @@
                   <!-- VARIÁVEIS DINÂMICAS -->
                   <div v-if="hasVariableTags(elem)" class="em-field-stack" style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
                     <div class="em-lbl" style="color: var(--accent-primary);">⚡ Variáveis Dinâmicas Detectadas</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;">
                       <div class="em-field">
                         <label class="em-lbl">🏙️ $cidade</label>
                         <input v-model="elem.cityName" class="em-input" type="text" placeholder="Curitiba" />
@@ -278,13 +374,20 @@
                         <label class="em-lbl">👀 Máx. Espectadores</label>
                         <input v-model.number="elem.maxViewers" class="em-input" type="number" placeholder="200" />
                       </div>
+                      <div class="em-field">
+                        <label class="em-lbl">🎨 Cor do Número</label>
+                        <div class="em-color-row">
+                          <input v-model="elemStyle.countColor" class="em-color-dot" type="color" />
+                          <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#38bdf8" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- RIGHT: STYLE -->
                 <div class="em-style-col" v-if="hasStyleOptions(elem)">
-                  <div class="em-style-2col">
+                  <div class="em-style-2col" v-if="elem.type !== 'vturb-player'">
                     <div class="em-field">
                       <label class="em-lbl">Tamanho</label>
                       <select v-model="elemStyle.fontSize" class="em-select">
@@ -314,15 +417,15 @@
                   </div>
 
                   <!-- MARGENS E PADDINGS -->
-                  <div class="em-style-2col">
-                    <div class="em-field">
-                      <label class="em-lbl">Margem 👆</label>
-                      <input v-model.number="elemStyle.marginTop" class="em-input" type="number" placeholder="6" />
-                    </div>
-                    <div class="em-field">
-                      <label class="em-lbl">Margem 👇</label>
-                      <input v-model.number="elemStyle.marginBottom" class="em-input" type="number" placeholder="6" />
-                    </div>
+                  <div class="em-field">
+                    <label class="em-lbl">Margem (Altura / Vertical) ↕</label>
+                    <input
+                      :value="marginVerticalValue"
+                      @input="onMarginVerticalInput($event.target.value)"
+                      class="em-input"
+                      type="number"
+                      placeholder="6"
+                    />
                   </div>
 
                   <div class="em-style-2col">
@@ -345,7 +448,7 @@
                   <div class="em-style-2col">
                     <div class="em-field">
                       <label class="em-lbl">Largura Máxima</label>
-                      <input v-model="elemStyle.maxWidth" class="em-input" type="text" placeholder="400px ou 100%" />
+                      <input v-model="elemStyle.maxWidth" class="em-input" type="text" placeholder="320px ou 100%" />
                     </div>
                     <div class="em-field">
                       <label class="em-lbl">Altura Máxima</label>
@@ -355,8 +458,8 @@
                 </div>
               </div>
 
-              <!-- COLORS & TRANSPARENCY ROW -->
-              <div class="em-colors-row" v-if="hasStyleOptions(elem)">
+              <!-- COLORS & TRANSPARENCY ROW (oculto para VTurb) -->
+              <div class="em-colors-row" v-if="hasStyleOptions(elem) && elem.type !== 'vturb-player'">
                 <div class="em-color-field">
                   <label class="em-lbl">Cor do texto</label>
                   <div class="em-color-row">
@@ -379,6 +482,13 @@
                   </div>
                 </div>
                 <div class="em-color-field">
+                  <label class="em-lbl">Cor do Número 🔢</label>
+                  <div class="em-color-row">
+                    <input v-model="elemStyle.countColor" class="em-color-dot" type="color" />
+                    <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#38bdf8" />
+                  </div>
+                </div>
+                <div class="em-color-field">
                   <label class="em-lbl">Opacidade Fundo</label>
                   <input v-model.number="elemStyle.bgOpacity" class="em-input" type="number" step="0.1" min="0" max="1" placeholder="1.0" style="width:80px;" />
                 </div>
@@ -398,8 +508,8 @@
                 </div>
               </div>
 
-              <!-- BORDER OPTIONS ROW -->
-              <div class="em-colors-row" v-if="hasStyleOptions(elem)" style="border-top:1px dashed rgba(255,255,255,0.08); background:rgba(0,0,0,0.25);">
+              <!-- BORDER OPTIONS ROW (oculto para VTurb) -->
+              <div class="em-colors-row" v-if="hasStyleOptions(elem) && elem.type !== 'vturb-player'" style="border-top:1px dashed rgba(255,255,255,0.08); background:rgba(0,0,0,0.25);">
                 <div class="em-color-field" style="justify-content:center;">
                   <label class="em-chk-lbl">
                     <input type="checkbox" v-model="elemStyle.hasBorder" />
@@ -485,6 +595,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
+import { getNum } from '../utils/atomitags';
 import TopBannerElement from './elements/TopBannerElement.vue';
 import HeadingElement from './elements/HeadingElement.vue';
 import ParagraphElement from './elements/ParagraphElement.vue';
@@ -503,10 +614,35 @@ const activeIconCat = ref('Social');
 const taMain = ref(null);
 
 const elem = computed(() => state.selectedElement);
-const elemStyle = computed(() => {
-  if (!elem.value || !elem.value.style) return {};
-  return elem.value.style;
+const elemStyle = computed(() => elem.value?.style || {});
+
+const marginVerticalValue = computed(() => {
+  const mt = elemStyle.value?.marginTop;
+  const mb = elemStyle.value?.marginBottom;
+  if (mt !== undefined && mt !== null && mt !== '') return Number(mt);
+  if (mb !== undefined && mb !== null && mb !== '') return Number(mb);
+  return 6;
 });
+
+function onMarginVerticalInput(val) {
+  const parsed = (val === '' || val === null || isNaN(Number(val))) ? 0 : Number(val);
+  if (elemStyle.value) {
+    elemStyle.value.marginTop = parsed;
+    elemStyle.value.marginBottom = parsed;
+  }
+}
+
+function handleLogoFileUpload(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    if (elem.value) {
+      elem.value.logoImageUrl = event.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+}
 
 // Override manual de orientação: null = auto, 'vertical' = forçar lateral, 'horizontal' = forçar topo
 const orientationOverride = ref(null);
@@ -551,14 +687,15 @@ function getTypeTitle(e) {
   const m = {
     'top-banner': 'Banner Topo', 'heading': 'Headline', 'paragraph': 'Parágrafo',
     'button': 'Botão Link', 'vturb-player': 'Player VTurb', 'pitch-button': 'Botão Pitch',
-    'live-viewers': 'Espectadores', 'meta-pixel': 'Meta Pixel'
+    'live-viewers': 'Espectadores', 'meta-pixel': 'Meta Pixel',
+    'email-header': 'Cabeçalho E-mail', 'email-footer': 'Rodapé E-mail', 'email-tag': 'Pill / Label E-mail'
   };
   return m[e.type] || e.type;
 }
 
 function hasContent(e) {
   if (!e || e.isGlobalSettings) return false;
-  return ['heading', 'paragraph', 'button', 'top-banner', 'pitch-button', 'live-viewers', 'vturb-player', 'meta-pixel'].includes(e.type);
+  return ['heading', 'paragraph', 'button', 'top-banner', 'pitch-button', 'live-viewers', 'vturb-player', 'meta-pixel', 'email-header', 'email-footer', 'email-tag'].includes(e.type);
 }
 
 function hasTextContent(e) {
@@ -640,6 +777,7 @@ const filteredIcons = computed(() => {
 .element-modal-box {
   width: min(1440px, 98vw);
   max-height: 94vh;
+  height: fit-content;
   background: #13151d;
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 14px;
@@ -684,9 +822,11 @@ const filteredIcons = computed(() => {
 
 /* Preview lateral (vídeo vertical) */
 .em-preview-side {
-  width: 360px;
-  min-width: 280px;
+  width: fit-content;
+  min-width: 290px;
   max-width: 400px;
+  height: fit-content;
+  max-height: 100%;
   flex-shrink: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -694,10 +834,10 @@ const filteredIcons = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 12px;
+  padding: 16px;
   border-right: 1px solid rgba(255,255,255,0.09);
   box-sizing: border-box;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* Preview em cima (video horizontal) */
@@ -705,14 +845,15 @@ const filteredIcons = computed(() => {
   position: relative;
   background: #141722;
   border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-  min-height: 220px;
-  max-height: 420px;
+  height: fit-content;
+  min-height: auto;
+  max-height: 340px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
-  padding: 12px 36px 36px 36px;
+  gap: 10px;
+  padding: 14px 20px;
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;

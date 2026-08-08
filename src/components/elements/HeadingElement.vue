@@ -8,7 +8,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { parseAtomitags, hexToRgba } from '../../utils/atomitags';
+import { parseAtomitags, hexToRgba, getNum } from '../../utils/atomitags';
 
 const props = defineProps({
   element: { type: Object, required: true }
@@ -19,16 +19,21 @@ const computedStyle = computed(() => {
 
   let bg = 'transparent';
   if (s.bgColor && !s.hasTransparentBg) {
-    bg = s.bgOpacity !== undefined && s.bgOpacity < 1 ? hexToRgba(s.bgColor, s.bgOpacity) : s.bgColor;
+    bg = s.bgOpacity !== undefined && s.bgOpacity !== null && s.bgOpacity !== '' && Number(s.bgOpacity) < 1 
+      ? hexToRgba(s.bgColor, Number(s.bgOpacity)) 
+      : s.bgColor;
   }
 
   let border = 'none';
   if (s.hasBorder) {
-    border = `${s.borderWidth || 2}px ${s.borderStyle || 'solid'} ${s.borderColor || '#ffffff'}`;
+    border = `${getNum(s.borderWidth, 2)}px ${s.borderStyle || 'solid'} ${s.borderColor || '#ffffff'}`;
   }
 
-  const py = s.paddingVertical !== undefined ? s.paddingVertical : 0;
-  const px = s.paddingHorizontal !== undefined ? s.paddingHorizontal : 0;
+  const py = getNum(s.paddingVertical, 0);
+  const px = getNum(s.paddingHorizontal, 0);
+  const mt = getNum(s.marginTop, 10);
+  const mb = getNum(s.marginBottom, 10);
+  const br = getNum(s.borderRadius, 0);
 
   return {
     fontSize: s.fontSize || '30px',
@@ -36,16 +41,17 @@ const computedStyle = computed(() => {
     color: s.textColor || '#ffffff',
     backgroundColor: bg,
     padding: `${py}px ${px}px`,
-    borderRadius: (s.borderRadius || 0) + 'px',
+    borderRadius: `${br}px`,
     border: border,
-    marginTop: (s.marginTop !== undefined ? s.marginTop : 10) + 'px',
-    marginBottom: (s.marginBottom !== undefined ? s.marginBottom : 10) + 'px',
+    marginTop: `${mt}px`,
+    marginBottom: `${mb}px`,
     textAlign: s.align || 'center',
     lineHeight: s.lineHeight || 1.3,
     letterSpacing: (s.letterSpacing || 0) + 'px',
-    maxWidth: '900px',
+    maxWidth: (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim() : '900px',
+    maxHeight: (s.maxHeight && s.maxHeight.trim()) ? s.maxHeight.trim() : undefined,
     width: '100%',
-    margin: `${s.marginTop !== undefined ? s.marginTop : 10}px auto ${s.marginBottom !== undefined ? s.marginBottom : 10}px auto`,
+    margin: `${mt}px auto ${mb}px auto`,
     boxSizing: 'border-box'
   };
 });
@@ -58,7 +64,8 @@ const parsedContent = computed(() => {
     {
       cityName: props.element.cityName,
       minViewers: props.element.minViewers,
-      maxViewers: props.element.maxViewers
+      maxViewers: props.element.maxViewers,
+      countColor: props.element.style?.countColor
     }
   );
 });

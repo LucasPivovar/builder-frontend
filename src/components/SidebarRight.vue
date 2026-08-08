@@ -91,6 +91,31 @@
               <span class="object-name">{{ obj.title }}</span>
             </div>
           </div>
+
+          <div class="section-title">OBJETOS DE E-MAIL</div>
+          <div class="objects-grid">
+            <div
+              v-for="obj in emailObjects"
+              :key="obj.type"
+              class="object-card"
+              @click="addElementToCanvas(obj.type)"
+            >
+              <div class="object-icon" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;"><i :class="obj.icon"></i></div>
+              <span class="object-name">{{ obj.title }}</span>
+            </div>
+          </div>
+
+          <div class="section-title">TEMPLATES PRONTOS</div>
+          <div class="objects-grid">
+            <div class="object-card" @click="loadTemplateWithConfirm('vsl')" style="border-color: rgba(52, 211, 153, 0.3);">
+              <div class="object-icon" style="background: rgba(52, 211, 153, 0.2); color: #34d399;"><i class="bi bi-play-circle-fill"></i></div>
+              <span class="object-name">Template VSL</span>
+            </div>
+            <div class="object-card" @click="loadTemplateWithConfirm('email')" style="border-color: rgba(56, 189, 248, 0.3);">
+              <div class="object-icon" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;"><i class="bi bi-envelope-paper-fill"></i></div>
+              <span class="object-name">Template E-mail</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -231,7 +256,16 @@ function closeAllDropdowns() {
   activeElementDropdownId.value = null;
 }
 
-const { state, addRow, addElementToCanvas, duplicateRow, deleteRow, openModalForElement, openGlobalSettings, duplicateElement, deleteElement } = useBuilderStore();
+const { state, addRow, addElementToCanvas, duplicateRow, deleteRow, openModalForElement, openGlobalSettings, duplicateElement, deleteElement, loadTemplate } = useBuilderStore();
+
+function loadTemplateWithConfirm(key) {
+  if (state.rows && state.rows.length > 0) {
+    if (!confirm('⚠️ Atenção: Carregar este template irá substituir o conteúdo atual da sua página. Deseja continuar?')) {
+      return;
+    }
+  }
+  loadTemplate(key);
+}
 
 const contentObjects = [
   { type: 'top-banner', title: 'Banner Topo', icon: 'bi bi-exclamation-triangle-fill' },
@@ -244,6 +278,12 @@ const conversionObjects = [
   { type: 'vturb-player', title: 'Player VTurb', icon: 'bi bi-play-circle-fill' },
   { type: 'pitch-button', title: 'Botão CTA Pitch', icon: 'bi bi-lightning-charge-fill' },
   { type: 'live-viewers', title: 'Espectadores Ao Vivo', icon: 'bi bi-eye-fill' }
+];
+
+const emailObjects = [
+  { type: 'email-header', title: 'Cabeçalho E-mail', icon: 'bi bi-layout-three-columns' },
+  { type: 'email-tag', title: 'Pill / Label', icon: 'bi bi-tag-fill' },
+  { type: 'email-footer', title: 'Rodapé E-mail', icon: 'bi bi-layout-bottom-panel' }
 ];
 
 const gridPresets = [

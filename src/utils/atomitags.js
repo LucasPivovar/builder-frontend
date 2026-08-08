@@ -52,6 +52,7 @@ export function parseAtomitags(text, altColor = '#f1c232', bgColor = '#00ff0b', 
   const minViewers = options.minViewers || 140;
   const maxViewers = options.maxViewers || 200;
   const randomViewers = Math.floor(Math.random() * (maxViewers - minViewers + 1)) + minViewers;
+  const countColor = options.countColor || (options.style && options.style.countColor) || '#38bdf8';
 
   // 1. Suporte a quebra de linha com \n e <br>
   html = html.replace(/\r?\n/g, '<br>');
@@ -60,8 +61,8 @@ export function parseAtomitags(text, altColor = '#f1c232', bgColor = '#00ff0b', 
   html = html.replace(/\$cidade/gi, cityName);
   html = html.replace(/\$hoje-ext/gi, `${weekday}, ${day} de ${month} de ${year}`);
   html = html.replace(/\$hoje/gi, now.toLocaleDateString('pt-BR'));
-  html = html.replace(/\$espectadores/gi, `${randomViewers}`);
-  html = html.replace(/\$random/gi, `${randomViewers}`);
+  html = html.replace(/\$espectadores/gi, `<strong style="color:${countColor}">${randomViewers}</strong>`);
+  html = html.replace(/\$random/gi, `<strong style="color:${countColor}">${randomViewers}</strong>`);
 
   // 3. Formatações customizadas (regexes não-gulosos)
   html = html.replace(/>>(.+?)<</g, `<span style="color:${altColor};">$1</span>`);
@@ -75,3 +76,11 @@ export function parseAtomitags(text, altColor = '#f1c232', bgColor = '#00ff0b', 
 
   return html;
 }
+
+export function getNum(val, fallback) {
+  if (val === undefined || val === null || val === '' || isNaN(Number(val))) {
+    return fallback;
+  }
+  return Number(val);
+}
+

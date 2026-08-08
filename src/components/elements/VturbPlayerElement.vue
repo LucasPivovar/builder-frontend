@@ -15,6 +15,7 @@
 
 <script setup>
 import { ref, watch, onMounted, nextTick, computed } from 'vue';
+import { getNum } from '../../utils/atomitags';
 
 const props = defineProps({
   element: { type: Object, required: true }
@@ -22,15 +23,41 @@ const props = defineProps({
 
 const wrapperStyle = computed(() => {
   const s = props.element.style || {};
-  const w = (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim()
+  const body = props.element.vturbBody || '';
+  const match = body.match(/padding[^:]*:[^\d]*(\d+(?:\.\d+)?)%/);
+  const padTopRatio = match ? parseFloat(match[1]) / 100 : 0.5625;
+  const isVertical = padTopRatio > 1.0;
+
+  let w = (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim()
            : (props.element.vturbWidth && props.element.vturbWidth.trim()) ? props.element.vturbWidth.trim()
-           : '';
+           : (isVertical ? '400px' : '640px');
+
   const h = (s.maxHeight && s.maxHeight.trim()) ? s.maxHeight.trim()
            : (props.element.vturbHeight && props.element.vturbHeight.trim()) ? props.element.vturbHeight.trim()
            : '';
-  const res = { margin: '0 auto', width: '100%', boxSizing: 'border-box', display: 'block' };
+
+  const mt = getNum(s.marginTop, 16);
+  const mb = getNum(s.marginBottom, 16);
+  const py = getNum(s.paddingVertical, 0);
+  const px = getNum(s.paddingHorizontal, 0);
+
+  const res = {
+    marginTop: `${mt}px`,
+    marginBottom: `${mb}px`,
+    marginRight: 'auto',
+    marginLeft: 'auto',
+    padding: `${py}px ${px}px`,
+    width: '100%',
+    boxSizing: 'border-box',
+    display: 'block'
+  };
   if (w) res.maxWidth = /px|%|vw/.test(w) ? w : w + 'px';
   if (h) { res.maxHeight = /px|%|vh/.test(h) ? h : h + 'px'; res.overflow = 'hidden'; }
+  if (s.borderRadius !== undefined && s.borderRadius !== null && s.borderRadius !== '') {
+    const br = typeof s.borderRadius === 'number' ? s.borderRadius + 'px' : s.borderRadius;
+    res.borderRadius = br;
+    res.overflow = 'hidden';
+  }
   return res;
 });
 
@@ -55,13 +82,19 @@ function loadInlineScript(code) {
 function renderVturb() {
   nextTick(() => {
     if (!containerRef.value) return;
-    const bodyHTML = (props.element.vturbBody || '').trim();
+    let bodyHTML = (props.element.vturbBody || '').trim();
     if (!bodyHTML) {
-      containerRef.value.innerHTML = '';
-      return;
+      // eslint-disable-next-line no-useless-escape
+      bodyHTML = `<vturb-smartplayer id="vid-6a74fc57b559162d923537ff" style="display: block; margin: 0 auto; width: 100%; max-width: 320px;"><div class="vturb-player-placeholder" style="position: relative; width: 100%; padding: 177.77777777777777% 0 0; z-index: 0; background-color: black;"></div></vturb-smartplayer> <script type="text/javascript"> var s=document.createElement("script"); s.src="https://scripts.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a74fc57b559162d923537ff/v4/player.js", s.async=!0,document.head.appendChild(s); <\/script>`;
     }
 
-    // 1. Inserir o HTML exatamente como vem da VTurb no container
+    const match = bodyHTML.match(/padding[^:]*:[^\d]*(\d+(?:\.\d+)?)%/);
+    const padTopRatio = match ? parseFloat(match[1]) / 100 : 0.5625;
+    if (padTopRatio > 1.0) {
+      bodyHTML = bodyHTML.replace(/max-width:\s*\d+px/gi, 'max-width: 100%');
+    }
+
+    // 1. Inserir o HTML no container
     containerRef.value.innerHTML = bodyHTML;
 
     // 2. Executar scripts do Head (vturbHead)
@@ -98,8 +131,11 @@ onMounted(() => {
 });
 
 watch(
-  () => [props.element.vturbBody, props.element.vturbHead],
-  () => { renderVturb(); },
+  () => [props.element?.vturbBody, props.element?.vturbHead],
+  () => {
+    if (!props.element) return;
+    renderVturb();
+  },
   { deep: true }
 );
 </script>
