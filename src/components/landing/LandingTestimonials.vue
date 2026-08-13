@@ -2,30 +2,30 @@
   <section id="depoimentos" class="testimonials-section">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">O que nossos clientes dizem</h2>
+        <h2 class="section-title">Um fluxo para cada campanha</h2>
       </div>
 
       <div class="testimonials-grid">
         <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p class="quote">"O Visual Builder Studio revolucionou nossa agência. Criamos VSLs e funis em minutos e os resultados de conversão dobraram!"</p>
+          <div class="stars" aria-label="Funis e páginas"><i class="bi bi-window"></i></div>
+          <p class="quote">Monte páginas de vendas e VSLs em largura total, configure rastreamento e exporte o HTML quando estiver pronto.</p>
           <div class="user-info">
-            <div class="avatar">R</div>
+            <div class="avatar"><i class="bi bi-play-btn-fill"></i></div>
             <div>
-              <div class="user-name">Rodrigo M.</div>
-              <div class="user-role">Diretor de Marketing</div>
+              <div class="user-name">Funis e VSLs</div>
+              <div class="user-role">Páginas de conversão</div>
             </div>
           </div>
         </div>
 
         <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p class="quote">"Facilidade incrível de uso, integração com VTurb perfeita e a exportação do código HTML é extremamente limpa."</p>
+          <div class="stars" aria-label="E-mails e quizzes"><i class="bi bi-ui-checks-grid"></i></div>
+          <p class="quote">Crie e-mails compatíveis com largura de 600px e quizzes em etapas com respostas, progresso e resultado.</p>
           <div class="user-info">
-            <div class="avatar">C</div>
+            <div class="avatar"><i class="bi bi-envelope-paper-fill"></i></div>
             <div>
-              <div class="user-name">Camila S.</div>
-              <div class="user-role">Produtora Digital</div>
+              <div class="user-name">E-mails e quizzes</div>
+              <div class="user-role">Campanhas e experiências interativas</div>
             </div>
           </div>
         </div>
@@ -53,10 +53,10 @@
   padding: 28px;
 }
 
-.stars { color: #fbbf24; font-size: 16px; margin-bottom: 12px; }
-.quote { font-size: 14.5px; color: #cbd5e1; margin-bottom: 18px; font-style: italic; }
+.stars { color: var(--color-primary); font-size: 16px; margin-bottom: 12px; display:flex; gap:3px; }
+.quote { font-size: 14.5px; color: var(--color-border); margin-bottom: 18px; font-style: italic; }
 .user-info { display: flex; align-items: center; gap: 12px; }
-.avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #10b981); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; }
+.avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--color-surface); }
 .user-name { font-weight: 700; font-size: 14px; }
-.user-role { font-size: 12px; color: #94a3b8; }
+.user-role { font-size: 12px; color: var(--color-text-soft); }
 </style>

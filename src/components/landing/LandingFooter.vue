@@ -3,11 +3,11 @@
     <div class="container footer-content">
       <div class="footer-brand">
         <div class="brand-logo"><i class="bi bi-diagram-3-fill"></i></div>
-        <span>Visual Builder Studio</span>
-        <p>A solução definitiva para criação e gerenciamento de páginas de alta conversão.</p>
+        <span>Funil Builder</span>
+        <p>Construtor visual para criar, organizar e exportar páginas de funil, e-mails e quizzes.</p>
       </div>
       <div class="footer-links">
-        <p>© 2026 Visual Builder Studio. Todos os direitos reservados.</p>
+        <p>© 2026 Funil Builder. Todos os direitos reservados.</p>
       </div>
     </div>
   </footer>
@@ -17,7 +17,7 @@
 .footer {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 40px 0;
-  color: #94a3b8;
+  color: var(--color-text-soft);
   font-size: 14px;
 }
 
@@ -40,11 +40,11 @@
 .brand-logo {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #6366f1, #38bdf8);
+  background: var(--color-primary);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--color-surface);
 }
 </style>

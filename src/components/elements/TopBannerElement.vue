@@ -31,7 +31,6 @@ const computedStyle = computed(() => {
 
   const py = getNum(s.paddingVertical, 12);
   const px = getNum(s.paddingHorizontal, 16);
-  const mt = getNum(s.marginTop, 0);
   const mb = getNum(s.marginBottom, 0);
   const br = getNum(s.borderRadius, 0);
 
@@ -41,7 +40,7 @@ const computedStyle = computed(() => {
     fontWeight: s.fontWeight || '800',
     fontSize: s.fontSize || '15px',
     padding: `${py}px ${px}px`,
-    marginTop: `${mt}px`,
+    marginTop: '0px',
     marginBottom: `${mb}px`,
     borderRadius: `${br}px`,
     border: border,

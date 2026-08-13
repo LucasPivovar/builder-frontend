@@ -1,0 +1,89 @@
+/*
+ * Identidade visual oficial do Funil Builder.
+ * Todas as telas e componentes devem consumir estes tokens.
+ * Evite declarar cores ou fontes diretamente nos componentes.
+ */
+:root {
+  color-scheme: light;
+
+  /* Tipografia */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-editor: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+  /* Azul-celeste, superfícies e texto */
+  --color-primary: #0369a1;
+  --color-primary-hover: #075985;
+  --color-primary-strong: #075985;
+  --color-primary-deep: #0c4a6e;
+  --color-primary-bright: #0ea5e9;
+  --color-primary-border: #7dd3fc;
+  --color-primary-soft: #e0f2fe;
+  --color-primary-subtle: #f0f9ff;
+
+  --color-page: #f5fbff;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f8fdff;
+  --color-surface-hover: #edf9ff;
+  --color-border: #bae6fd;
+  --color-border-strong: #7dd3fc;
+  --color-focus-ring: rgba(14, 165, 233, 0.16);
+
+  --color-text: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #5b6b80;
+  --color-text-soft: #64748b;
+  --color-on-primary: #ffffff;
+
+  --color-success: #047857;
+  --color-success-strong: #047857;
+  --color-success-soft: #ecfdf5;
+  --color-success-border: #6ee7b7;
+  --color-danger: #dc2626;
+  --color-danger-strong: #b91c1c;
+  --color-danger-soft: #fff1f2;
+  --color-danger-border: #fecaca;
+  --color-warning: #b45309;
+  --color-warning-strong: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-warning-border: #fde68a;
+
+  /* Estrutura */
+  --header-height: 56px;
+  --sidebar-width: 330px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --shadow-sm: 0 4px 14px rgba(14, 116, 144, 0.08);
+  --shadow-main: 0 12px 34px rgba(14, 116, 144, 0.13);
+  --shadow-modal: 0 24px 64px rgba(14, 116, 144, 0.2);
+  --overlay: rgba(15, 23, 42, 0.42);
+  --overlay-strong: rgba(15, 23, 42, 0.68);
+
+  /* Compatibilidade com os componentes existentes */
+  --bg-dark: var(--color-page);
+  --bg-panel: var(--color-surface);
+  --bg-card: var(--color-surface-soft);
+  --bg-card-hover: var(--color-primary-soft);
+  --bg-canvas: var(--color-primary-soft);
+  --border-color: var(--color-border);
+  --border-focus: var(--color-primary);
+  --accent-primary: var(--color-primary);
+  --accent-hover: var(--color-primary-hover);
+  --danger-color: var(--color-danger);
+  --success-color: var(--color-success);
+  --text-main: var(--color-text);
+  --text-muted: var(--color-text-secondary);
+  --text-dim: var(--color-text-muted);
+  --font-family: var(--font-sans);
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+}

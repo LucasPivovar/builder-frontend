@@ -31,9 +31,9 @@ import { ref } from 'vue';
 const openIndex = ref(0);
 
 const faqItems = [
-  { question: 'Preciso saber programar para usar a plataforma?', answer: 'Não! O construtor é 100% drag & drop visual. Você pode criar, estilizar e publicar suas páginas sem escrever nenhuma linha de código.' },
-  { question: 'Posso usar meu próprio domínio personalizado?', answer: 'Sim! Nosso plano Pro permite que você vincule seus domínios próprios e publique suas páginas instantaneamente.' },
-  { question: 'Como funciona a exportação de HTML?', answer: 'Com apenas um clique, o estúdio gera o código HTML puro, sem scripts desnecessários, pronto para subir em qualquer servidor ou hospedagem.' }
+  { question: 'Preciso saber programar para usar a plataforma?', answer: 'Não. Você monta e edita as páginas pelo construtor visual e pode visualizar o resultado antes de exportar.' },
+  { question: 'Quais formatos posso criar?', answer: 'Você pode criar páginas de funil e VSL, campanhas de e-mail com 600px de largura e quizzes interativos organizados em etapas.' },
+  { question: 'Como funciona a exportação de HTML?', answer: 'O construtor gera um arquivo HTML que você pode revisar, copiar ou baixar para publicar na hospedagem de sua preferência.' }
 ];
 
 function toggleFaq(idx) {
@@ -68,7 +68,7 @@ function toggleFaq(idx) {
 .faq-answer {
   padding: 0 24px 18px 24px;
   font-size: 14.5px;
-  color: #94a3b8;
+  color: var(--color-text-soft);
   line-height: 1.6;
 }
 

@@ -13,17 +13,25 @@
     <!-- Global Modals -->
     <ToastNotification />
     <PageSummaryModal />
+    <ProductTour />
   </div>
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import ToastNotification from './components/ToastNotification.vue';
 import PageSummaryModal from './components/PageSummaryModal.vue';
+import ProductTour from './components/ProductTour.vue';
 import { useBuilderStore } from './composables/useBuilderStore';
+import { hasAuthToken } from './services/api';
 
 const router = useRouter();
-const { loadTemplate } = useBuilderStore();
+const { loadTemplate, hydrateWorkspaceFromBackend, closeTemplateBuilder } = useBuilderStore();
+
+onMounted(() => {
+  if (hasAuthToken()) hydrateWorkspaceFromBackend().catch(() => {});
+});
 
 function handleNavigate(routeName) {
   const routesMap = {
@@ -38,6 +46,7 @@ function handleNavigate(routeName) {
 }
 
 function handleOpenBuilder(templateKey) {
+  closeTemplateBuilder();
   if (templateKey && typeof templateKey === 'string') {
     loadTemplate(templateKey);
   }

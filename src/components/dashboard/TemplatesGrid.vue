@@ -1,11 +1,18 @@
 <template>
   <div class="templates-view-wrapper">
+    <div v-if="templateType === 'quiz'" class="template-category-block">
+      <div class="category-header"><div class="category-title-badge"><i class="bi bi-ui-checks-grid"></i><h3>Templates de Quiz Interativo</h3></div><span class="category-count">{{ 1 + customQuizTemplates.length }} modelos</span></div>
+      <div class="templates-grid">
+        <div class="page-item-card"><div class="page-preview-box quiz-preview-box"><span class="category-badge-tag">Quiz</span><span class="badge-default-tag">PADRÃO</span><div class="quiz-mockup"><div class="quiz-bar"></div><div class="mockup-line"></div><div class="quiz-option"></div><div class="quiz-option"></div><div class="mockup-btn"></div></div></div><div class="page-item-info"><div class="page-item-title">Quiz de Diagnóstico</div><div class="page-item-date">5 etapas · Perguntas · Análise · Resultado</div><div class="page-item-actions"><button class="btn-edit-builder" @click="$emit('use-template','quiz')"><i class="bi bi-magic"></i> Usar Template Quiz</button></div></div></div>
+        <div v-for="tmpl in customQuizTemplates" :key="tmpl.id" class="page-item-card"><div class="page-preview-box quiz-preview-box"><span class="category-badge-tag">Quiz</span><span class="badge-custom-tag">PERSONALIZADO</span><div class="quiz-mockup"><div class="quiz-bar"></div><div class="mockup-line"></div><div class="quiz-option"></div><div class="mockup-btn"></div></div></div><div class="page-item-info"><div class="page-item-title">{{ tmpl.name }}</div><div class="page-item-date">Template de quiz salvo</div><div class="page-item-actions"><button class="btn-edit-builder" @click="$emit('use-template',tmpl.id)"><i class="bi bi-magic"></i> Usar Template Quiz</button></div></div></div>
+      </div>
+    </div>
     <!-- EMAIL TEMPLATES -->
-    <div v-if="templateType === 'email'">
+    <div v-else-if="templateType === 'email'">
       <div class="template-category-block">
         <div class="category-header">
           <div class="category-title-badge">
-            <i class="bi bi-envelope-paper-fill" style="color: #38bdf8;"></i>
+            <i class="bi bi-envelope-paper-fill" style="color: var(--color-primary-strong);"></i>
             <h3>Templates de E-mail Marketing</h3>
           </div>
           <span class="category-count">{{ 1 + customEmailTemplates.length }} modelos</span>
@@ -15,16 +22,16 @@
           <!-- Default Email Template -->
           <div class="page-item-card">
             <div class="page-preview-box email-preview-box">
-              <span class="category-badge-tag" style="color: #38bdf8;">E-mail</span>
+              <span class="category-badge-tag" style="color: var(--color-primary-strong);">E-mail</span>
               <span class="badge-default-tag">PADRÃO</span>
               <div class="email-mockup">
-                <div class="em-header"></div>
+                <div class="template-email-header"></div>
                 <div class="em-body">
                   <div class="em-line"></div>
                   <div class="em-line short"></div>
-                  <div class="em-btn"></div>
+                  <div class="template-email-button"></div>
                 </div>
-                <div class="em-footer"></div>
+                <div class="template-email-footer"></div>
               </div>
             </div>
             <div class="page-item-info">
@@ -33,7 +40,7 @@
               <div class="page-item-actions">
                 <button
                   class="btn-edit-builder"
-                  style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.35);"
+                  style="background: var(--color-primary-soft); color: var(--color-primary-strong); border-color: var(--color-primary-border);"
                   @click="$emit('use-template', 'email')"
                 >
                   <i class="bi bi-magic"></i> Usar Template E-mail
@@ -49,11 +56,11 @@
             class="page-item-card"
           >
             <div class="page-preview-box">
-              <span class="category-badge-tag" style="color: #38bdf8;">E-mail</span>
+              <span class="category-badge-tag" style="color: var(--color-primary-strong);">E-mail</span>
               <span class="badge-custom-tag">PERSONALIZADO</span>
-              <div class="page-preview-mockup" style="border-color: #38bdf8;">
+              <div class="page-preview-mockup" style="border-color: var(--color-primary-border);">
                 <div class="mockup-line"></div>
-                <div class="mockup-btn" style="background: #38bdf8;"></div>
+                <div class="mockup-btn" style="background: var(--color-primary);"></div>
               </div>
             </div>
             <div class="page-item-info">
@@ -62,7 +69,7 @@
               <div class="page-item-actions">
                 <button
                   class="btn-edit-builder"
-                  style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);"
+                  style="background: var(--color-primary-soft); color: var(--color-primary-strong); border-color: var(--color-primary-border);"
                   @click="$emit('use-template', tmpl.id)"
                 >
                   <i class="bi bi-magic"></i> Usar Template E-mail
@@ -141,17 +148,18 @@ const { customTemplatesRegistry } = useBuilderStore();
 const customEmailTemplates = computed(() => {
   return customTemplatesRegistry.filter(t => (t.category || '').toLowerCase().includes('mail'));
 });
+const customQuizTemplates = computed(() => customTemplatesRegistry.filter(t => t.quizMode || (t.category || '').toLowerCase().includes('quiz')));
 
 const categorizedFolders = computed(() => {
   const baseFolders = [
     {
       key: 'vsl',
-      name: '📁 Pasta: Templates VSL (Vídeo de Vendas)',
+      name: 'Pasta: Templates VSL (Vídeo de Vendas)',
       categoryKey: 'VSL',
       icon: 'bi bi-play-circle-fill',
-      color: '#34d399',
-      bgColor: 'rgba(16, 185, 129, 0.15)',
-      borderColor: 'rgba(16, 185, 129, 0.4)',
+      color: '#0ea5e9',
+      bgColor: '#e0f2fe',
+      borderColor: '#7dd3fc',
       defaultTemplates: [
         { id: 'vsl-1', title: 'VSL Vendas de Alta Conversão', subCategory: 'VSL', templateKey: 'vsl' }
       ]
@@ -162,7 +170,7 @@ const categorizedFolders = computed(() => {
     const customItems = customTemplatesRegistry.filter(t => {
       const cat = (t.category || '').toLowerCase();
       const targetCat = folder.categoryKey.toLowerCase();
-      if (targetCat === 'vsl') return cat.includes('vsl') || cat.includes('funil') || cat === '';
+      if (targetCat === 'vsl') return (cat.includes('vsl') || cat.includes('funil') || cat === '') && !cat.includes('quiz') && !cat.includes('mail');
       return cat.includes(targetCat);
     }).map(t => ({
       id: t.id,
@@ -188,8 +196,8 @@ const categorizedFolders = computed(() => {
 }
 
 .empty-email-templates {
-  background: rgba(23, 31, 48, 0.5);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: var(--color-surface-soft);
+  border: 1px dashed var(--color-border);
   border-radius: 20px;
   padding: 80px 24px;
   text-align: center;
@@ -198,8 +206,8 @@ const categorizedFolders = computed(() => {
 .empty-icon-box {
   width: 64px;
   height: 64px;
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -211,20 +219,20 @@ const categorizedFolders = computed(() => {
 .empty-email-templates h3 {
   font-size: 20px;
   font-weight: 800;
-  color: #fff;
+  color: var(--color-text);
   margin-bottom: 6px;
 }
 
 .empty-email-templates p {
-  color: #94a3b8;
+  color: var(--color-primary-deep);
   font-size: 14px;
   max-width: 450px;
   margin: 0 auto 20px auto;
 }
 
 .btn-primary-sm {
-  background: #6366f1;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   padding: 10px 20px;
   border-radius: 10px;
@@ -233,8 +241,8 @@ const categorizedFolders = computed(() => {
 }
 
 .template-category-block {
-  background: rgba(23, 31, 48, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 24px;
   margin-bottom: 24px;
@@ -246,7 +254,7 @@ const categorizedFolders = computed(() => {
   justify-content: space-between;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .category-title-badge {
@@ -256,11 +264,11 @@ const categorizedFolders = computed(() => {
 }
 
 .category-title-badge i { font-size: 20px; }
-.category-title-badge h3 { font-size: 17px; font-weight: 800; color: #fff; }
+.category-title-badge h3 { font-size: 17px; font-weight: 800; color: var(--color-text); }
 
 .category-count {
-  background: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
   font-size: 12px;
   font-weight: 700;
   padding: 3px 10px;
@@ -274,8 +282,8 @@ const categorizedFolders = computed(() => {
 }
 
 .page-item-card {
-  background: rgba(23, 31, 48, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -284,25 +292,25 @@ const categorizedFolders = computed(() => {
 }
 
 .page-item-card:hover {
-  background: rgba(30, 41, 62, 0.9);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-bright);
   transform: translateY(-4px);
 }
 
 .page-preview-box {
   height: 130px;
-  background: #111827;
+  background: var(--color-primary-soft);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .page-preview-mockup {
   width: 80%;
   height: 80%;
-  background: #1f2937;
+  background: var(--color-surface);
   border-radius: 8px;
   border: 1px solid;
   padding: 10px;
@@ -312,14 +320,15 @@ const categorizedFolders = computed(() => {
   opacity: 0.8;
 }
 
-.mockup-line { height: 8px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+.mockup-line { height: 8px; background: var(--color-border); border-radius: 4px; }
 .mockup-btn { height: 14px; border-radius: 4px; width: 40%; margin-top: 4px; }
 
 .category-badge-tag {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 8px;
@@ -330,8 +339,8 @@ const categorizedFolders = computed(() => {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(99, 102, 241, 0.25);
-  color: #a5b4fc;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
   font-size: 10px;
   font-weight: 800;
   padding: 2px 8px;
@@ -339,35 +348,41 @@ const categorizedFolders = computed(() => {
 }
 
 .page-item-info { padding: 14px; display: flex; flex-direction: column; flex: 1; }
-.page-item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #fff; }
-.page-item-date { font-size: 11.5px; color: #94a3b8; margin-bottom: 12px; }
+.page-item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--color-text); }
+.page-item-date { font-size: 11.5px; color: var(--color-primary-deep); margin-bottom: 12px; }
 
 .page-item-actions { display: flex; align-items: center; gap: 8px; margin-top: auto; }
 .btn-edit-builder { flex: 1; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid; }
 
 /* Email template preview mockup */
 .email-preview-box {
-  background: #f5f5f7 !important;
+  background: var(--color-primary-subtle) !important;
 }
 
 .email-mockup {
   width: 75%; height: 80%;
   border-radius: 6px; overflow: hidden;
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  border: 1px solid var(--color-primary-border);
   display: flex; flex-direction: column;
 }
 
-.em-header { height: 22%; background: #27272a; flex-shrink: 0; }
-.em-body { flex: 1; background: #ffffff; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
-.em-footer { height: 18%; background: #27272a; flex-shrink: 0; }
-.em-line { height: 6px; background: #d4d4d8; border-radius: 3px; }
+.template-email-header { height: 22%; background: var(--color-primary-strong); flex-shrink: 0; }
+.em-body { flex: 1; background: var(--color-surface); padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.template-email-footer { height: 18%; background: var(--color-primary-strong); flex-shrink: 0; }
+.em-line { height: 6px; background: var(--color-border); border-radius: 3px; }
 .em-line.short { width: 55%; }
-.em-btn { height: 10px; background: #27272a; border-radius: 3px; width: 40%; margin-top: 4px; }
+.template-email-button { height: 10px; background: var(--color-primary); border-radius: 3px; width: 40%; margin-top: 4px; }
+.quiz-preview-box{background:var(--color-primary-subtle)}.quiz-mockup{width:52%;height:82%;margin:auto;padding:12px 9px;display:flex;flex-direction:column;gap:7px;border:2px solid var(--color-primary-strong);border-radius:16px;background:var(--color-surface)}.quiz-bar{height:4px;border-radius:8px;background:var(--color-primary)}.quiz-option{height:18px;border:1px solid var(--color-border);border-radius:7px}.quiz-mockup .mockup-btn{margin-top:auto;height:14px;border-radius:6px}
 
 .badge-default-tag {
   position: absolute; top: 8px; right: 8px;
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8; font-size: 10px; font-weight: 800;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-bright); font-size: 10px; font-weight: 800;
   padding: 2px 8px; border-radius: 999px;
 }
+/* Superfícies claras para a biblioteca de templates. */
+.empty-email-templates, .template-category-block, .page-item-card { background:var(--color-surface); border-color:var(--color-border); }
+.empty-email-templates { border-style:dashed; }.empty-email-templates h3, .category-title-badge h3, .page-item-title { color:var(--color-text); }.empty-email-templates p, .page-item-date { color:var(--color-text-muted); }
+.empty-icon-box { background:var(--color-primary-soft); color:var(--color-primary-hover); }.btn-primary-sm { background:var(--color-primary); }.category-header { border-color:var(--color-primary-soft); }.category-count { background:var(--color-primary-soft); color:var(--color-primary-strong); }
+.page-item-card:hover { background:var(--color-primary-subtle); border-color:var(--color-primary-bright); }.page-preview-box { background:var(--color-primary-soft); border-color:var(--color-border); }.page-preview-mockup { background:var(--color-surface); border-color:var(--color-border); }.mockup-line { background:var(--color-border); }.mockup-btn { background:var(--color-primary); }.category-badge-tag { background:var(--color-surface); color:var(--color-primary-strong); }.btn-edit-builder { background:var(--color-primary-soft); color:var(--color-primary-strong); border-color:var(--color-border-strong); }.btn-item-more { background:var(--color-surface-soft); border-color:var(--color-border); color:var(--color-text-muted); }
 </style>

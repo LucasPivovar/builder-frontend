@@ -3,13 +3,13 @@
     <div class="container nav-container">
       <a href="#" class="nav-brand" @click.prevent="$emit('navigate', 'landing')">
         <div class="brand-logo"><i class="bi bi-diagram-3-fill"></i></div>
-        <span>Visual Builder Studio</span>
+        <span>Funil Builder</span>
       </a>
 
       <ul class="nav-links">
         <li><a href="#recursos">Recursos</a></li>
-        <li><a href="#planos">Planos</a></li>
-        <li><a href="#depoimentos">Depoimentos</a></li>
+        <li><a href="#planos">Como começar</a></li>
+        <li><a href="#depoimentos">Formatos</a></li>
         <li><a href="#faq">FAQ</a></li>
       </ul>
 
@@ -54,19 +54,19 @@ defineEmits(['navigate']);
   gap: 10px;
   font-size: 18px;
   font-weight: 800;
-  color: #fff;
+  color: var(--color-surface);
   text-decoration: none;
 }
 
 .brand-logo {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #6366f1, #38bdf8);
+  background: var(--color-primary);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--color-surface);
   font-size: 18px;
 }
 
@@ -78,7 +78,7 @@ defineEmits(['navigate']);
 }
 
 .nav-links a {
-  color: #94a3b8;
+  color: var(--color-text-soft);
   text-decoration: none;
   font-weight: 600;
   font-size: 14.5px;
@@ -86,7 +86,7 @@ defineEmits(['navigate']);
 }
 
 .nav-links a:hover {
-  color: #fff;
+  color: var(--color-surface);
 }
 
 .nav-actions {
@@ -98,7 +98,7 @@ defineEmits(['navigate']);
 .btn-outline {
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: transparent;
-  color: #fff;
+  color: var(--color-surface);
   padding: 9px 20px;
   border-radius: 10px;
   font-size: 14px;
@@ -107,14 +107,14 @@ defineEmits(['navigate']);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   padding: 9px 22px;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  box-shadow: none;
 }
 </style>

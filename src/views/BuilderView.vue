@@ -2,7 +2,10 @@
   <div class="builder-view">
     <Header
       @open-export="openExport"
-      @open-save="isSaveModalOpen = true"
+      @open-save="handleSave"
+      @open-preview="openPreviewModal"
+      @open-versions="openVersionModal"
+      @open-metrics="openMetricsModal"
     />
 
     <div class="app-container">
@@ -13,9 +16,10 @@
     <!-- Modals -->
     <ElementModal />
     <ExportModal />
+    <PreviewModal />
+    <VersionModal />
+    <MetricsModal />
     <SavePageModal :isOpen="isSaveModalOpen" @close="isSaveModalOpen = false" @saved="onPageSaved" />
-    <ToastNotification />
-    <PageSummaryModal v-if="state.isSummaryModalOpen" @close="closeSummaryModal" />
   </div>
 </template>
 
@@ -27,20 +31,30 @@ import CanvasWorkspace from '../components/CanvasWorkspace.vue';
 import ElementModal from '../components/ElementModal.vue';
 import ExportModal from '../components/ExportModal.vue';
 import SavePageModal from '../components/SavePageModal.vue';
-import ToastNotification from '../components/ToastNotification.vue';
-import PageSummaryModal from '../components/PageSummaryModal.vue';
+import PreviewModal from '../components/PreviewModal.vue';
+import VersionModal from '../components/VersionModal.vue';
+import MetricsModal from '../components/MetricsModal.vue';
 
 import { useBuilderStore } from '../composables/useBuilderStore';
 
-const { state, showToast, closeSummaryModal, openExportModal } = useBuilderStore();
+const { state, showToast, openExportModal, openPreviewModal, openVersionModal, openMetricsModal, saveTemplateFromBuilder, flushWorkspaceToBackend } = useBuilderStore();
 const isSaveModalOpen = ref(false);
 
 function openExport() {
   openExportModal();
 }
 
+async function handleSave() {
+  if (!state.isTemplateBuilder) {
+    isSaveModalOpen.value = true;
+    return;
+  }
+  const template = saveTemplateFromBuilder();
+  if (template) await flushWorkspaceToBackend().catch(() => false);
+}
+
 function onPageSaved(page) {
-  showToast(`✅ "${page.name}" salva com sucesso!`, 'success');
+  showToast(`"${page.name}" salva com sucesso!`, 'success');
 }
 </script>
 
@@ -51,7 +65,7 @@ function onPageSaved(page) {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: #0b0f19;
+  background: var(--color-primary-soft);
 }
 
 .app-container {

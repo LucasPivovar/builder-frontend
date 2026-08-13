@@ -70,8 +70,8 @@ defineEmits(['update:filterPill', 'update:selectedCategory']);
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: rgba(23, 31, 48, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 8px 12px;
   margin: 20px 0 28px 0;
@@ -87,7 +87,7 @@ defineEmits(['update:filterPill', 'update:selectedCategory']);
 .pill-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
@@ -97,14 +97,14 @@ defineEmits(['update:filterPill', 'update:selectedCategory']);
 }
 
 .pill-btn.active {
-  background: #6366f1;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .filter-select {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   font-size: 13px;
   padding: 7px 12px;
   border-radius: 8px;

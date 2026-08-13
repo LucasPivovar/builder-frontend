@@ -41,6 +41,19 @@
         <span class="badge-count">{{ funilPagesCount }}</span>
       </a>
 
+      <a
+        class="menu-item"
+        :class="{ active: activeTab === 'email-pages' }"
+        @click="$emit('select-tab', 'email-pages')"
+      >
+        <i class="bi bi-envelope-paper-fill"></i>
+        <span>E-mails</span>
+        <span class="badge-count">{{ emailPagesCount }}</span>
+      </a>
+      <a class="menu-item" :class="{ active: activeTab === 'quiz-pages' }" @click="$emit('select-tab', 'quiz-pages')">
+        <i class="bi bi-ui-checks-grid"></i><span>Quizzes</span><span class="badge-count">{{ quizPagesCount }}</span>
+      </a>
+
       <!-- Label de Categoria: ORGANIZAÇÃO -->
       <div class="menu-group-title" style="margin-top: 18px;">
         <span>ORGANIZAÇÃO</span>
@@ -63,12 +76,22 @@
 
       <a
         class="menu-item"
+        :class="{ active: activeTab === 'templates' }"
+        @click="$emit('select-tab', 'templates')"
+      >
+        <i class="bi bi-collection-fill"></i>
+        <span>Todos os Templates</span>
+        <span class="badge-count">{{ funilTemplatesCount + emailTemplatesCount + quizTemplatesCount }}</span>
+      </a>
+
+      <a
+        class="menu-item"
         :class="{ active: activeTab === 'templates-funil' }"
         @click="$emit('select-tab', 'templates-funil')"
       >
         <i class="bi bi-grid-1x2-fill"></i>
         <span>Templates de Funil</span>
-        <span class="badge-count">{{ templatesCount }}</span>
+        <span class="badge-count">{{ funilTemplatesCount }}</span>
       </a>
 
       <a
@@ -78,7 +101,10 @@
       >
         <i class="bi bi-envelope-paper-fill"></i>
         <span>Templates de E-mail</span>
-        <span class="badge-count empty-badge">0</span>
+        <span class="badge-count">{{ emailTemplatesCount }}</span>
+      </a>
+      <a class="menu-item" :class="{ active: activeTab === 'templates-quiz' }" @click="$emit('select-tab', 'templates-quiz')">
+        <i class="bi bi-ui-checks-grid"></i><span>Templates de Quiz</span><span class="badge-count">{{ quizTemplatesCount }}</span>
       </a>
 
       <!-- Label de Categoria: CONTA & SISTEMA -->
@@ -87,11 +113,12 @@
       </div>
 
       <a
+        v-if="currentUser?.role === 'admin'"
         class="menu-item admin-item"
         :class="{ active: activeTab === 'admin' }"
         @click="$emit('select-tab', 'admin')"
       >
-        <i class="bi bi-shield-lock-fill" style="color: #ef4444;"></i>
+        <i class="bi bi-shield-lock-fill"></i>
         <span>Painel Admin</span>
         <span class="admin-badge-sm">ADMIN</span>
       </a>
@@ -116,32 +143,45 @@
     </nav>
 
     <div class="sidebar-user" @click="$emit('select-tab', 'settings')" style="cursor: pointer;">
-      <div class="user-avatar">L</div>
+      <div class="user-avatar">{{ userInitial }}</div>
       <div class="user-details">
-        <span class="user-name">Lucas Wallysson</span>
-        <span class="user-plan">Plano Pro Performance</span>
+        <span class="user-name">{{ currentUser?.name || 'Seu espaço' }}</span>
+        <span class="user-plan">{{ currentUser?.email || 'Plano local' }}</span>
       </div>
     </div>
   </aside>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+defineEmits(['select-tab']);
+
+const props = defineProps({
   activeTab: String,
   pagesCount: Number,
   funilPagesCount: Number,
+  emailPagesCount: Number,
+  quizPagesCount: Number,
   foldersCount: Number,
-  templatesCount: Number
+  templatesCount: Number,
+  funilTemplatesCount: { type: Number, default: 1 },
+  emailTemplatesCount: { type: Number, default: 1 },
+  quizTemplatesCount: { type: Number, default: 1 },
+  currentUser: { type: Object, default: null }
 });
 
-defineEmits(['select-tab']);
+const userInitial = computed(() => {
+  const name = props.currentUser?.name || props.currentUser?.email || 'S';
+  return name.trim().charAt(0).toUpperCase();
+});
 </script>
 
 <style scoped>
 .sidebar {
   width: 260px;
-  background: #0f1523;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -153,25 +193,25 @@ defineEmits(['select-tab']);
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .brand-icon {
   width: 38px;
   height: 38px;
-  background: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
+  background: var(--color-primary);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--color-surface);
   font-size: 20px;
 }
 
 .brand-name {
   font-size: 17px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .sidebar-menu {
@@ -184,7 +224,7 @@ defineEmits(['select-tab']);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.2px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   margin: 18px 12px 6px 12px;
   text-transform: uppercase;
 }
@@ -194,7 +234,7 @@ defineEmits(['select-tab']);
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
@@ -204,26 +244,26 @@ defineEmits(['select-tab']);
 }
 
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  background: var(--color-primary-subtle);
+  color: var(--color-text);
 }
 
 .menu-item.active {
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  border: 1px solid var(--color-border-strong);
 }
 
 .menu-item.admin-item.active {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-strong);
+  border: 1px solid var(--color-danger-border);
 }
 
 .admin-badge-sm {
   margin-left: auto;
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  background: var(--color-danger-soft);
+  color: var(--color-danger-strong);
   font-size: 10px;
   font-weight: 800;
   padding: 2px 6px;
@@ -232,8 +272,8 @@ defineEmits(['select-tab']);
 
 .badge-count {
   margin-left: auto;
-  background: rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
@@ -246,7 +286,7 @@ defineEmits(['select-tab']);
 
 .sidebar-user {
   padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -256,12 +296,12 @@ defineEmits(['select-tab']);
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #10b981, #6366f1);
+  background: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-surface);
 }
 
 .user-details {
@@ -269,6 +309,14 @@ defineEmits(['select-tab']);
   flex-direction: column;
 }
 
-.user-name { font-size: 13.5px; font-weight: 700; }
-.user-plan { font-size: 11.5px; color: #38bdf8; }
+.user-name { font-size: 13.5px; font-weight: 700; color:var(--color-text); }
+.user-plan { font-size: 11.5px; color: var(--color-primary-bright); }
+
+@media (max-width: 760px) {
+  .sidebar { width: 100%; height: 56px; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--color-border); overflow: hidden; }
+  .sidebar-brand, .sidebar-user, .menu-group-title, .menu-item span:not(.badge-count) { display: none; }
+  .sidebar-menu { display: flex; align-items: center; justify-content: space-between; gap: 5px; padding: 7px 10px; overflow: hidden; }
+  .menu-item { flex: 0 0 38px; justify-content: center; padding: 9px; margin: 0; }
+  .menu-item:nth-of-type(6), .menu-item:nth-of-type(7), .menu-item:nth-of-type(9), .menu-item .badge-count { display: none; }
+}
 </style>

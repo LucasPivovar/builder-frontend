@@ -15,9 +15,9 @@ defineEmits(['navigate']);
 
 <style scoped>
 .auth-page-wrapper {
-  background-color: #090d16;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  color: #f8fafc;
+  background-color: var(--color-primary-subtle);
+  font-family: var(--font-sans);
+  color: var(--color-surface-soft);
   min-height: 100vh;
   width: 100vw;
   display: flex;
@@ -25,7 +25,7 @@ defineEmits(['navigate']);
   justify-content: center;
   padding: 20px;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .glow-circle-1 {
@@ -34,7 +34,7 @@ defineEmits(['navigate']);
   left: -150px;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+  background: var(--color-primary-soft);
   pointer-events: none;
 }
 
@@ -44,7 +44,7 @@ defineEmits(['navigate']);
   right: -150px;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%);
+  background: var(--color-border);
   pointer-events: none;
 }
 </style>

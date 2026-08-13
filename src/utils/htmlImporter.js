@@ -43,7 +43,7 @@ export function parseHTMLToBuilderState(htmlString) {
             const banner = elemNode.querySelector('.canvas-top-banner');
             const bg = banner?.style.background || banner?.style.backgroundColor || '#dc2626';
             const color = banner?.style.color || '#ffffff';
-            const content = banner?.textContent?.trim() || '⚠️ ATENÇÃO NÃO FECHE ESTA PÁGINA ⚠️';
+            const content = banner?.textContent?.trim() || 'ATENÇÃO: NÃO FECHE ESTA PÁGINA';
 
             elements.push({
               id: `elem-imp-${Date.now()}-${rIdx}-${cIdx}-${eIdx}`,

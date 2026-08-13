@@ -3,15 +3,15 @@
     <div class="auth-card">
       <!-- Brand -->
       <div class="auth-brand">
-        <div class="brand-logo">🚀</div>
-        <h1>Visual Builder Studio</h1>
+        <div class="brand-logo"><i class="bi bi-diagram-3-fill"></i></div>
+        <h1>Funil Builder</h1>
         <p>Crie páginas de funil e templates profissionais</p>
       </div>
 
       <!-- Tabs -->
       <div class="auth-tabs">
-        <button class="tab-btn" :class="{ active: mode === 'login' }" @click="mode = 'login'">Entrar</button>
-        <button class="tab-btn" :class="{ active: mode === 'register' }" @click="mode = 'register'">Criar conta</button>
+        <button type="button" class="tab-btn" :class="{ active: mode === 'login' }" @click="switchMode('login')">Entrar</button>
+        <button type="button" class="tab-btn" :class="{ active: mode === 'register' }" @click="switchMode('register')">Criar conta</button>
       </div>
 
       <!-- Login Form -->
@@ -58,23 +58,6 @@
           <span v-else><i class="bi bi-hourglass-split"></i> Aguarde...</span>
         </button>
 
-        <div class="auth-divider"><span>ou continue com</span></div>
-
-        <div class="social-buttons">
-          <button type="button" class="btn-social">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Google
-          </button>
-          <button type="button" class="btn-social">
-            <i class="bi bi-github" style="color: #fff;"></i>
-            GitHub
-          </button>
-        </div>
       </form>
 
       <!-- Register Form -->
@@ -169,11 +152,15 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import { login, register, storeAuthSession } from '../../services/api';
+import { useBuilderStore } from '../../composables/useBuilderStore';
 
 const router = useRouter();
+const route = useRoute();
+const { hydrateWorkspaceFromBackend } = useBuilderStore();
 
-const mode = ref('login');
+const mode = ref(route.query.mode === 'register' ? 'register' : 'login');
 const loading = ref(false);
 const showPass = ref(false);
 
@@ -192,6 +179,18 @@ const regConfirmPassword = ref('');
 const acceptTerms = ref(false);
 const registerError = ref('');
 const registerSuccess = ref('');
+
+const redirectTarget = computed(() => {
+  const target = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard';
+  return target.startsWith('/') && !target.startsWith('//') ? target : '/dashboard';
+});
+
+function switchMode(nextMode) {
+  mode.value = nextMode;
+  loginError.value = '';
+  registerError.value = '';
+  registerSuccess.value = '';
+}
 
 const passwordStrength = computed(() => {
   const p = regPassword.value;
@@ -213,27 +212,26 @@ const passwordStrengthClass = computed(() => {
 });
 
 const passwordStrengthLabel = computed(() => {
-  const m = { weak: '⚠️ Fraca', fair: '📊 Razoável', good: '👍 Boa', strong: '🔒 Forte' };
+  const m = { weak: 'Fraca', fair: 'Razoável', good: 'Boa', strong: 'Forte' };
   return m[passwordStrengthClass.value];
 });
 
 async function handleLogin() {
   loginError.value = '';
   loading.value = true;
-  await new Promise(r => setTimeout(r, 800));
-  loading.value = false;
-
-  // Simulate auth (localStorage)
-  const users = JSON.parse(localStorage.getItem('vbs_users') || '[]');
-  const user = users.find(u => u.email === loginEmail.value && u.password === loginPassword.value);
-
-  if (user || loginEmail.value === 'admin@test.com') {
-    const currentUser = user || { name: 'Admin', email: loginEmail.value };
-    localStorage.setItem('vbs_current_user', JSON.stringify(currentUser));
-    localStorage.setItem('vbs_logged_in', 'true');
-    router.push('/dashboard');
-  } else {
-    loginError.value = 'E-mail ou senha incorretos. Tente novamente.';
+  try {
+    const session = await login({
+      email: loginEmail.value.trim().toLowerCase(),
+      password: loginPassword.value,
+      remember: rememberMe.value
+    });
+    storeAuthSession(session, rememberMe.value);
+    await hydrateWorkspaceFromBackend();
+    router.push(redirectTarget.value);
+  } catch (error) {
+    loginError.value = error.message || 'Não foi possível entrar.';
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -243,25 +241,23 @@ async function handleRegister() {
   if (regPassword.value !== regConfirmPassword.value) { registerError.value = 'Senhas não coincidem.'; return; }
   if (!acceptTerms.value) { registerError.value = 'Aceite os termos de uso.'; return; }
   loading.value = true;
-  await new Promise(r => setTimeout(r, 900));
-  loading.value = false;
-
-  const users = JSON.parse(localStorage.getItem('vbs_users') || '[]');
-  if (users.find(u => u.email === regEmail.value)) {
-    registerError.value = 'Este e-mail já está cadastrado.';
-    return;
+  try {
+    const session = await register({
+      name: regName.value.trim(),
+      lastName: regLastName.value.trim(),
+      email: regEmail.value.trim().toLowerCase(),
+      password: regPassword.value,
+      remember: true
+    });
+    storeAuthSession(session, true);
+    await hydrateWorkspaceFromBackend();
+    registerSuccess.value = 'Conta criada! Abrindo seu painel...';
+    setTimeout(() => router.push(redirectTarget.value), 350);
+  } catch (error) {
+    registerError.value = error.message || 'Não foi possível criar a conta.';
+  } finally {
+    loading.value = false;
   }
-
-  users.push({
-    id: 'user-' + Date.now(),
-    name: `${regName.value} ${regLastName.value}`.trim(),
-    email: regEmail.value,
-    password: regPassword.value,
-    createdAt: new Date().toISOString()
-  });
-  localStorage.setItem('vbs_users', JSON.stringify(users));
-  registerSuccess.value = '✅ Conta criada! Redirecionando para login...';
-  setTimeout(() => { mode.value = 'login'; registerSuccess.value = ''; }, 1800);
 }
 </script>
 
@@ -271,9 +267,7 @@ async function handleRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-              radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
-              #08091a;
+  background: var(--color-primary-subtle);
   padding: 20px;
 }
 
@@ -289,51 +283,51 @@ async function handleRegister() {
 
 .auth-brand { text-align: center; margin-bottom: 28px; }
 .brand-logo { font-size: 40px; margin-bottom: 10px; }
-.auth-brand h1 { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 4px; }
-.auth-brand p { font-size: 13.5px; color: #94a3b8; }
+.auth-brand h1 { font-size: 22px; font-weight: 900; color: var(--color-surface); margin-bottom: 4px; }
+.auth-brand p { font-size: 13.5px; color: var(--color-text-soft); }
 
 .auth-tabs { display: flex; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 3px; margin-bottom: 24px; }
-.tab-btn { flex: 1; padding: 9px; border-radius: 10px; border: none; background: none; color: #94a3b8; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.tab-btn.active { background: #6366f1; color: #fff; }
+.tab-btn { flex: 1; padding: 9px; border-radius: 10px; border: none; background: none; color: var(--color-text-soft); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.tab-btn.active { background: var(--color-primary); color: var(--color-surface); }
 
 .auth-form { display: flex; flex-direction: column; gap: 0; }
 
 .form-group { margin-bottom: 14px; }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.form-label { display: block; font-size: 12px; font-weight: 700; color: #e2e8f0; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: var(--color-border); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .input-wrapper { position: relative; }
-.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 14px; pointer-events: none; }
-.btn-toggle-pass { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; padding: 4px; }
+.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-soft); font-size: 14px; pointer-events: none; }
+.btn-toggle-pass { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-text-soft); cursor: pointer; font-size: 14px; padding: 4px; }
 
 .form-input {
   width: 100%; padding: 10px 14px 10px 38px;
   background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px; color: #fff; font-size: 14px; outline: none;
+  border-radius: 10px; color: var(--color-surface); font-size: 14px; outline: none;
   transition: border-color 0.2s;
 }
 
-.form-input:focus { border-color: #6366f1; }
+.form-input:focus { border-color: var(--color-primary); }
 .form-input.has-icon-right { padding-right: 38px; }
 
 .form-row-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 
-.check-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #94a3b8; cursor: pointer; }
-.check-label input[type="checkbox"] { accent-color: #6366f1; width: 14px; height: 14px; cursor: pointer; }
+.check-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-soft); cursor: pointer; }
+.check-label input[type="checkbox"] { accent-color: var(--color-primary); width: 14px; height: 14px; cursor: pointer; }
 
-.link-forgot, .link-terms { color: #818cf8; font-size: 12.5px; text-decoration: none; font-weight: 600; }
-.link-forgot:hover, .link-terms:hover { color: #a5b4fc; text-decoration: underline; }
+.link-forgot, .link-terms { color: var(--color-primary-hover); font-size: 12.5px; text-decoration: none; font-weight: 600; }
+.link-forgot:hover, .link-terms:hover { color: var(--color-primary-strong); text-decoration: underline; }
 
 .password-strength { margin-top: 6px; display: flex; align-items: center; gap: 8px; }
 .strength-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
 .strength-fill { height: 100%; border-radius: 999px; transition: width 0.3s, background 0.3s; }
 .strength-fill.weak { background: #ef4444; }
-.strength-fill.fair { background: #f59e0b; }
+.strength-fill.fair { background: var(--color-primary-bright); }
 .strength-fill.good { background: #3b82f6; }
 .strength-fill.strong { background: #10b981; }
 .strength-label { font-size: 11px; font-weight: 700; white-space: nowrap; }
 .strength-label.weak { color: #ef4444; }
-.strength-label.fair { color: #f59e0b; }
+.strength-label.fair { color: var(--color-primary-hover); }
 .strength-label.good { color: #3b82f6; }
 .strength-label.strong { color: #10b981; }
 
@@ -347,20 +341,20 @@ async function handleRegister() {
 
 .success-message {
   background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #34d399; padding: 8px 12px; border-radius: 8px; font-size: 13px;
+  color: var(--color-primary-strong); padding: 8px 12px; border-radius: 8px; font-size: 13px;
   display: flex; align-items: center; gap: 6px; margin-bottom: 14px;
 }
 
 .btn-auth {
   width: 100%; padding: 12px;
-  background: #6366f1; border: none; color: #fff;
+  background: var(--color-primary); border: none; color: var(--color-surface);
   font-size: 15px; font-weight: 800; border-radius: 12px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+  box-shadow: none;
   transition: all 0.2s;
 }
 
-.btn-auth:hover { background: #5558e8; }
+.btn-auth:hover { background: var(--color-primary-hover); }
 .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .auth-divider { text-align: center; margin: 20px 0 14px; position: relative; }
@@ -370,7 +364,7 @@ async function handleRegister() {
 }
 .auth-divider span {
   position: relative; background: #0d1220; padding: 0 12px;
-  color: #64748b; font-size: 12px;
+  color: var(--color-text-muted); font-size: 12px;
 }
 
 .social-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -378,9 +372,34 @@ async function handleRegister() {
 .btn-social {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0; padding: 10px; border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  color: var(--color-border); padding: 10px; border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-social:hover { background: rgba(255, 255, 255, 0.1); }
+
+/* Auth follows the same clear sky-blue visual language as the studio. */
+.auth-wrapper { background: var(--color-primary-subtle); }
+.auth-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 18px 46px rgba(14, 116, 144, 0.14);
+}
+.auth-brand h1 { color: var(--color-text); }
+.auth-brand p, .form-label, .check-label { color: var(--color-text-secondary); }
+.brand-logo { color: var(--color-surface); }
+.auth-tabs { background: var(--color-primary-soft); }
+.tab-btn { color: var(--color-primary-strong); }
+.tab-btn.active { background: var(--color-primary); color: var(--color-surface); }
+.form-input { background: var(--color-surface-soft); border-color: var(--color-border); color: var(--color-text); }
+.form-input::placeholder { color: var(--color-text-soft); }
+.form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, .13); }
+.input-icon, .btn-toggle-pass { color: var(--color-primary-hover); }
+.link-forgot, .link-terms { color: var(--color-primary-hover); }
+.btn-auth { background: var(--color-primary); box-shadow: 0 6px 16px rgba(14, 165, 233, .24); }
+.btn-auth:hover { background: var(--color-primary-hover); }
+.auth-divider::before { background: var(--color-primary-soft); }
+.auth-divider span { background: var(--color-surface); color: var(--color-text-muted); }
+.btn-social { background: var(--color-surface-soft); border-color: var(--color-border); color: var(--color-text); }
+.btn-social:hover { background: var(--color-primary-soft); }
 </style>

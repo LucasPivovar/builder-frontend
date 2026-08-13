@@ -9,7 +9,7 @@
       <div class="features-grid">
         <div class="feature-card">
           <div class="icon-box"><i class="bi bi-cursor-fill"></i></div>
-          <h3>Editor Drag & Drop Vivo</h3>
+          <h3>Editor visual</h3>
           <p>Arraste elementos, configure estilos em tempo real e visualize o resultado final na hora.</p>
         </div>
 
@@ -33,14 +33,14 @@
 
         <div class="feature-card">
           <div class="icon-box"><i class="bi bi-code-slash"></i></div>
-          <h3>Exportação Clean HTML</h3>
-          <p>Baixe o código HTML puro sem dependências pesadas, super leve e otimizado para SEO.</p>
+          <h3>Exportação em HTML</h3>
+          <p>Revise, copie ou baixe o código HTML para publicar na hospedagem de sua preferência.</p>
         </div>
 
         <div class="feature-card">
-          <div class="icon-box"><i class="bi bi-shield-lock-fill"></i></div>
-          <h3>Hospedagem & Domínios</h3>
-          <p>Conecte seus próprios domínios personalizados e publique páginas com SSL nativo.</p>
+          <div class="icon-box"><i class="bi bi-clock-history"></i></div>
+          <h3>Salvamento e recuperação</h3>
+          <p>Mantenha páginas e pastas no backend local, com histórico para recuperar alterações.</p>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
 }
 
 .section-subtitle {
-  color: #94a3b8;
+  color: var(--color-text-soft);
   font-size: 16px;
 }
 
@@ -90,19 +90,19 @@
 
 .feature-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: var(--color-primary-bright);
 }
 
 .icon-box {
   width: 56px;
   height: 56px;
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--color-primary-soft);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #818cf8;
+  color: var(--color-primary);
   margin-bottom: 20px;
 }
 
@@ -114,6 +114,6 @@
 
 .feature-card p {
   font-size: 14.5px;
-  color: #94a3b8;
+  color: var(--color-text-soft);
 }
 </style>

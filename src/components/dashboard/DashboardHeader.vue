@@ -11,11 +11,9 @@
     </div>
 
     <div class="header-actions">
-      <button class="btn-create-blank" @click="$emit('open-builder')">
-        <i class="bi bi-plus-lg"></i> Criar em Branco
-      </button>
-      <button class="btn-icon-top" @click="$emit('notify')" title="Notificações">
+      <button class="btn-icon-top notification-trigger" @click="$emit('notify')" title="Notificações">
         <i class="bi bi-bell"></i>
+        <span v-if="unreadCount" class="notification-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
       </button>
       <button class="btn-icon-top" @click="$emit('open-auth')" title="Sair">
         <i class="bi bi-box-arrow-right"></i>
@@ -26,7 +24,8 @@
 
 <script setup>
 defineProps({
-  searchQuery: String
+  searchQuery: String,
+  unreadCount: { type: Number, default: 0 }
 });
 
 defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
@@ -35,8 +34,8 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
 <style scoped>
 .header-topbar {
   height: 64px;
-  background: #0f1523;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -54,16 +53,16 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--color-text-soft);
 }
 
 .header-search input {
   width: 100%;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 9px 14px 9px 38px;
-  color: #fff;
+  color: var(--color-text);
   font-size: 13.5px;
   outline: none;
 }
@@ -75,8 +74,8 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
 }
 
 .btn-create-blank {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   padding: 9px 20px;
   border-radius: 10px;
@@ -86,19 +85,32 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  box-shadow: none;
 }
 
 .btn-icon-top {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+.notification-trigger { position: relative; }
+.notification-badge { position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:var(--color-on-primary); border:2px solid var(--color-surface); font-size:9px; font-weight:900; }
+
+@media (max-width: 700px) {
+  .header-topbar { height: 56px; padding: 0 12px; gap: 10px; }
+  .header-search { flex: 1; width: auto; }
+  .header-search input { font-size: 12px; }
+  .header-actions { gap: 6px; }
+  .btn-create-blank { width: 36px; height: 36px; padding: 0; justify-content: center; font-size: 0; }
+  .btn-create-blank i { font-size: 17px; }
+  .btn-icon-top { width: 36px; height: 36px; }
+  .btn-icon-top:last-child { display: none; }
 }
 </style>

@@ -1,17 +1,17 @@
 <template>
   <div v-if="state.isElementModalOpen && elem" class="element-modal-overlay">
-    <div class="element-modal-box">
+    <div class="element-modal-box tour-element-modal" :class="{ 'is-global-settings': elem.isGlobalSettings }">
 
       <!-- HEADER -->
       <div class="em-header">
         <div class="em-header-left">
           <span class="em-title">
-            <template v-if="elem.isGlobalSettings">⚙️ Configurações Gerais</template>
+            <template v-if="elem.isGlobalSettings"><i class="bi bi-gear-fill"></i> Configurações Gerais</template>
             <template v-else>Editando: <strong>{{ getTypeTitle(elem) }}</strong></template>
           </span>
           <span class="em-badge">Desktop</span>
         </div>
-        <button class="em-close" @click="saveAndClose">✕</button>
+        <button class="em-close" @click="saveAndClose"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="em-subinfo">
         <span v-if="!elem.isGlobalSettings">Classe: {{ elem.type }}-element &nbsp;·&nbsp; ID: division-{{ elem.id }}</span>
@@ -37,9 +37,9 @@
                 <div v-for="col in row.columns" :key="col.id" class="mini-builder-col" :style="{ flex: col.flex || 1 }">
                   <div v-for="e in col.elements" :key="e.id" class="mini-canvas-elem">
                     <TopBannerElement v-if="e.type === 'top-banner'" :element="e" />
-                    <HeadingElement v-else-if="e.type === 'heading'" :element="e" />
+                    <HeadingElement v-else-if="e.type === 'heading' || e.type === 'quiz-question'" :element="e" />
                     <ParagraphElement v-else-if="e.type === 'paragraph'" :element="e" />
-                    <ButtonElement v-else-if="e.type === 'button'" :element="e" />
+                    <ButtonElement v-else-if="e.type === 'button' || e.type === 'quiz-next'" :element="e" />
                     <VturbPlayerElement v-else-if="e.type === 'vturb-player'" :element="e" />
                     <PitchButtonElement v-else-if="e.type === 'pitch-button'" :element="e" />
                     <LiveViewersElement v-else-if="e.type === 'live-viewers'" :element="e" />
@@ -54,6 +54,33 @@
               <label class="em-lbl">Título da Página (&lt;title&gt;)</label>
               <input v-model="state.pageSettings.pageTitle" class="em-input" type="text" placeholder="Página de Vendas - VSL" />
             </div>
+            <div class="em-field em-full global-theme-presets-box">
+              <label class="em-lbl"><i class="bi bi-palette-fill"></i> Esquema de Cores Global (Aplica em TODOS os elementos da página)</label>
+              <span class="theme-subtitle">Clique em um tema para harmonizar a cor de fundo, títulos, parágrafos, botões e banners de uma só vez:</span>
+
+              <div class="theme-cards-grid">
+                <div
+                  v-for="t in colorThemesList"
+                  :key="t.key"
+                  class="theme-card"
+                  :class="{ active: state.activeThemeKey === t.key }"
+                  @click="applyGlobalColorTheme(t.key)"
+                >
+                  <div class="theme-card-header">
+                    <span class="theme-name">{{ t.name }}</span>
+                    <i v-if="state.activeThemeKey === t.key" class="bi bi-check-circle-fill active-check"></i>
+                    <span v-else class="theme-tag">{{ t.tag }}</span>
+                  </div>
+                  <div class="theme-dots">
+                    <span class="dot-preview" :style="{ background: t.pageBg }" title="Fundo"></span>
+                    <span class="dot-preview" :style="{ background: t.headingAlt }" title="Destaque"></span>
+                    <span class="dot-preview" :style="{ background: t.btnBg }" title="Botão"></span>
+                    <span class="dot-preview" :style="{ background: t.headingText }" title="Texto"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="em-field">
               <label class="em-lbl">Cor de Fundo da Página</label>
               <div class="em-color-row">
@@ -80,10 +107,40 @@
               <label class="em-lbl">Espaçamento entre Seções (px)</label>
               <input v-model.number="state.pageSettings.sectionGap" class="em-input" type="number" min="0" max="100" placeholder="16" />
             </div>
+            <div v-if="state.builderMode === 'quiz'" class="quiz-progress-settings em-full">
+              <div class="quiz-progress-settings-copy">
+                <span class="quiz-progress-settings-icon"><i class="bi bi-bar-chart-steps"></i></span>
+                <div>
+                  <strong>Barra de progresso do quiz</strong>
+                  <small>O percentual é calculado automaticamente conforme a etapa atual.</small>
+                </div>
+              </div>
+              <div class="quiz-progress-settings-controls">
+                <div class="em-field">
+                  <label class="em-lbl">Cor da barra</label>
+                  <div class="em-color-row quiz-progress-color-row">
+                    <input v-model="state.pageSettings.quizProgressColor" class="em-color-dot" type="color" aria-label="Cor da barra de progresso" />
+                    <input v-model="state.pageSettings.quizProgressColor" class="em-input" type="text" aria-label="Código da cor da barra de progresso" />
+                  </div>
+                </div>
+                <div class="em-field">
+                  <label class="em-lbl">Espessura</label>
+                  <select v-model.number="state.pageSettings.quizProgressHeight" class="em-select">
+                    <option :value="3">Fina · 3px</option>
+                    <option :value="6">Média · 6px</option>
+                    <option :value="10">Grossa · 10px</option>
+                  </select>
+                </div>
+              </div>
+              <div class="quiz-progress-settings-preview">
+                <span>Prévia · etapa 3 de 5</span>
+                <div :style="{ height: `${state.pageSettings.quizProgressHeight || 6}px` }"><i :style="{ width: '60%', backgroundColor: state.pageSettings.quizProgressColor || '#0ea5e9' }"></i></div>
+              </div>
+            </div>
             <div class="em-field em-full">
               <label class="em-lbl">
-                ⚡ Meta Pixel (ID ou Script Completo)
-                <span v-if="state.pageSettings.metaPixel" class="em-pixel-badge">✓ Pixel Configurado</span>
+                <i class="bi bi-lightning-charge-fill"></i> Meta Pixel (ID ou Script Completo)
+                <span v-if="state.pageSettings.metaPixel" class="em-pixel-badge"><i class="bi bi-check-circle-fill"></i> Pixel Configurado</span>
               </label>
               <textarea v-model="state.pageSettings.metaPixel" class="em-input em-ta-sm" placeholder="Insira o ID (ex: 1234567890) ou cole o código <script> completo do Meta Pixel..."></textarea>
             </div>
@@ -137,14 +194,16 @@
                   title="Detectar automático"
                 ><i class="bi bi-magic"></i> Auto</button>
               </div>
-              <TopBannerElement v-if="elem.type === 'top-banner'" :key="elem.id + '-tb-prev'" :element="elem" />
-              <HeadingElement v-else-if="elem.type === 'heading'" :key="elem.id + '-hd-prev'" :element="elem" />
-              <ParagraphElement v-else-if="elem.type === 'paragraph'" :key="elem.id + '-pr-prev'" :element="elem" />
-              <ButtonElement v-else-if="elem.type === 'button'" :key="elem.id + '-bt-prev'" :element="elem" />
-              <VturbModalPreview v-else-if="elem.type === 'vturb-player'" :key="elem.id + '-vt-prev'" :element="elem" />
-              <PitchButtonElement v-else-if="elem.type === 'pitch-button'" :key="elem.id + '-pb-prev'" :element="elem" />
-              <UpsellButtonsElement v-else-if="elem.type === 'upsell-buttons'" :key="elem.id + '-ub-prev'" :element="elem" />
-              <LiveViewersElement v-else-if="elem.type === 'live-viewers'" :key="elem.id + '-lv-prev'" :element="elem" />
+              <TopBannerElement v-if="elem.type === 'top-banner'" :element="elem" />
+              <HeadingElement v-else-if="elem.type === 'heading' || elem.type === 'quiz-question'" :element="elem" />
+              <ParagraphElement v-else-if="elem.type === 'paragraph'" :element="elem" />
+              <ButtonElement v-else-if="elem.type === 'button' || elem.type === 'quiz-next'" :element="elem" />
+              <VturbModalPreview v-else-if="elem.type === 'vturb-player'" :element="elem" />
+              <PitchButtonElement v-else-if="elem.type === 'pitch-button'" :element="elem" />
+              <UpsellButtonsElement v-else-if="elem.type === 'upsell-buttons'" :element="elem" />
+              <LiveViewersElement v-else-if="elem.type === 'live-viewers'" :element="elem" />
+              <LibraryElement v-else-if="libraryElementTypes.includes(elem.type)" :element="elem" />
+              <QuizElement v-else-if="quizElementTypes.includes(elem.type)" :element="elem" />
 
               <!-- EMAIL HEADER PREVIEW -->
               <div v-else-if="elem.type === 'email-header'" style="width: 100%; max-width: 600px; margin: 0 auto;">
@@ -177,7 +236,7 @@
               </div>
 
               <div v-else-if="elem.type === 'meta-pixel'" class="meta-pixel-preview">
-                ⚡ Meta Pixel &nbsp;·&nbsp; ID: {{ elem.pixelId || '—' }} &nbsp;·&nbsp; Evento: {{ elem.pixelEvent || 'PageView' }}
+                <i class="bi bi-lightning-charge-fill"></i> Meta Pixel &nbsp;·&nbsp; ID: {{ elem.pixelId || '—' }} &nbsp;·&nbsp; Evento: {{ elem.pixelEvent || 'PageView' }}
               </div>
             </div>
 
@@ -193,11 +252,11 @@
                   <!-- VTURB -->
                   <div v-if="elem.type === 'vturb-player'" class="em-field-stack">
                     <div class="em-field">
-                      <label class="em-lbl">🎬 Link 1: Código Embed do Player (Tag &lt;vturb-smartplayer&gt;)</label>
+                      <label class="em-lbl"><i class="bi bi-play-btn-fill"></i> Link 1: Código Embed do Player (Tag &lt;vturb-smartplayer&gt;)</label>
                       <textarea v-model="elem.vturbBody" class="em-input em-ta-main" placeholder="Cole aqui a tag <vturb-smartplayer id='...'>...</vturb-smartplayer> e o script do player..."></textarea>
                     </div>
                     <div class="em-field">
-                      <label class="em-lbl">⚡ Link 2: Scripts de Otimização &amp; Preload (Cabeçalho &lt;head&gt;)</label>
+                      <label class="em-lbl"><i class="bi bi-lightning-charge-fill"></i> Link 2: Scripts de Otimização &amp; Preload (Cabeçalho &lt;head&gt;)</label>
                       <textarea v-model="elem.vturbHead" class="em-input em-ta-sm" placeholder="Cole aqui os links <link rel='preload'>, dns-prefetch e scripts de otimização VTurb..."></textarea>
                     </div>
                   </div>
@@ -234,11 +293,11 @@
                     </div>
                     <div v-else class="em-field-stack">
                       <div class="em-field">
-                        <label class="em-lbl">📁 Upload de Arquivo de Imagem</label>
+                        <label class="em-lbl"><i class="bi bi-image-fill"></i> Upload de Arquivo de Imagem</label>
                         <input type="file" accept="image/*" class="em-input" @change="handleLogoFileUpload" />
                       </div>
                       <div class="em-field">
-                        <label class="em-lbl">🔗 ou Cole a URL / Base64 da Logo</label>
+                        <label class="em-lbl"><i class="bi bi-link-45deg"></i> ou Cole a URL / Base64 da Logo</label>
                         <input v-model="elem.logoImageUrl" class="em-input" type="text" placeholder="https://exemplo.com/logo.png" />
                       </div>
                     </div>
@@ -259,11 +318,11 @@
                     </div>
                     <div v-else class="em-field-stack">
                       <div class="em-field">
-                        <label class="em-lbl">📁 Upload de Arquivo de Imagem</label>
+                        <label class="em-lbl"><i class="bi bi-image-fill"></i> Upload de Arquivo de Imagem</label>
                         <input type="file" accept="image/*" class="em-input" @change="handleLogoFileUpload" />
                       </div>
                       <div class="em-field">
-                        <label class="em-lbl">🔗 ou Cole a URL / Base64 da Logo</label>
+                        <label class="em-lbl"><i class="bi bi-link-45deg"></i> ou Cole a URL / Base64 da Logo</label>
                         <input v-model="elem.logoImageUrl" class="em-input" type="text" placeholder="https://exemplo.com/logo.png" />
                       </div>
                     </div>
@@ -279,6 +338,76 @@
                       <label class="em-lbl">Texto do Pill / Label</label>
                       <input v-model="elem.content" class="em-input" type="text" placeholder="ARTES PRONTAS" />
                     </div>
+                  </div>
+
+                  <!-- BIBLIOTECA DE BLOCOS -->
+                  <div v-else-if="libraryElementTypes.includes(elem.type)" class="em-field-stack">
+                    <template v-if="elem.type === 'image'">
+                      <div class="em-field">
+                        <label class="em-lbl">Upload da imagem</label>
+                        <input type="file" accept="image/*" class="em-input" @change="handleLibraryImageUpload" />
+                      </div>
+                      <div class="em-field">
+                        <label class="em-lbl">URL da imagem</label>
+                        <input v-model="elem.imageUrl" class="em-input" type="url" placeholder="https://exemplo.com/imagem.jpg" />
+                      </div>
+                      <div class="em-field">
+                        <label class="em-lbl">Texto alternativo</label>
+                        <input v-model="elem.altText" class="em-input" type="text" placeholder="Descreva a imagem" />
+                      </div>
+                    </template>
+                    <template v-else-if="elem.type !== 'divider'">
+                      <div class="em-field">
+                        <label class="em-lbl">{{ elem.type === 'faq' ? 'Pergunta' : elem.type === 'form' ? 'Texto do botão' : 'Texto principal' }}</label>
+                        <input v-model="elem.content" class="em-input" type="text" />
+                      </div>
+                      <div v-if="elem.type === 'testimonial'" class="em-field">
+                        <label class="em-lbl">Nome da pessoa</label>
+                        <input v-model="elem.author" class="em-input" type="text" />
+                      </div>
+                      <div v-if="elem.type === 'testimonial'" class="em-field">
+                        <label class="em-lbl">Cargo ou contexto</label>
+                        <input v-model="elem.role" class="em-input" type="text" />
+                      </div>
+                      <div v-if="elem.type === 'faq'" class="em-field">
+                        <label class="em-lbl">Resposta</label>
+                        <textarea v-model="elem.answer" class="em-input em-ta-sm"></textarea>
+                      </div>
+                      <template v-if="elem.type === 'form'">
+                        <div class="em-field"><label class="em-lbl">Título do formulário</label><input v-model="elem.formTitle" class="em-input" type="text" /></div>
+                        <div class="em-field"><label class="em-lbl">Descrição</label><input v-model="elem.description" class="em-input" type="text" /></div>
+                        <div class="em-field"><label class="em-lbl">URL de envio (será ativada com o backend)</label><input v-model="elem.submitUrl" class="em-input" type="url" placeholder="https://..." /></div>
+                      </template>
+                      <div v-if="elem.type === 'countdown'" class="em-field">
+                        <label class="em-lbl">Data final (formato ISO)</label>
+                        <input v-model="elem.targetDate" class="em-input" type="text" placeholder="2026-12-31T23:59:00" />
+                      </div>
+                    </template>
+                  </div>
+
+                  <div v-else-if="quizElementTypes.includes(elem.type)" class="em-field-stack">
+                    <div v-if="['quiz-single','quiz-multiple','quiz-yes-no'].includes(elem.type)" class="em-field"><label class="em-lbl">Opções (uma por linha)</label><textarea v-model="elem.optionsText" class="em-input em-ta-sm"></textarea></div>
+                    <div v-if="['quiz-progress','quiz-loading'].includes(elem.type)" class="em-field"><label class="em-lbl">Progresso (%)</label><input v-model.number="elem.progress" class="em-input" type="number" min="0" max="100"></div>
+                    <div v-if="elem.type === 'quiz-loading'" class="em-field"><label class="em-lbl">Texto do carregamento</label><input v-model="elem.content" class="em-input" type="text"></div>
+                    <div v-if="elem.type === 'quiz-metric'" class="em-field em-metrics-editor">
+                      <div class="em-metrics-header">
+                        <div>
+                          <label class="em-lbl">Métricas</label>
+                          <small>Use uma ou várias. O espaço se adapta automaticamente.</small>
+                        </div>
+                        <button type="button" class="em-add-metric" @click="addMetric"><i class="bi bi-plus-lg"></i> Adicionar</button>
+                      </div>
+                      <div class="em-metric-list">
+                        <div v-for="(metric, index) in metricItems" :key="index" class="em-metric-row">
+                          <span class="em-metric-index">{{ index + 1 }}</span>
+                          <div class="em-field"><label class="em-lbl">Valor</label><input :value="metric.value" class="em-input" placeholder="72%" @input="updateMetric(index, 'value', $event.target.value)"></div>
+                          <div class="em-field em-metric-name"><label class="em-lbl">Nome</label><input :value="metric.label" class="em-input" placeholder="Taxa de conversão" @input="updateMetric(index, 'label', $event.target.value)"></div>
+                          <button type="button" class="em-remove-metric" :disabled="metricItems.length === 1" :title="metricItems.length === 1 ? 'Mantenha ao menos uma métrica' : 'Remover métrica'" @click="removeMetric(index)"><i class="bi bi-trash3"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <template v-if="elem.type === 'quiz-price'"><div class="em-field"><label class="em-lbl">Nome do plano</label><input v-model="elem.content" class="em-input"></div><div class="em-field"><label class="em-lbl">Descrição</label><input v-model="elem.description" class="em-input"></div><div class="em-field"><label class="em-lbl">Preço</label><input v-model="elem.price" class="em-input"></div><div class="em-field"><label class="em-lbl">Destaque</label><input v-model="elem.badge" class="em-input"></div></template>
+                    <div v-if="elem.type === 'quiz-spacer'" class="em-field"><label class="em-lbl">Altura do espaço (px)</label><input v-model.number="elem.height" class="em-input" type="number" min="4" max="300"></div>
                   </div>
 
                   <!-- DEFAULT TEXT CONTENT -->
@@ -324,10 +453,10 @@
                   </div>
 
                   <!-- LINK + SUBTEXT + TARGET for buttons -->
-                  <template v-if="elem.type === 'button' || elem.type === 'pitch-button'">
+                  <template v-if="elem.type === 'button' || elem.type === 'pitch-button' || elem.type === 'quiz-next'">
                     <div class="em-field" style="margin-top:6px;">
                       <label class="em-lbl">Subtexto do Botão (Opcional)</label>
-                      <input v-model="elem.subtext" class="em-input" type="text" placeholder="Ex: ⚡ Acesso imediato · Garantia de 7 dias" />
+                      <input v-model="elem.subtext" class="em-input" type="text" placeholder="Ex: Acesso imediato · Garantia de 7 dias" />
                     </div>
 
                     <div class="em-field" style="margin-top:6px;">
@@ -335,7 +464,7 @@
                       <input v-model="elem.url" class="em-input" type="text" placeholder="https://..." />
                       <div style="display:flex; gap:14px; margin-top:6px; flex-wrap:wrap; align-items:center;">
                         <label class="em-chk-lbl"><input type="checkbox" v-model="elem.openInNewTab" /> Abrir em nova aba (target="_blank")</label>
-                        <label class="em-chk-lbl"><input type="checkbox" v-model="elemStyle.isGlow" /> ✨ Efeito Glow (Brilho Neon)</label>
+                        <label class="em-chk-lbl"><input type="checkbox" v-model="elemStyle.isGlow" /> <i class="bi bi-stars"></i> Efeito Glow (Brilho Neon)</label>
                         <div v-if="elemStyle.isGlow" style="display:flex; align-items:center; gap:6px;">
                           <label class="em-lbl" style="margin:0;">Cor do Glow:</label>
                           <input v-model="elemStyle.glowColor" class="em-color-dot" type="color" />
@@ -349,7 +478,7 @@
                   <div v-if="hasDelayOption(elem)" class="em-delay-line">
                     <label class="em-chk-lbl">
                       <input type="checkbox" v-model="elem.delayEnabled" />
-                      ⏱ Pitch Delay neste objeto
+                      <i class="bi bi-stopwatch-fill"></i> Pitch Delay neste objeto
                     </label>
                     <div v-if="elem.delayEnabled" class="em-delay-mmss">
                       <input v-model.number="elem.delayMinutes" type="number" min="0" max="180" class="em-input em-mmss-input" placeholder="0" />
@@ -360,22 +489,22 @@
                   </div>
                   <!-- VARIÁVEIS DINÂMICAS -->
                   <div v-if="hasVariableTags(elem)" class="em-field-stack" style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
-                    <div class="em-lbl" style="color: var(--accent-primary);">⚡ Variáveis Dinâmicas Detectadas</div>
+                    <div class="em-lbl" style="color: var(--accent-primary);"><i class="bi bi-lightning-charge-fill"></i> Variáveis Dinâmicas Detectadas</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;">
                       <div class="em-field">
-                        <label class="em-lbl">🏙️ $cidade</label>
+                        <label class="em-lbl"><i class="bi bi-building"></i> $cidade</label>
                         <input v-model="elem.cityName" class="em-input" type="text" placeholder="Curitiba" />
                       </div>
                       <div class="em-field">
-                        <label class="em-lbl">👀 Mín. Espectadores</label>
+                        <label class="em-lbl"><i class="bi bi-eye-fill"></i> Mín. Espectadores</label>
                         <input v-model.number="elem.minViewers" class="em-input" type="number" placeholder="140" />
                       </div>
                       <div class="em-field">
-                        <label class="em-lbl">👀 Máx. Espectadores</label>
+                        <label class="em-lbl"><i class="bi bi-eye-fill"></i> Máx. Espectadores</label>
                         <input v-model.number="elem.maxViewers" class="em-input" type="number" placeholder="200" />
                       </div>
                       <div class="em-field">
-                        <label class="em-lbl">🎨 Cor do Número</label>
+                        <label class="em-lbl"><i class="bi bi-palette-fill"></i> Cor do Número</label>
                         <div class="em-color-row">
                           <input v-model="elemStyle.countColor" class="em-color-dot" type="color" />
                           <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#38bdf8" />
@@ -482,7 +611,7 @@
                   </div>
                 </div>
                 <div class="em-color-field">
-                  <label class="em-lbl">Cor do Número 🔢</label>
+                  <label class="em-lbl"><i class="bi bi-123"></i> Cor do Número</label>
                   <div class="em-color-row">
                     <input v-model="elemStyle.countColor" class="em-color-dot" type="color" />
                     <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#38bdf8" />
@@ -495,7 +624,7 @@
                 <div class="em-color-field" style="justify-content:flex-end;">
                   <label class="em-chk-lbl" style="padding-bottom:6px;">
                     <input type="checkbox" v-model="elemStyle.hasTransparentBg" />
-                    🚫 Sem Fundo (Transparente)
+                    <i class="bi bi-slash-circle"></i> Sem Fundo (Transparente)
                   </label>
                 </div>
                 <div class="em-color-field">
@@ -508,12 +637,25 @@
                 </div>
               </div>
 
+              <!-- PALETAS RÁPIDAS DE CORES -->
+              <div v-if="hasStyleOptions(elem) && elem.type !== 'vturb-player'" class="color-presets-bar">
+                <span class="preset-label"><i class="bi bi-palette-fill"></i> Paleta Rápida VSL & SaaS:</span>
+                <div class="preset-swatches">
+                  <button type="button" class="swatch-btn" style="background:#ffffff;" title="Branco / Amarelo VSL" @click="applyColorPreset('#ffffff', '#f1c232', null)"></button>
+                  <button type="button" class="swatch-btn" style="background:#f1c232;" title="Amarelo VSL / Fundo Vermelho" @click="applyColorPreset('#ffffff', '#f1c232', '#dc2626')"></button>
+                  <button type="button" class="swatch-btn" style="background:#0ea5e9;" title="Azul SaaS" @click="applyColorPreset('#ffffff', '#0369a1', '#0ea5e9')"></button>
+                  <button type="button" class="swatch-btn" style="background:#10b981;" title="Verde Conversão" @click="applyColorPreset('#ffffff', '#f1c232', '#10b981')"></button>
+                  <button type="button" class="swatch-btn" style="background:#ef4444;" title="Vermelho Alerta" @click="applyColorPreset('#ffffff', '#f1c232', '#ef4444')"></button>
+                  <button type="button" class="swatch-btn" style="background:#075985; border:1px solid #38bdf8;" title="Azul Profundo" @click="applyColorPreset('#ffffff', '#38bdf8', '#075985')"></button>
+                </div>
+              </div>
+
               <!-- BORDER OPTIONS ROW (oculto para VTurb) -->
               <div class="em-colors-row" v-if="hasStyleOptions(elem) && elem.type !== 'vturb-player'" style="border-top:1px dashed rgba(255,255,255,0.08); background:rgba(0,0,0,0.25);">
                 <div class="em-color-field" style="justify-content:center;">
                   <label class="em-chk-lbl">
                     <input type="checkbox" v-model="elemStyle.hasBorder" />
-                    🔲 Ativar Borda Personalizada
+                    <i class="bi bi-border-style"></i> Ativar Borda Personalizada
                   </label>
                 </div>
                 <template v-if="elemStyle.hasBorder">
@@ -553,7 +695,7 @@
                   <div class="em-at-card"><div class="em-at-k">&gt;&gt;texto&lt;&lt;</div><div class="em-at-v">→ <span :style="{ color: elemStyle.altColor || '#f1c232' }">cor alternativa</span></div></div>
                   <div class="em-at-card"><div class="em-at-k">[[texto]]</div><div class="em-at-v">→ <span :style="{ background: elemStyle.bgColor || '#00ff0b', color: '#000', padding: '0 4px', borderRadius: '2px' }">fundo</span></div></div>
                   <div class="em-at-card"><div class="em-at-k">**texto**</div><div class="em-at-v">→ <strong>negrito</strong></div></div>
-                      <div class="em-at-card"><div class="em-at-k">~texto~</div><div class="em-at-v">→ <span :style="{ color: elemStyle.altColor || '#f1c232' }">pulsando ✦</span></div></div>
+                      <div class="em-at-card"><div class="em-at-k">~texto~</div><div class="em-at-v">→ <span :style="{ color: elemStyle.altColor || '#f1c232' }">pulsando</span></div></div>
                   <div class="em-at-card"><div class="em-at-k">&lt;i class="bi bi-star"&gt;&lt;/i&gt;</div><div class="em-at-v">→ <i class="bi bi-star"></i> ícone</div></div>
                 </div>
                 <div class="em-at-quick">
@@ -605,16 +747,50 @@ import VturbModalPreview from './elements/VturbModalPreview.vue';
 import PitchButtonElement from './elements/PitchButtonElement.vue';
 import UpsellButtonsElement from './elements/UpsellButtonsElement.vue';
 import LiveViewersElement from './elements/LiveViewersElement.vue';
+import LibraryElement from './elements/LibraryElement.vue';
+import QuizElement from './elements/QuizElement.vue';
 
-const { state, closeModal, deleteSelectedElement } = useBuilderStore();
+const { state, closeModal, deleteSelectedElement, applyGlobalColorTheme, colorThemesList } = useBuilderStore();
 
 const iconPickerOpen = ref(false);
 const iconSearch = ref('');
 const activeIconCat = ref('Social');
 const taMain = ref(null);
+const libraryElementTypes = ['image', 'divider', 'testimonial', 'faq', 'countdown', 'form'];
+const quizElementTypes = ['quiz-progress', 'quiz-single', 'quiz-multiple', 'quiz-yes-no', 'quiz-loading', 'quiz-metric', 'quiz-price', 'quiz-spacer'];
 
 const elem = computed(() => state.selectedElement);
 const elemStyle = computed(() => elem.value?.style || {});
+const metricItems = computed(() => parseMetricItems(elem.value?.metricsText));
+
+function parseMetricItems(raw) {
+  const parsed = String(raw || '').split('\n').map(line => {
+    const separator = line.indexOf('|');
+    if (separator < 0) return { value: line.trim(), label: '' };
+    return { value: line.slice(0, separator).trim(), label: line.slice(separator + 1).trim() };
+  }).filter(item => item.value || item.label);
+  return parsed.length ? parsed : [{ value: '', label: '' }];
+}
+
+function saveMetricItems(items) {
+  if (!elem.value) return;
+  elem.value.metricsText = items.map(item => `${String(item.value || '').replace(/\|/g, '')}|${String(item.label || '').replace(/\|/g, '')}`).join('\n');
+}
+
+function updateMetric(index, key, value) {
+  const items = metricItems.value.map(item => ({ ...item }));
+  items[index][key] = value;
+  saveMetricItems(items);
+}
+
+function addMetric() {
+  saveMetricItems([...metricItems.value.map(item => ({ ...item })), { value: '0%', label: 'Nova métrica' }]);
+}
+
+function removeMetric(index) {
+  if (metricItems.value.length === 1) return;
+  saveMetricItems(metricItems.value.filter((_, itemIndex) => itemIndex !== index));
+}
 
 const marginVerticalValue = computed(() => {
   const mt = elemStyle.value?.marginTop;
@@ -641,6 +817,14 @@ function handleLogoFileUpload(e) {
       elem.value.logoImageUrl = event.target.result;
     }
   };
+  reader.readAsDataURL(file);
+}
+
+function handleLibraryImageUpload(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file || !elem.value) return;
+  const reader = new FileReader();
+  reader.onload = event => { elem.value.imageUrl = event.target.result; };
   reader.readAsDataURL(file);
 }
 
@@ -678,6 +862,16 @@ const todayExt = computed(() => new Date().toLocaleDateString('pt-BR', {
   weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
 }));
 
+function applyColorPreset(textColor, altColor, bgColor) {
+  if (!elemStyle.value) return;
+  if (textColor) elemStyle.value.textColor = textColor;
+  if (altColor) elemStyle.value.altColor = altColor;
+  if (bgColor) {
+    elemStyle.value.bgColor = bgColor;
+    elemStyle.value.hasTransparentBg = false;
+  }
+}
+
 function saveAndClose() {
   closeModal();
 }
@@ -688,24 +882,27 @@ function getTypeTitle(e) {
     'top-banner': 'Banner Topo', 'heading': 'Headline', 'paragraph': 'Parágrafo',
     'button': 'Botão Link', 'vturb-player': 'Player VTurb', 'pitch-button': 'Botão Pitch',
     'live-viewers': 'Espectadores', 'meta-pixel': 'Meta Pixel',
-    'email-header': 'Cabeçalho E-mail', 'email-footer': 'Rodapé E-mail', 'email-tag': 'Pill / Label E-mail'
+    'email-header': 'Cabeçalho E-mail', 'email-footer': 'Rodapé E-mail', 'email-tag': 'Pill / Label E-mail',
+    image: 'Imagem', divider: 'Divisor', testimonial: 'Depoimento', faq: 'Pergunta frequente',
+    countdown: 'Contagem regressiva', form: 'Formulário'
+    , 'quiz-question':'Pergunta', 'quiz-next':'Avançar etapa', 'quiz-progress':'Progresso', 'quiz-single':'Escolha única', 'quiz-multiple':'Múltipla escolha', 'quiz-yes-no':'Sim / Não', 'quiz-loading':'Loading', 'quiz-metric':'Métricas', 'quiz-price':'Preço / Plano', 'quiz-spacer':'Espaço'
   };
   return m[e.type] || e.type;
 }
 
 function hasContent(e) {
   if (!e || e.isGlobalSettings) return false;
-  return ['heading', 'paragraph', 'button', 'top-banner', 'pitch-button', 'live-viewers', 'vturb-player', 'meta-pixel', 'email-header', 'email-footer', 'email-tag'].includes(e.type);
+  return ['heading', 'quiz-question', 'paragraph', 'button', 'quiz-next', 'top-banner', 'pitch-button', 'live-viewers', 'vturb-player', 'meta-pixel', 'email-header', 'email-footer', 'email-tag', ...libraryElementTypes, ...quizElementTypes].includes(e.type);
 }
 
 function hasTextContent(e) {
   if (!e || e.isGlobalSettings) return false;
-  return ['heading', 'paragraph', 'button', 'top-banner', 'pitch-button', 'live-viewers'].includes(e.type);
+  return ['heading', 'quiz-question', 'paragraph', 'button', 'quiz-next', 'top-banner', 'pitch-button', 'live-viewers'].includes(e.type);
 }
 
 function hasDelayOption(e) {
   if (!e || e.isGlobalSettings) return false;
-  return ['heading', 'paragraph', 'button', 'top-banner', 'pitch-button', 'upsell-buttons', 'live-viewers'].includes(e.type);
+  return ['heading', 'quiz-question', 'paragraph', 'button', 'quiz-next', 'top-banner', 'pitch-button', 'upsell-buttons', 'live-viewers'].includes(e.type);
 }
 
 function hasVariableTags(e) {
@@ -722,7 +919,7 @@ function hasStyleOptions(e) {
 
 function showAtomitags(e) {
   if (!e) return false;
-  return ['heading', 'paragraph', 'button', 'top-banner', 'pitch-button', 'live-viewers'].includes(e.type);
+  return ['heading', 'quiz-question', 'paragraph', 'button', 'quiz-next', 'top-banner', 'pitch-button', 'live-viewers'].includes(e.type);
 }
 
 function insertAtCursor(str) {
@@ -794,12 +991,12 @@ const filteredIcons = computed(() => {
 /* ─── HEADER ─────────────────────────────────────── */
 .em-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px 8px; }
 .em-header-left { display:flex; align-items:center; gap:10px; }
-.em-title { font-size:15px; color:#fff; }
+.em-title { font-size:15px; color:var(--color-surface); }
 .em-title strong { font-weight:800; }
-.em-badge { font-size:10px; font-weight:700; background:rgba(255,255,255,0.08); color:#9ca3af; padding:2px 8px; border-radius:10px; text-transform:uppercase; }
-.em-close { background:transparent; border:none; color:#9ca3af; font-size:17px; cursor:pointer; padding:4px 8px; border-radius:6px; }
-.em-close:hover { color:#fff; background:rgba(255,255,255,0.07); }
-.em-subinfo { padding:0 20px 10px; font-size:11px; color:#4b5563; border-bottom:1px solid rgba(255,255,255,0.07); }
+.em-badge { font-size:10px; font-weight:700; background:var(--color-primary-soft); color:var(--color-primary-strong); padding:2px 8px; border-radius:10px; text-transform:uppercase; }
+.em-close { background:transparent; border:none; color:var(--color-primary-strong); font-size:17px; cursor:pointer; padding:4px 8px; border-radius:6px; }
+.em-close:hover { color:var(--color-surface); background:rgba(255,255,255,0.07); }
+.em-subinfo { padding:0 20px 10px; font-size:11px; color:var(--color-primary-deep); border-bottom:1px solid var(--color-border); }
 
 /* ─── BODY ───────────────────────────────────────── */
 .em-scroll-body { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
@@ -914,7 +1111,7 @@ const filteredIcons = computed(() => {
 .em-orient-btn {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
-  color: #9ca3af;
+  color: var(--color-primary-deep);
   padding: 5px 12px;
   border-radius: 6px;
   font-size: 11px;
@@ -927,15 +1124,15 @@ const filteredIcons = computed(() => {
   white-space: nowrap;
 }
 .em-orient-btn:hover {
-  background: rgba(99,102,241,0.2);
-  border-color: rgba(99,102,241,0.4);
-  color: #fff;
+  background: rgba(14,165,233,0.14);
+  border-color: rgba(14,165,233,0.45);
+  color: var(--color-surface);
 }
 .em-orient-btn.active {
-  background: rgba(99,102,241,0.3);
-  border-color: rgba(99,102,241,0.7);
-  color: #818cf8;
-  box-shadow: 0 0 8px rgba(99,102,241,0.3);
+  background: rgba(14,165,233,0.16);
+  border-color: rgba(14,165,233,0.65);
+  color: var(--color-primary-hover);
+  box-shadow: 0 0 8px rgba(14,165,233,0.22);
 }
 .em-orient-auto {
   background: rgba(16,185,129,0.1) !important;
@@ -999,7 +1196,7 @@ const filteredIcons = computed(() => {
   user-select: none;
   font-size: 12px;
   font-weight: 600;
-  color: #cbd5e1;
+  color: var(--color-border);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.09);
   padding: 6px 12px;
@@ -1007,16 +1204,16 @@ const filteredIcons = computed(() => {
   transition: all 0.2s ease;
 }
 .em-chk-lbl:hover {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.4);
-  color: #ffffff;
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-border);
+  color: var(--color-primary-strong);
 }
 .em-chk-lbl input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
   width: 17px;
   height: 17px;
-  border: 2px solid #64748b;
+  border: 2px solid var(--color-text-muted);
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.3);
   cursor: pointer;
@@ -1026,24 +1223,25 @@ const filteredIcons = computed(() => {
   margin: 0;
 }
 .em-chk-lbl input[type="checkbox"]:checked {
-  background: #6366f1;
-  border-color: #6366f1;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.42);
 }
 .em-chk-lbl input[type="checkbox"]:checked::after {
-  content: '✓';
+  content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 900;
+  width: 7px;
+  height: 7px;
+  background: var(--color-surface);
+  border-radius: 2px;
 }
 .meta-pixel-preview {
-  color:#818cf8; font-weight:700; font-size:13px;
-  background:rgba(99,102,241,0.1); padding:10px 20px; border-radius:8px;
-  border:1px solid rgba(99,102,241,0.3);
+  color:var(--color-primary-hover); font-weight:700; font-size:13px;
+  background:var(--color-primary-soft); padding:10px 20px; border-radius:8px;
+  border:1px solid var(--color-border);
 }
 
 /* ─── GLOBAL SETTINGS GRID ───────────────────────── */
@@ -1052,8 +1250,8 @@ const filteredIcons = computed(() => {
   padding:20px;
 }
 .em-pixel-badge {
-  display:inline-block; margin-left:8px; background:rgba(99,102,241,0.2);
-  color:#818cf8; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px;
+  display:inline-block; margin-left:8px; background:var(--color-primary-soft);
+  color:var(--color-primary-hover); font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px;
 }
 
 /* ─── MAIN ROW ───────────────────────────────────── */
@@ -1081,7 +1279,7 @@ const filteredIcons = computed(() => {
 }
 .em-delay-mmss { display:flex; align-items:center; gap:4px; }
 .em-mmss-input { width:54px !important; text-align:center; }
-.em-mmss-sep { color:#6b7280; font-size:13px; font-weight:700; }
+.em-mmss-sep { color:var(--color-primary-deep); font-size:13px; font-weight:700; }
 
 /* ─── TEXTAREA & ICON PICKER ─────────────────────── */
 .em-textarea-wrap { position:relative; display:flex; flex-direction:column; gap:4px; }
@@ -1094,7 +1292,7 @@ const filteredIcons = computed(() => {
   color:#d1d5db; padding:5px 10px; border-radius:6px; font-size:11px;
   cursor:pointer; display:flex; align-items:center; gap:5px; transition:all 0.15s;
 }
-.em-icon-trigger:hover { background:rgba(99,102,241,0.2); border-color:rgba(99,102,241,0.5); color:#fff; }
+.em-icon-trigger:hover { background:rgba(14,165,233,0.14); border-color:rgba(14,165,233,0.45); color:var(--color-text); }
 
 .em-icon-picker {
   background:#0d0f18; border:1px solid rgba(255,255,255,0.1); border-radius:10px;
@@ -1106,10 +1304,10 @@ const filteredIcons = computed(() => {
 .em-ip-categories { display:flex; gap:4px; flex-wrap:wrap; }
 .em-ip-cat {
   background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
-  color:#9ca3af; padding:3px 8px; border-radius:5px; font-size:10px;
+  color:var(--color-primary-deep); padding:3px 8px; border-radius:5px; font-size:10px;
   cursor:pointer; font-weight:600; transition:all 0.12s;
 }
-.em-ip-cat.active, .em-ip-cat:hover { background:rgba(99,102,241,0.25); border-color:rgba(99,102,241,0.5); color:#fff; }
+.em-ip-cat.active, .em-ip-cat:hover { background:rgba(14,165,233,0.14); border-color:rgba(14,165,233,0.45); color:var(--color-text); }
 .em-ip-grid {
   display:grid; grid-template-columns:repeat(auto-fill, minmax(52px, 1fr));
   gap:4px; overflow-y:auto; max-height:160px;
@@ -1120,49 +1318,63 @@ const filteredIcons = computed(() => {
   display:flex; flex-direction:column; align-items:center; gap:2px;
   transition:all 0.12s; font-size:16px;
 }
-.em-ip-btn:hover { background:rgba(99,102,241,0.2); border-color:rgba(99,102,241,0.5); color:#fff; }
-.em-ip-name { font-size:8px; color:#6b7280; overflow:hidden; max-width:50px; text-overflow:ellipsis; white-space:nowrap; }
+.em-ip-btn:hover { background:rgba(14,165,233,0.14); border-color:rgba(14,165,233,0.45); color:var(--color-text); }
+.em-ip-name { font-size:8px; color:var(--color-primary-deep); overflow:hidden; max-width:50px; text-overflow:ellipsis; white-space:nowrap; }
 
 /* ─── ATOMITAGS PANEL ────────────────────────────── */
 .em-at-panel { padding:14px 20px; background:rgba(255,255,255,0.012); }
-.em-at-header { font-size:12px; color:#9ca3af; margin-bottom:10px; }
-.em-at-hl { color:#6366f1; }
+.em-at-header { font-size:12px; color:var(--color-primary-deep); margin-bottom:10px; }
+.em-at-hl { color:var(--color-primary); }
 .em-at-grid4 { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:8px; }
 .em-at-grid3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:10px; }
 .em-at-card { background:rgba(255,255,255,0.04); border-radius:6px; padding:7px 10px; }
-.em-at-k { font-size:10px; font-weight:700; color:#6b7280; font-family:monospace; margin-bottom:3px; }
+.em-at-k { font-size:10px; font-weight:700; color:var(--color-primary-deep); font-family:var(--font-mono); margin-bottom:3px; }
 .em-at-v { font-size:12px; color:#e5e7eb; }
 .em-at-quick { display:flex; flex-wrap:wrap; gap:5px; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; }
 .em-at-q-btn {
   background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
   color:#d1d5db; padding:3px 8px; border-radius:5px; font-size:11px;
-  cursor:pointer; font-family:monospace; transition:all 0.13s;
+  cursor:pointer; font-family:var(--font-mono); transition:all 0.13s;
 }
-.em-at-q-btn:hover { background:rgba(99,102,241,0.2); border-color:rgba(99,102,241,0.4); color:#fff; }
+.em-at-q-btn:hover { background:rgba(14,165,233,0.14); border-color:rgba(14,165,233,0.45); color:var(--color-text); }
 
 /* ─── FORM ELEMENTS ──────────────────────────────── */
-.em-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#6b7280; }
+.em-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--color-primary-deep); }
 .em-input {
   background:#0f1117; border:1px solid rgba(255,255,255,0.1); border-radius:6px;
-  color:#fff; font-size:13px; padding:8px 10px; width:100%; outline:none;
+  color:var(--color-surface); font-size:13px; padding:8px 10px; width:100%; outline:none;
   transition:border-color 0.15s; font-family:inherit;
 }
-.em-input:focus { border-color:rgba(99,102,241,0.5); }
+.em-input:focus { border-color:rgba(14,165,233,0.55); }
 .em-select {
   background:#0f1117; border:1px solid rgba(255,255,255,0.1); border-radius:6px;
-  color:#fff; font-size:13px; padding:8px 10px; width:100%; outline:none;
+  color:var(--color-surface); font-size:13px; padding:8px 10px; width:100%; outline:none;
 }
 .em-field { display:flex; flex-direction:column; gap:5px; }
 .em-field-stack { display:flex; flex-direction:column; gap:8px; }
 .em-full { grid-column:1 / -1; }
+.em-metrics-editor { gap:10px; }
+.em-metrics-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.em-metrics-header>div { display:flex; flex-direction:column; gap:3px; }
+.em-metrics-header small { color:var(--color-text-muted); font-size:11px; }
+.em-add-metric { min-height:34px; display:inline-flex; align-items:center; gap:6px; padding:0 12px; border:1px solid var(--color-primary-border); border-radius:8px; background:var(--color-primary-soft); color:var(--color-primary-strong); font:inherit; font-size:11px; font-weight:800; cursor:pointer; transition:transform .18s ease, background-color .18s ease; }
+.em-add-metric:hover { transform:translateY(-1px); background:var(--color-primary-subtle); }
+.em-metric-list { display:flex; flex-direction:column; gap:8px; }
+.em-metric-row { display:grid; grid-template-columns:28px minmax(100px,.55fr) minmax(170px,1.45fr) 34px; align-items:end; gap:8px; padding:10px; border:1px solid var(--color-border); border-radius:10px; background:var(--color-surface-soft); animation:emMetricIn .22s ease both; }
+.em-metric-index { width:25px; height:34px; display:grid; place-items:center; color:var(--color-primary-strong); font-size:11px; font-weight:900; }
+.em-remove-metric { width:34px; height:34px; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-danger); cursor:pointer; transition:.18s ease; }
+.em-remove-metric:hover:not(:disabled) { border-color:var(--color-danger); background:var(--color-danger-soft); transform:translateY(-1px); }
+.em-remove-metric:disabled { opacity:.32; cursor:not-allowed; }
+@keyframes emMetricIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+@media(max-width:720px){.em-metric-row{grid-template-columns:24px 1fr 34px}.em-metric-name{grid-column:2}.em-remove-metric{grid-column:3;grid-row:1/3;align-self:center}}
 
 .em-upsell-tabs { display:flex; gap:6px; }
 .em-tab-btn {
   background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
-  color:#9ca3af; padding:5px 10px; border-radius:6px; font-size:12px; cursor:pointer;
+  color:var(--color-primary-deep); padding:5px 10px; border-radius:6px; font-size:12px; cursor:pointer;
 }
-.em-tab-btn.active { background:rgba(99,102,241,0.2); border-color:rgba(99,102,241,0.5); color:#fff; }
-.em-chk-lbl { display:flex; align-items:center; gap:6px; font-size:12px; color:#9ca3af; cursor:pointer; }
+.em-tab-btn.active { background:rgba(14,165,233,0.14); border-color:rgba(14,165,233,0.45); color:var(--color-text); }
+.em-chk-lbl { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--color-primary-deep); cursor:pointer; }
 
 /* ─── FOOTER ─────────────────────────────────────── */
 .em-footer {
@@ -1176,9 +1388,196 @@ const filteredIcons = computed(() => {
 }
 .btn-em-delete:hover { background:rgba(239,68,68,0.2); }
 .btn-em-save {
-  background:linear-gradient(135deg, #6366f1, #8b5cf6); border:none; color:#fff;
+  background:var(--color-primary); border:none; color:var(--color-surface);
   padding:8px 20px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;
   display:flex; align-items:center; gap:6px; transition:opacity 0.15s;
 }
 .btn-em-save:hover { opacity:0.88; }
+
+/* ─── COLOR PRESETS BAR ─────────────────────────── */
+.color-presets-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+.preset-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-text-soft);
+}
+.preset-swatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.swatch-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  padding: 0;
+}
+.swatch-btn:hover {
+  transform: scale(1.2);
+  border-color: var(--color-primary);
+}
+
+/* ─── GLOBAL THEMES GRID ────────────────────────── */
+.global-theme-presets-box {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.theme-subtitle {
+  display: block;
+  font-size: 11.5px;
+  color: var(--color-text-soft);
+  margin-top: 2px;
+  margin-bottom: 12px;
+}
+.theme-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.theme-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.theme-card:hover {
+  background: rgba(14, 165, 233, 0.14);
+  border-color: rgba(14, 165, 233, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.theme-card.active {
+  background: rgba(14, 165, 233, 0.14);
+  border: 1.5px solid var(--color-primary);
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.22);
+}
+.active-check {
+  color: var(--color-primary-bright);
+  font-size: 14px;
+}
+.theme-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.theme-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-surface);
+}
+.theme-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+}
+.theme-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dot-preview {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Editor alinhado à identidade visual central. */
+.element-modal-overlay { background: var(--overlay) !important; backdrop-filter: blur(4px); }
+.element-modal-box { background: var(--color-surface) !important; border-color: var(--color-border) !important; box-shadow: var(--shadow-modal); color: var(--color-text); }
+.em-header, .em-footer { background: var(--color-surface) !important; border-color: var(--color-border) !important; }
+.em-header { padding: 16px 20px 9px; }
+.em-footer { border-top: 1px solid var(--color-border) !important; }
+.em-title, .em-lbl, .em-label, .em-editing-title, .theme-name { color: var(--color-text) !important; }
+.em-close { color: var(--color-text-muted); }
+.em-close:hover { color: var(--color-primary-strong); background: var(--color-primary-soft); }
+.em-subinfo, .em-sub-info, .theme-subtitle { color: var(--color-text-muted) !important; border-color: var(--color-border) !important; }
+.em-scroll-body, .em-layout-top, .em-layout-side, .em-below-content, .em-side-content { background: var(--color-surface); }
+.em-main-row { border-color: var(--color-border) !important; }
+.em-content-col, .em-style-col { background: var(--color-surface-soft) !important; border-color: var(--color-border) !important; }
+.em-input, .em-select, .em-textarea-container { background: var(--color-surface) !important; border-color: var(--color-border) !important; color: var(--color-text) !important; }
+.em-input:focus, .em-select:focus { border-color: var(--color-primary) !important; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.em-preview-top, .em-preview-side, .em-preview-pane, .em-preview-card { background: var(--color-primary-subtle) !important; border-color: var(--color-border) !important; }
+.em-preview-card { box-shadow: none; }
+.em-colors-row { background: var(--color-surface-soft) !important; border-color: var(--color-border) !important; }
+.em-color-dot { border-color: var(--color-border-strong); }
+.em-chk-lbl, .em-delay-line, .em-icon-trigger, .em-ip-cat, .em-ip-btn, .em-at-card, .em-at-q-btn, .em-tab-btn { background: var(--color-surface) !important; border-color: var(--color-border) !important; color: var(--color-text-secondary) !important; }
+.em-chk-lbl:hover, .em-icon-trigger:hover, .em-ip-cat:hover, .em-ip-cat.active, .em-ip-btn:hover, .em-at-q-btn:hover, .em-tab-btn.active { background: var(--color-primary-soft) !important; border-color: var(--color-primary-border) !important; color: var(--color-primary-strong) !important; }
+.em-chk-lbl input[type="checkbox"] { border-color: var(--color-primary-border); background: var(--color-surface); }
+.em-chk-lbl input[type="checkbox"]:checked { background: var(--color-primary); border-color: var(--color-primary); box-shadow: none; }
+.em-icon-picker, .global-theme-presets-box, .atomitags-guide-box, .color-presets-bar, .em-at-panel { background: var(--color-surface-soft) !important; border-color: var(--color-border) !important; }
+.em-at-panel { border-top: 1px solid var(--color-border); }
+.em-at-header, .em-at-k, .preset-label, .em-ip-name { color: var(--color-primary-strong) !important; }
+.em-at-v { color: var(--color-text-muted) !important; }
+.em-at-quick { border-color: var(--color-border); }
+.theme-card { background: var(--color-surface) !important; border-color: var(--color-border) !important; }
+.theme-card:hover, .theme-card.active { background: var(--color-primary-soft) !important; border-color: var(--color-primary) !important; box-shadow: none; }
+.btn-em-save { background: var(--color-primary); color: var(--color-on-primary); }
+.btn-em-save:hover { opacity: 1; background: var(--color-primary-hover); }
+.btn-em-delete { background: var(--color-surface); }
+
+/* Configurações gerais: contraste forte e blocos fáceis de escanear. */
+.is-global-settings .em-header { background: var(--color-primary-subtle) !important; border-bottom: 1px solid var(--color-border) !important; }
+.is-global-settings .em-title { color: var(--color-text) !important; font-weight: 800; }
+.is-global-settings .em-subinfo { padding-top: 7px; padding-bottom: 11px; background: var(--color-surface); color: var(--color-text-secondary) !important; }
+.is-global-settings .em-scroll-body { background: var(--color-page); }
+.is-global-settings .global-page-mini-preview { background: var(--color-primary-soft) !important; border-bottom: 1px solid var(--color-border) !important; }
+.is-global-settings .em-gs-grid { background: var(--color-page); gap: 12px; }
+.is-global-settings .em-gs-grid > .em-field { padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.is-global-settings .em-lbl { color: var(--color-text-secondary) !important; }
+.is-global-settings .em-input,
+.is-global-settings .em-select { min-height: 40px; border-color: var(--color-border-strong) !important; background: var(--color-surface) !important; color: var(--color-text) !important; }
+.is-global-settings .em-input::placeholder { color: var(--color-text-soft); opacity: 1; }
+.is-global-settings .theme-card { border-color: var(--color-border-strong) !important; }
+.is-global-settings .theme-name { color: var(--color-text) !important; }
+.is-global-settings .theme-tag { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.is-global-settings .theme-subtitle { color: var(--color-text-muted) !important; line-height: 1.45; }
+.is-global-settings .em-footer { background: var(--color-surface) !important; }
+
+.quiz-progress-settings { display:flex; flex-direction:column; gap:14px; }
+.quiz-progress-settings-copy { display:flex; align-items:center; gap:11px; }
+.quiz-progress-settings-icon { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; border-radius:10px; background:var(--color-primary-soft); color:var(--color-primary-strong); font-size:17px; }
+.quiz-progress-settings-copy>div { display:flex; flex-direction:column; gap:3px; }
+.quiz-progress-settings-copy strong { color:var(--color-text); font-size:13px; }
+.quiz-progress-settings-copy small { color:var(--color-text-muted); font-size:11px; line-height:1.4; }
+.quiz-progress-settings-controls { display:grid; grid-template-columns:1fr 180px; gap:10px; }
+.quiz-progress-color-row .em-input { flex:1; }
+.quiz-progress-settings-preview { padding:11px 12px; border:1px solid var(--color-border); border-radius:10px; background:var(--color-primary-subtle); }
+.quiz-progress-settings-preview>span { display:block; margin-bottom:7px; color:var(--color-text-secondary); font-size:10px; font-weight:800; text-transform:uppercase; }
+.quiz-progress-settings-preview>div { width:100%; overflow:hidden; border-radius:999px; background:var(--color-primary-soft); }
+.quiz-progress-settings-preview i { display:block; height:100%; border-radius:inherit; transition:width .4s ease,background-color .2s ease; }
+
+@media (max-width: 760px) {
+  .element-modal-overlay { padding: 8px; align-items: flex-end; }
+  .element-modal-box { width: 100%; max-height: 96vh; border-radius: 16px 16px 0 0; }
+  .em-main-row { flex-direction: column; }
+  .em-content-col { border-right: 0; border-bottom: 1px solid var(--color-border); }
+  .em-style-col { width: 100%; }
+  .em-colors-row { align-items: stretch; }
+  .em-color-field { flex: 1 1 130px; }
+  .em-at-grid4, .em-at-grid3 { grid-template-columns: repeat(2, 1fr); }
+  .is-global-settings .em-gs-grid { grid-template-columns:1fr; padding:12px; }
+  .quiz-progress-settings-controls { grid-template-columns:1fr; }
+}
 </style>

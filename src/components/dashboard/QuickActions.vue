@@ -3,13 +3,13 @@
     <div class="action-card" @click="$emit('open-create-modal')">
       <div class="action-card-icon"><i class="bi bi-file-earmark-plus"></i></div>
       <div>
-        <div class="action-card-title">Criar em Branco</div>
-        <div class="action-card-subtitle">Funil ou E-mail</div>
+        <div class="action-card-title">Criar em branco</div>
+        <div class="action-card-subtitle">Funil, e-mail ou quiz</div>
       </div>
     </div>
 
     <div class="action-card" @click="$emit('open-builder', 'vsl')">
-      <div class="action-card-icon" style="background: rgba(52, 211, 153, 0.2); color: #34d399;"><i class="bi bi-play-circle-fill"></i></div>
+      <div class="action-card-icon"><i class="bi bi-play-circle-fill"></i></div>
       <div>
         <div class="action-card-title">Template VSL</div>
         <div class="action-card-subtitle">Funil de vídeo pronto</div>
@@ -17,17 +17,17 @@
     </div>
 
     <div class="action-card" @click="$emit('open-builder', 'email')">
-      <div class="action-card-icon" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;"><i class="bi bi-envelope-paper-fill"></i></div>
+      <div class="action-card-icon"><i class="bi bi-envelope-paper-fill"></i></div>
       <div>
-        <div class="action-card-title">Template E-mail</div>
+        <div class="action-card-title">Template de e-mail</div>
         <div class="action-card-subtitle">E-mail marketing 600px</div>
       </div>
     </div>
 
     <div class="action-card" @click="$emit('select-templates')">
-      <div class="action-card-icon" style="background: rgba(16, 185, 129, 0.2); color: #34d399;"><i class="bi bi-magic"></i></div>
+      <div class="action-card-icon"><i class="bi bi-magic"></i></div>
       <div>
-        <div class="action-card-title">Ver Templates</div>
+        <div class="action-card-title">Ver templates</div>
         <div class="action-card-subtitle">Biblioteca de modelos</div>
       </div>
     </div>
@@ -47,8 +47,8 @@ defineEmits(['open-builder', 'open-create-modal', 'select-templates']);
 }
 
 .action-card {
-  background: rgba(23, 31, 48, 0.75);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -59,8 +59,8 @@ defineEmits(['open-builder', 'open-create-modal', 'select-templates']);
 }
 
 .action-card:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: #6366f1;
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary);
   transform: translateY(-2px);
 }
 
@@ -68,8 +68,8 @@ defineEmits(['open-builder', 'open-create-modal', 'select-templates']);
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,11 +79,11 @@ defineEmits(['open-builder', 'open-create-modal', 'select-templates']);
 .action-card-title {
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .action-card-subtitle {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--color-text-soft);
 }
 </style>

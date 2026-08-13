@@ -3,7 +3,10 @@
     <div v-if="isOpen" class="modal-backdrop" @click.self="$emit('close')">
       <div class="folder-modal">
         <div class="modal-header">
-          <h3>{{ mode === 'create' ? '📁 Nova Pasta' : '✏️ Renomear Pasta' }}</h3>
+          <h3>
+            <i :class="mode === 'create' ? 'bi bi-folder-plus' : 'bi bi-pencil-square'"></i>
+            {{ mode === 'create' ? 'Nova Pasta' : 'Renomear Pasta' }}
+          </h3>
           <button class="btn-close" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
         </div>
 
@@ -14,7 +17,7 @@
               type="text"
               class="form-input"
               v-model="folderName"
-              placeholder="ex: Funil Dollar App, Lançamento 2026..."
+              placeholder="Ex.: Funil principal ou Campanha de lançamento"
               autofocus
               @keydown.enter="handleConfirm"
             />
@@ -38,7 +41,7 @@
             <label class="form-label">Pasta Pai (subpasta)</label>
             <select class="form-select" v-model="parentId">
               <option value="">Raiz (sem pasta pai)</option>
-              <option v-for="f in foldersRegistry" :key="f.id" :value="f.id">📁 {{ f.name }}</option>
+              <option v-for="f in foldersRegistry" :key="f.id" :value="f.id">{{ f.name }}</option>
             </select>
           </div>
         </div>
@@ -69,15 +72,15 @@ const emit = defineEmits(['close', 'done']);
 const { foldersRegistry, createFolder, renameFolder } = useBuilderStore();
 
 const folderName = ref('');
-const selectedColor = ref('#6366f1');
+const selectedColor = ref('#0ea5e9');
 const parentId = ref('');
 
-const colorOptions = ['#6366f1', '#f59e0b', '#10b981', '#38bdf8', '#f87171', '#a78bfa', '#fb923c', '#34d399'];
+const colorOptions = ['#0ea5e9', '#0284c7', '#38bdf8', '#7dd3fc', '#0369a1', '#075985'];
 
 watch(() => props.isOpen, (open) => {
   if (open) {
     folderName.value = props.mode === 'rename' && props.folder ? props.folder.name : '';
-    selectedColor.value = '#6366f1';
+    selectedColor.value = '#0ea5e9';
     parentId.value = '';
   }
 });
@@ -118,29 +121,29 @@ function handleConfirm() {
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.modal-header h3 { font-size: 17px; font-weight: 800; color: #fff; }
-.btn-close { background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; }
-.btn-close:hover { color: #fff; }
+.modal-header h3 { font-size: 17px; font-weight: 800; color: var(--color-surface); }
+.btn-close { background: none; border: none; color: var(--color-text-soft); font-size: 16px; cursor: pointer; }
+.btn-close:hover { color: var(--color-surface); }
 
 .modal-body { padding: 20px 24px; }
 
 .form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 12.5px; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+.form-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--color-border); margin-bottom: 6px; }
 
 .form-input, .form-select {
   width: 100%; background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
-  padding: 10px 14px; color: #fff; font-size: 14px; outline: none;
+  padding: 10px 14px; color: var(--color-surface); font-size: 14px; outline: none;
 }
 
-.form-input:focus { border-color: #6366f1; }
+.form-input:focus { border-color: var(--color-primary); }
 
 .color-picker-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .color-swatch {
   width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
   border: 2px solid transparent; transition: all 0.2s; flex-shrink: 0;
 }
-.color-swatch.active { border-color: #fff; transform: scale(1.15); }
+.color-swatch.active { border-color: var(--color-surface); transform: scale(1.15); }
 
 .modal-footer {
   display: flex; gap: 8px; justify-content: flex-end;
@@ -150,14 +153,27 @@ function handleConfirm() {
 
 .btn-cancel {
   background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0; padding: 9px 18px; border-radius: 9px; font-weight: 600; font-size: 13.5px; cursor: pointer;
+  color: var(--color-border); padding: 9px 18px; border-radius: 9px; font-weight: 600; font-size: 13.5px; cursor: pointer;
 }
 
 .btn-confirm {
-  background: #6366f1; border: none; color: #fff;
+  background: var(--color-primary); border: none; color: var(--color-surface);
   padding: 9px 18px; border-radius: 9px; font-weight: 700; font-size: 13.5px; cursor: pointer;
   display: flex; align-items: center; gap: 6px;
 }
 
 .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.modal-backdrop { background: var(--overlay); }
+.folder-modal { background: var(--color-surface); border-color: var(--color-border); box-shadow: var(--shadow-modal); color: var(--color-text); }
+.modal-header, .modal-footer { border-color: var(--color-border); }
+.modal-header h3 { color: var(--color-text); }
+.btn-close { color: var(--color-text-muted); }
+.btn-close:hover { color: var(--color-primary-strong); }
+.form-label { color: var(--color-text-secondary); }
+.form-input, .form-select { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text); }
+.form-input:focus, .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.color-swatch.active { border-color: var(--color-text); }
+.modal-footer { background: var(--color-surface-soft); }
+.btn-cancel { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text-secondary); }
 </style>

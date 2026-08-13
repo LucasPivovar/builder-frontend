@@ -47,7 +47,7 @@
 
       <!-- Tab Objetos -->
       <div v-if="activeTab === 'objects'" class="tab-content active">
-        <div class="section-title">ELEMENTOS DE CONTEÚDO</div>
+        <div class="section-title">OBJETOS GERAIS</div>
         <div class="objects-grid">
           <div
             v-for="obj in contentObjects"
@@ -60,10 +60,10 @@
           </div>
         </div>
 
-        <div class="section-title">COMPONENTES DE CONVERSÃO</div>
+        <div class="section-title">{{ modeSectionTitle }}</div>
         <div class="objects-grid">
           <div
-            v-for="obj in conversionObjects"
+            v-for="obj in modeObjects"
             :key="obj.type"
             class="object-card"
             @click="addElementToCanvas(obj.type)"
@@ -106,31 +106,53 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
 
 const activeTab = ref('pages');
-const { addElementToCanvas, addRow, loadTemplate } = useBuilderStore();
+const { state, addElementToCanvas, addRow, loadTemplate } = useBuilderStore();
 
-const pageTemplates = [
+const vslPageTemplates = [
   { id: 'lp', title: 'Landing Page (LP)', desc: 'Página de VSL e alta conversão', icon: 'bi bi-rocket-takeoff-fill' },
   { id: 'home', title: 'Página Inicial', desc: 'Home Page SaaS / Institucional', icon: 'bi bi-house-door-fill' },
   { id: 'auth', title: 'Página de Auth', desc: 'Tela de Login e Cadastro', icon: 'bi bi-shield-lock-fill' }
 ];
+const emailPageTemplates = [{ id:'email', title:'E-mail profissional', desc:'Cabeçalho, conteúdo, CTA e rodapé', icon:'bi bi-envelope-paper-fill' }];
+const quizPageTemplates = [{ id:'quiz', title:'Quiz de diagnóstico', desc:'Perguntas, progresso e resultado', icon:'bi bi-ui-checks-grid' }];
+const pageTemplates = computed(() => state.builderMode === 'email' ? emailPageTemplates : state.builderMode === 'quiz' ? quizPageTemplates : vslPageTemplates);
 
 const contentObjects = [
-  { type: 'top-banner', title: 'Banner Topo', icon: 'bi bi-exclamation-triangle-fill' },
   { type: 'heading', title: 'Título / Headline', icon: 'bi bi-type-h1' },
   { type: 'paragraph', title: 'Parágrafo / Texto', icon: 'bi bi-paragraph' },
-  { type: 'button', title: 'Botão Link', icon: 'bi bi-menu-button-wide-fill' }
+  { type: 'image', title: 'Imagem', icon: 'bi bi-image' },
+  { type: 'button', title: 'Botão Link', icon: 'bi bi-menu-button-wide-fill' },
+  { type: 'divider', title: 'Divisor', icon: 'bi bi-dash-lg' }
 ];
 
-const conversionObjects = [
+const quizObjects = [
+  { type: 'quiz-progress', title: 'Progresso', icon: 'bi bi-bar-chart-steps' },
+  { type: 'quiz-single', title: 'Escolha única', icon: 'bi bi-ui-radios' },
+  { type: 'quiz-multiple', title: 'Múltipla escolha', icon: 'bi bi-ui-checks' },
+  { type: 'quiz-yes-no', title: 'Sim / Não', icon: 'bi bi-toggles' },
+  { type: 'quiz-loading', title: 'Carregamento', icon: 'bi bi-arrow-repeat' },
+  { type: 'quiz-metric', title: 'Métricas', icon: 'bi bi-graph-up-arrow' },
+  { type: 'quiz-price', title: 'Preço / Plano', icon: 'bi bi-cash-coin' },
+  { type: 'quiz-spacer', title: 'Espaço', icon: 'bi bi-arrows-expand' }
+];
+const vslObjects = [
+  { type: 'top-banner', title: 'Banner Topo', icon: 'bi bi-exclamation-triangle-fill' },
   { type: 'vturb-player', title: 'Player VTurb', icon: 'bi bi-play-circle-fill' },
   { type: 'pitch-button', title: 'Botão CTA Pitch', icon: 'bi bi-lightning-charge-fill' },
   { type: 'upsell-buttons', title: 'Botões Upsell', icon: 'bi bi-bag-check-fill' },
   { type: 'live-viewers', title: 'Espectadores Ao Vivo', icon: 'bi bi-eye-fill' }
 ];
+const emailObjects = [
+  { type:'email-header', title:'Cabeçalho E-mail', icon:'bi bi-envelope-paper-fill' },
+  { type:'email-tag', title:'Tag / Label', icon:'bi bi-tag-fill' },
+  { type:'email-footer', title:'Rodapé E-mail', icon:'bi bi-postcard-fill' }
+];
+const modeObjects = computed(() => state.builderMode === 'email' ? emailObjects : state.builderMode === 'quiz' ? quizObjects : vslObjects);
+const modeSectionTitle = computed(() => state.builderMode === 'email' ? 'OBJETOS DE E-MAIL' : state.builderMode === 'quiz' ? 'OBJETOS DO QUIZ' : 'OBJETOS DE VSL');
 
 const gridPresets = [
   { preset: '1-col', title: '1 Coluna', sub: '100% Largura', cols: [1], total: 1 },
@@ -151,8 +173,8 @@ const gridPresets = [
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 12px 14px;
   cursor: pointer;
@@ -160,16 +182,16 @@ const gridPresets = [
 }
 
 .page-template-card:hover {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.35);
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-border);
   transform: translateX(3px);
 }
 
 .page-template-icon {
   width: 38px;
   height: 38px;
-  background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -186,20 +208,20 @@ const gridPresets = [
 .page-template-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-surface);
 }
 
 .page-template-desc {
   font-size: 11.5px;
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted, var(--color-text-soft));
 }
 
 .card-arrow {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-soft);
   font-size: 18px;
 }
 
 .page-template-card:hover .card-arrow {
-  color: #818cf8;
+  color: var(--color-primary-hover);
 }
 </style>

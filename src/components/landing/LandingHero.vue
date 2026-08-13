@@ -3,7 +3,7 @@
     <div class="glow-bg"></div>
     <div class="container hero-container">
       <div class="badge-tag">
-        <i class="bi bi-rocket-takeoff-fill"></i> Plataforma Nº 1 em Construção Visual de Páginas
+        <i class="bi bi-rocket-takeoff-fill"></i> Construtor visual para funis, e-mails e quizzes
       </div>
 
       <h1 class="hero-title">
@@ -11,7 +11,7 @@
       </h1>
 
       <p class="hero-subtitle">
-        A plataforma completa para você construir, gerenciar e publicar páginas modernas, VSLs e funis de vendas com máxima performance e sem programar uma linha de código.
+        Crie, organize, visualize e exporte páginas de funil, campanhas de e-mail e quizzes interativos sem precisar programar.
       </p>
 
       <div class="hero-buttons">
@@ -19,7 +19,7 @@
           Acessar Meu Painel <i class="bi bi-arrow-right-short"></i>
         </button>
         <button class="btn-hero-secondary" @click="$emit('navigate', 'builder')">
-          <i class="bi bi-play-circle-fill"></i> Abrir Construtor Live
+          <i class="bi bi-play-circle-fill"></i> Abrir construtor
         </button>
       </div>
 
@@ -31,7 +31,6 @@
             <span class="dot yellow"></span>
             <span class="dot green"></span>
           </div>
-          <span class="mockup-url">builder.visualstudio.com/editor</span>
         </div>
         <div class="mockup-body">
           <div class="mockup-sidebar"></div>
@@ -68,7 +67,7 @@ defineEmits(['navigate']);
   transform: translateX(-50%);
   width: 700px;
   height: 700px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, rgba(56, 189, 248, 0.05) 50%, transparent 70%);
+  background: var(--color-primary-soft);
   pointer-events: none;
 }
 
@@ -82,9 +81,9 @@ defineEmits(['navigate']);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  color: #818cf8;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-primary-strong);
   padding: 6px 18px;
   border-radius: 999px;
   font-size: 13px;
@@ -102,14 +101,14 @@ defineEmits(['navigate']);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #818cf8 0%, #38bdf8 100%);
+  background: var(--color-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .hero-subtitle {
   font-size: clamp(16px, 2vw, 20px);
-  color: #94a3b8;
+  color: var(--color-text-soft);
   max-width: 760px;
   margin: 0 auto 36px auto;
 }
@@ -123,21 +122,21 @@ defineEmits(['navigate']);
 }
 
 .btn-hero-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   font-size: 16px;
   font-weight: 700;
   padding: 14px 34px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+  box-shadow: none;
 }
 
 .btn-hero-secondary {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
+  color: var(--color-surface);
   font-size: 16px;
   font-weight: 600;
   padding: 14px 28px;
@@ -154,7 +153,7 @@ defineEmits(['navigate']);
   background: #0f1523;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 18px 40px rgba(14, 116, 144, .14);
   overflow: hidden;
 }
 
@@ -174,16 +173,8 @@ defineEmits(['navigate']);
 
 .dot { width: 10px; height: 10px; border-radius: 50%; }
 .dot.red { background: #ef4444; }
-.dot.yellow { background: #f59e0b; }
+.dot.yellow { background: var(--color-primary); }
 .dot.green { background: #10b981; }
-
-.mockup-url {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: #94a3b8;
-}
 
 .mockup-body {
   height: 380px;

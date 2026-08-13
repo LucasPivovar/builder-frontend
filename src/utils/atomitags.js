@@ -10,13 +10,13 @@ export function getDynamicDateString(styleKey = 'full') {
   const dateFormatted = now.toLocaleDateString('pt-BR');
 
   if (styleKey === 'warning') {
-    return '⚠️ ATENÇÃO: Última chance em ' + dateFormatted;
+    return 'ATENÇÃO: Última chance em ' + dateFormatted;
   } else if (styleKey === 'valid_today') {
-    return '🔥 VÁLIDO SOMENTE HOJE (' + weekdayStr + ')';
+    return 'VÁLIDO SOMENTE HOJE (' + weekdayStr + ')';
   } else if (styleKey === 'vagas') {
-    return '⚡ AVISO IMPORTANTE: Vagas limitadas para ' + monthStr + ' de ' + yearNum;
+    return 'AVISO IMPORTANTE: Vagas limitadas para ' + monthStr + ' de ' + yearNum;
   } else if (styleKey === 'live') {
-    return '🔴 AO VIVO HOJE (' + dayNum + ' de ' + monthStr + ')';
+    return 'AO VIVO HOJE (' + dayNum + ' de ' + monthStr + ')';
   } else if (styleKey === 'none') {
     return '';
   } else {

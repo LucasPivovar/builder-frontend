@@ -3,20 +3,20 @@
     <div class="container">
       <div class="stats-grid">
         <div class="stat-item">
-          <div class="stat-number">+50.000</div>
-          <div class="stat-label">Páginas & Funis Criados</div>
+          <div class="stat-number">3</div>
+          <div class="stat-label">Formatos de página</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">99.9%</div>
-          <div class="stat-label">Uptime Garantido</div>
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Edição visual</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">&lt; 50ms</div>
-          <div class="stat-label">Tempo Médio de Carregamento</div>
+          <div class="stat-number">HTML</div>
+          <div class="stat-label">Exportação pronta</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">4.9 / 5</div>
-          <div class="stat-label">Avaliação de Satisfação</div>
+          <div class="stat-number">20</div>
+          <div class="stat-label">Versões de recuperação</div>
         </div>
       </div>
     </div>
@@ -48,12 +48,12 @@
 .stat-number {
   font-size: 36px;
   font-weight: 800;
-  color: #fff;
+  color: var(--color-surface);
   margin-bottom: 4px;
 }
 
 .stat-label {
   font-size: 13.5px;
-  color: #94a3b8;
+  color: var(--color-text-soft);
 }
 </style>

@@ -17,6 +17,7 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
   const bgColor = pageSettings.bgColor || '#191919';
   const fontFamily = pageSettings.fontFamily || 'Roboto';
   const faviconUrl = pageSettings.faviconUrl || '';
+  const trackingKey = String(pageSettings.trackingKey || 'draft').replace(/[^a-zA-Z0-9_-]/g, '');
 
   // Processa Meta Pixel
   let metaPixelScript = '';
@@ -56,24 +57,28 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
     }
   }
   const isEmailMode = pageSettings.builderMode === 'email' || rows.some(r => r.columns.some(c => c.elements.some(e => ['email-header', 'email-footer', 'email-tag'].includes(e.type))));
+  const quizTypes = ['quiz-question','quiz-next','quiz-progress','quiz-single','quiz-multiple','quiz-yes-no','quiz-loading','quiz-metric','quiz-price','quiz-spacer'];
+  const isQuizMode = pageSettings.builderMode === 'quiz' || rows.some(r => r.columns.some(c => c.elements.some(e => quizTypes.includes(e.type))));
 
   if (isEmailMode) {
     let emailRowsHTML = '';
     for (const row of rows) {
       for (const col of row.columns) {
         let colElemsHTML = '';
-        let hasHeaderOrFooter = false;
+        const flushContentRow = () => {
+          if (!colElemsHTML.trim()) return;
+          emailRowsHTML += `<tr><td class="pad" style="padding:34px 44px 38px;background:#ffffff">${colElemsHTML}</td></tr>`;
+          colElemsHTML = '';
+        };
         for (const elem of col.elements) {
           if (elem.type === 'email-header' || elem.type === 'email-footer') {
-            hasHeaderOrFooter = true;
+            flushContentRow();
             emailRowsHTML += renderExportElement(elem, fontFamily);
           } else {
             colElemsHTML += renderExportElement(elem, fontFamily);
           }
         }
-        if (!hasHeaderOrFooter && colElemsHTML.trim()) {
-          emailRowsHTML += `<tr><td class="pad" style="padding:34px 44px 38px;background:#ffffff">${colElemsHTML}</td></tr>`;
-        }
+        flushContentRow();
       }
     }
 
@@ -113,18 +118,21 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
 
   // Constrói o HTML do corpo
   let bodyContentHTML = '';
-  for (const row of rows) {
+  for (const [rowIndex, row] of rows.entries()) {
     let colsHTML = '';
     for (const col of row.columns) {
       let elemsHTML = '';
       for (const elem of col.elements) {
+        if (isQuizMode && elem.type === 'quiz-progress') continue;
         elemsHTML += renderExportElement(elem, fontFamily);
       }
       colsHTML += `<div class="builder-col" style="flex: ${col.flex || 1};">${elemsHTML}</div>`;
     }
     const rowHasTopBanner = row.columns.some(c => c.elements.some(e => e.type === 'top-banner'));
-    const rowClass = rowHasTopBanner ? 'builder-row has-top-banner' : 'builder-row';
-    bodyContentHTML += `<div class="${rowClass}">${colsHTML}</div>`;
+    const rowClass = rowHasTopBanner ? 'builder-row has-top-banner' : `builder-row${isQuizMode ? ' quiz-step' : ''}`;
+    const progress = Math.round(((rowIndex + 1) / Math.max(1, rows.length)) * 100);
+    const progressHTML = isQuizMode ? `<div class="quiz-progress" style="height:${Number(pageSettings.quizProgressHeight)||6}px"><span style="width:${progress}%;background:${pageSettings.quizProgressColor || '#0ea5e9'}"></span></div><div class="quiz-step-label">Etapa ${rowIndex + 1} de ${rows.length}</div>` : '';
+    bodyContentHTML += `<div class="${rowClass}"${isQuizMode ? ` data-quiz-step="${rowIndex}"` : ''}>${progressHTML}${colsHTML}</div>`;
   }
 
   const fullDocHTML = `<!DOCTYPE html>
@@ -175,6 +183,18 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
       margin: 0 0 clamp(16px, 2.5vh, 28px) 0;
       padding: 0;
     }
+    .builder-row.has-top-banner:first-child, .builder-row.has-top-banner .canvas-top-banner { margin-top: 0 !important; }
+    ${isQuizMode ? `
+    body,html{background:#f5fbff!important;color:#0f172a!important}
+    .vsl-container{width:min(100%,480px)!important;min-height:100vh;margin:0 auto!important;padding:24px 12px 48px!important;background:#f5fbff!important;display:flex;align-items:flex-start}
+    .quiz-step{display:none;flex-direction:column;width:100%;margin:0!important;padding:28px 20px!important;border:1px solid #bae6fd;border-radius:24px;background:#fff;box-shadow:0 12px 34px rgba(14,116,144,.13)}
+    .quiz-step.active{display:flex;animation:quizIn .3s ease}.quiz-step .builder-col{gap:14px}
+    .quiz-progress{border-radius:999px;background:#e0f2fe;overflow:hidden}.quiz-progress span{display:block;height:100%;border-radius:inherit;background:#0ea5e9}.quiz-step-label{text-align:right;margin:7px 0 12px;color:#7890a8;font-size:9px;font-weight:800;text-transform:uppercase}
+    .quiz-options{display:flex;flex-direction:column;gap:9px}.quiz-option{min-height:58px;display:grid;grid-template-columns:30px 1fr 18px;gap:10px;align-items:center;width:100%;padding:10px 14px;border:1px solid #bae6fd;border-radius:14px;background:#fff;color:#0f172a;font:inherit;font-size:15px;text-align:left;cursor:pointer}.quiz-option:hover,.quiz-option.selected{border-color:#0ea5e9;background:#f0f9ff}.quiz-options.quiz-required .quiz-option{border-color:#0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.12)}.quiz-option-mark{width:27px;height:27px;border:1px solid #bae6fd;border-radius:50%;display:grid;place-items:center;font-size:10px}.quiz-option.selected .quiz-option-mark{background:#0ea5e9;color:#fff}
+    .quiz-loading{display:flex;flex-direction:column;gap:9px;padding:12px 2px}.quiz-loading-header{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#0f172a;font-size:13px;font-weight:700}.quiz-loading-header strong{color:#0369a1}.quiz-loading-bar{height:12px;border-radius:999px;background:#e0f2fe;overflow:hidden}.quiz-loading-bar span{position:relative;display:block;height:100%;background:#0ea5e9;transform-origin:left;animation:quizLoadGrow 1.15s cubic-bezier(.22,1,.36,1) both}.quiz-loading-bar span:after{content:'';position:absolute;inset:0;width:45%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-120%);animation:quizLoadShimmer 1.45s ease-in-out .35s infinite}.quiz-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.quiz-metrics article{min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #bae6fd;border-radius:14px;animation:quizMetricIn .35s cubic-bezier(.22,1,.36,1) both}.quiz-metrics strong{font-size:22px;color:#0369a1}.quiz-metrics span{margin-top:8px;color:#64748b;font-size:12px;text-align:center}
+    .quiz-price{border:2px solid #0ea5e9;border-radius:15px;overflow:hidden}.quiz-price>small{display:block;padding:6px;text-align:center;background:#0ea5e9;color:#fff;font-weight:800}.quiz-price>div{display:flex;justify-content:space-between;align-items:center;padding:16px}.quiz-price span{display:flex;flex-direction:column}.quiz-price em{font-style:normal;color:#64748b;font-size:11px}.quiz-price b{font-size:20px;color:#0369a1}
+    @keyframes quizIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}@keyframes quizLoadGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes quizLoadShimmer{0%{transform:translateX(-120%)}70%,100%{transform:translateX(320%)}}@keyframes quizMetricIn{from{opacity:0;transform:translateY(9px) scale(.98)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.quiz-step,.quiz-loading-bar span,.quiz-loading-bar span:after,.quiz-metrics article{animation:none!important}}
+    ` : ''}
     .builder-col {
       display: flex;
       flex-direction: column;
@@ -182,6 +202,11 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
       width: 100%;
       flex: 1;
       box-sizing: border-box;
+    }
+    @media (max-width: 700px) {
+      .builder-row { padding: 0 12px; }
+      .builder-row.has-top-banner { padding: 0; }
+      .builder-col { flex: 0 0 100% !important; }
     }
     .canvas-element {
       display: block;
@@ -265,6 +290,19 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
   <div class="vsl-container" style="background-color: ${bgColor}; color: #ffffff;">
     ${bodyContentHTML}
   </div>
+
+  ${isQuizMode ? `<script>
+    (function(){
+      var steps=Array.from(document.querySelectorAll('.quiz-step')),index=0,answers={};
+      function show(next){index=Math.max(0,Math.min(next,steps.length-1));steps.forEach(function(step,i){step.classList.toggle('active',i===index)});window.scrollTo({top:0,behavior:'smooth'});}
+      document.addEventListener('click',function(event){
+        var option=event.target.closest('.quiz-option');
+        if(option){var group=option.closest('.quiz-options');group.classList.remove('quiz-required');group.removeAttribute('aria-invalid');if(group.dataset.multiple==='true')option.classList.toggle('selected');else{group.querySelectorAll('.quiz-option').forEach(function(item){item.classList.remove('selected')});option.classList.add('selected')}answers[index]=Array.from(group.querySelectorAll('.selected')).map(function(item){return item.dataset.value});}
+        var next=event.target.closest('a[href="#quiz-next"]');if(next){event.preventDefault();var active=steps[index],required=active&&active.querySelector('.quiz-options');if(required&&!required.querySelector('.selected')){required.classList.add('quiz-required');required.setAttribute('aria-invalid','true');var first=required.querySelector('.quiz-option');if(first)first.focus();return;}if(index<steps.length-1)show(index+1);else document.dispatchEvent(new CustomEvent('quiz:complete',{detail:{answers:answers}}));}
+      });
+      show(0);window.quizAnswers=answers;
+    })();
+  </script>` : ''}
 
   <!-- SCRIPT AUTOMÁTICO DE INTERCEPTAÇÃO E SINCRONIZAÇÃO DE PITCH DELAY COM VÍDEO VSL -->
   <script>
@@ -354,6 +392,49 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
       });
     })();
   </script>
+
+  <script>
+    (function() {
+      var countdowns = document.querySelectorAll('.builder-countdown');
+      function update() {
+        countdowns.forEach(function(item) {
+          var target = new Date(item.getAttribute('data-target')).getTime();
+          var seconds = Math.max(0, Math.floor((target - Date.now()) / 1000));
+          var days = Math.floor(seconds / 86400); seconds %= 86400;
+          var hours = Math.floor(seconds / 3600); seconds %= 3600;
+          var minutes = Math.floor(seconds / 60); var secs = seconds % 60;
+          var values = [[days,'dias'],[hours,'horas'],[minutes,'min'],[secs,'seg']];
+          item.querySelector('.builder-countdown-numbers').innerHTML = values.map(function(value) {
+            return '<span style="background:#e0f2fe;border-radius:10px;padding:10px 12px;min-width:54px;display:flex;flex-direction:column"><b style="font-size:26px;line-height:1">' + value[0] + '</b><small style="margin-top:5px;text-transform:uppercase;color:#475569">' + value[1] + '</small></span>';
+          }).join('');
+        });
+      }
+      if (countdowns.length) { update(); setInterval(update, 1000); }
+    })();
+  </script>
+
+  <script>
+    (function() {
+      var pageKey = '${trackingKey || 'draft'}';
+      function record(type, target) {
+        var payload = { source: 'visual-builder', type: 'metric', metric: { pageKey: pageKey, type: type, target: target || '', createdAt: new Date().toISOString() } };
+        try {
+          var saved = JSON.parse(localStorage.getItem('builder_metrics_v1') || '[]');
+          saved.unshift(payload.metric);
+          localStorage.setItem('builder_metrics_v1', JSON.stringify(saved.slice(0, 1000)));
+        } catch (e) {}
+        if (window.parent !== window) window.parent.postMessage(payload, '*');
+      }
+      record('page_view');
+      document.addEventListener('click', function(event) {
+        var link = event.target.closest && event.target.closest('a');
+        if (link) record('cta_click', link.getAttribute('href') || '');
+      });
+      document.addEventListener('submit', function(event) {
+        record('form_submit', event.target.getAttribute('action') || '');
+      });
+    })();
+  </script>
 </body>
 </html>`;
 
@@ -402,7 +483,7 @@ function parseAtomitags(text, altColor = '#f1c232', bgColor = '#00ff0b', parseOp
   str = str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
   // ~texto~ -> pulsando / destaque neon
-  str = str.replace(/~(.*?)~/g, `<span class="is-pulsing" style="color: ${altColor}; display: inline-block;">$1 ✦</span>`);
+  str = str.replace(/~(.*?)~/g, `<span class="is-pulsing" style="color: ${altColor}; display: inline-block;">$1</span>`);
 
   // --texto-- -> riscado (strikethrough)
   str = str.replace(/--(.*?)--/g, '<del style="opacity: 0.7;">$1</del>');
@@ -447,13 +528,12 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
   if (type === 'top-banner') {
     const py = getNum(style.paddingVertical, 12);
     const px = getNum(style.paddingHorizontal, 16);
-    const mt = getNum(style.marginTop, 0);
     const mb = getNum(style.marginBottom, 0);
     const bannerBg = style.hasTransparentBg ? 'transparent' : (style.bgOpacity !== undefined && style.bgOpacity !== null && style.bgOpacity !== '' && Number(style.bgOpacity) < 1 ? hexToRgba(style.bgColor || '#dc2626', Number(style.bgOpacity)) : (style.bgColor || '#dc2626'));
-    innerHTML = `<div class="canvas-top-banner" style="background: ${bannerBg}; color: ${style.textColor || '#ffffff'}; font-weight: ${style.fontWeight || '800'}; text-align: ${style.align || 'center'}; padding: ${py}px ${px}px; margin-top: ${mt}px; margin-bottom: ${mb}px; font-size: ${style.fontSize || '15px'}; width: 100%; ${borderStyleStr} border-radius: ${style.borderRadius || 0}px;">
-      ${parseAtomitags(elem.content || '⚠️ ATENÇÃO NÃO FECHE ESTA PÁGINA ⚠️', style.altColor, style.bgColor, parseOpts)}
+    innerHTML = `<div class="canvas-top-banner" style="background: ${bannerBg}; color: ${style.textColor || '#ffffff'}; font-weight: ${style.fontWeight || '800'}; text-align: ${style.align || 'center'}; padding: ${py}px ${px}px; margin-top: 0; margin-bottom: ${mb}px; font-size: ${style.fontSize || '15px'}; width: 100%; ${borderStyleStr} border-radius: ${style.borderRadius || 0}px;">
+      ${parseAtomitags(elem.content || 'ATENÇÃO: NÃO FECHE ESTA PÁGINA', style.altColor, style.bgColor, parseOpts)}
     </div>`;
-  } else if (type === 'heading') {
+  } else if (type === 'heading' || type === 'quiz-question') {
     const py = getNum(style.paddingVertical, 0);
     const px = getNum(style.paddingHorizontal, 0);
     const mt = getNum(style.marginTop, 10);
@@ -467,8 +547,8 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const mb = getNum(style.marginBottom, 6);
     const textStyle = `font-size:${style.fontSize || '15px'}; font-weight:${style.fontWeight || '400'}; color:${style.textColor || '#cccccc'}; margin:${mt}px auto ${mb}px auto; text-align:${style.align || 'center'}; line-height:${style.lineHeight || 1.5}; letter-spacing:${style.letterSpacing || 0}px;`;
     innerHTML = `<p class="canvas-paragraph" style="background-color: ${bg}; padding: ${py}px ${px}px; border-radius: ${style.borderRadius || 0}px; ${borderStyleStr} ${textStyle}">${parseAtomitags(elem.content, style.altColor, style.bgColor, parseOpts)}</p>`;
-  } else if (type === 'button' || type === 'pitch-button') {
-    const targetAttr = elem.openInNewTab !== false ? ' target="_blank"' : '';
+  } else if (type === 'button' || type === 'pitch-button' || type === 'quiz-next') {
+    const targetAttr = type === 'quiz-next' ? '' : (elem.openInNewTab !== false ? ' target="_blank"' : '');
     const defaultBg = '#ffffff';
     const defaultTextColor = '#000000';
     const defaultFontSize = '20px';
@@ -487,7 +567,7 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const subTextHTML = elem.subtext ? `<span style="font-size:12px; opacity:0.88; display:block; margin-top:4px; font-weight:500;">${parseAtomitags(elem.subtext, style.altColor, style.bgColor, parseOpts)}</span>` : '';
     
     innerHTML = `<div style="text-align:${style.align || 'center'}; width: 100%;">
-      <a href="${elem.url || '#'}"${targetAttr} class="${type === 'pitch-button' ? 'canvas-pitch-btn' : 'canvas-button'}" style="${btnStyle}">
+      <a href="${type === 'quiz-next' ? '#quiz-next' : (elem.url || '#')}"${targetAttr} class="${type === 'pitch-button' ? 'canvas-pitch-btn' : 'canvas-button'}" style="${btnStyle}">
         <span style="display:block;">${parseAtomitags(elem.content || (type === 'pitch-button' ? 'QUERO MEU ACESSO AGORA' : ''), style.altColor, style.bgColor, parseOpts)}</span>
         ${subTextHTML}
       </a>
@@ -596,6 +676,34 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const borderCol = style.borderColor || '#e4e4e7';
     const radius = getNum(style.borderRadius, 999);
     innerHTML = `<div style="display:inline-block;background:${tagBg};border:1px solid ${borderCol};border-radius:${radius}px;color:${textCol};font-family:'${fontFamily}',sans-serif!important;font-size:${style.fontSize || '11px'};font-weight:${style.fontWeight || '500'};letter-spacing:.6px;padding:${py}px ${px}px;margin-top:${mt}px;margin-bottom:${mb}px">${parseAtomitags(elem.content || 'ARTES PRONTAS', style.altColor, style.bgColor, parseOpts)}</div>`;
+  } else if (type === 'quiz-progress') {
+    innerHTML = `<div class="quiz-progress"><span style="width:${Math.max(0,Math.min(100,Number(elem.progress)||0))}%"></span></div>`;
+  } else if (['quiz-single','quiz-multiple','quiz-yes-no'].includes(type)) {
+    const options = String(elem.optionsText || 'Opção 1\nOpção 2').split('\n').map(value => value.trim()).filter(Boolean);
+    innerHTML = `<div class="quiz-options" data-multiple="${type === 'quiz-multiple'}">${options.map((option,index)=>`<button type="button" class="quiz-option" data-value="${option.replace(/"/g,'&quot;')}"><span class="quiz-option-mark">${type === 'quiz-multiple' ? String.fromCharCode(65+index) : ''}</span><span>${option}</span><span>›</span></button>`).join('')}</div>`;
+  } else if (type === 'quiz-loading') {
+    const progress=Math.max(0,Math.min(100,Number(elem.progress)||0)); innerHTML=`<div class="quiz-loading"><div class="quiz-loading-header"><span>${elem.content || 'Analisando suas respostas...'}</span><strong>${progress}%</strong></div><div class="quiz-loading-bar"><span style="width:${progress}%"></span></div></div>`;
+  } else if (type === 'quiz-metric') {
+    const metrics=String(elem.metricsText || '72%|Conversão').split('\n').map(line=>{const parts=line.split('|');return{value:(parts.shift()||'').trim(),label:parts.join('|').trim()}}).filter(metric=>metric.value||metric.label); innerHTML=`<div class="quiz-metrics">${metrics.map(({value,label})=>`<article><strong>${value||''}</strong><span>${label||''}</span></article>`).join('')}</div>`;
+  } else if (type === 'quiz-price') {
+    innerHTML=`<div class="quiz-price"><small>${elem.badge || 'Recomendado'}</small><div><span><strong>${elem.content || 'Plano PRO'}</strong><em>${elem.description || 'Acesso completo'}</em></span><b>${elem.price || 'R$ 197,00'}</b></div></div>`;
+  } else if (type === 'quiz-spacer') {
+    innerHTML=`<div style="height:${Math.max(4,Number(elem.height)||32)}px"></div>`;
+  } else if (type === 'image') {
+    const url = elem.imageUrl || elem.content || '';
+    innerHTML = `<img src="${url}" alt="${elem.altText || ''}" style="display:block;width:100%;max-width:${style.maxWidth || '760px'};height:auto;margin:${getNum(style.marginTop, 10)}px auto ${getNum(style.marginBottom, 10)}px;border-radius:${getNum(style.borderRadius, 12)}px;">`;
+  } else if (type === 'divider') {
+    innerHTML = `<div style="border-top:2px solid ${style.textColor || '#38bdf8'};margin:${getNum(style.marginTop, 18)}px 0 ${getNum(style.marginBottom, 18)}px;opacity:.8"></div>`;
+  } else if (type === 'testimonial') {
+    innerHTML = `<figure style="max-width:680px;margin:${getNum(style.marginTop, 12)}px auto ${getNum(style.marginBottom, 12)}px;padding:24px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 14)}px;background:${style.bgColor || '#ffffff'};color:${style.textColor || '#0f172a'};text-align:left"><blockquote style="margin:8px 0 18px;line-height:1.55;font-size:${style.fontSize || '16px'}">${parseAtomitags(elem.content || '', style.altColor, style.bgColor, parseOpts)}</blockquote><figcaption><strong>${elem.author || 'Cliente verificado'}</strong><br><span style="color:#64748b;font-size:13px">${elem.role || 'Cliente'}</span></figcaption></figure>`;
+  } else if (type === 'faq') {
+    innerHTML = `<details open style="max-width:680px;margin:${getNum(style.marginTop, 8)}px auto ${getNum(style.marginBottom, 8)}px;padding:20px 24px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 12)}px;background:${style.bgColor || '#ffffff'};color:${style.textColor || '#0f172a'}"><summary style="cursor:pointer;font-weight:800">${parseAtomitags(elem.content || 'Pergunta frequente', style.altColor, style.bgColor, parseOpts)}</summary><p style="margin:16px 0 0;line-height:1.55">${parseAtomitags(elem.answer || '', style.altColor, style.bgColor, parseOpts)}</p></details>`;
+  } else if (type === 'countdown') {
+    const target = elem.targetDate || new Date(Date.now() + 86400000).toISOString();
+    innerHTML = `<section class="builder-countdown" data-target="${target}" style="max-width:680px;margin:${getNum(style.marginTop, 12)}px auto ${getNum(style.marginBottom, 12)}px;padding:22px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 14)}px;background:${style.bgColor || '#ffffff'};color:${style.textColor || '#0f172a'};text-align:center"><strong style="display:block;margin-bottom:16px;font-size:${style.fontSize || '16px'}">${parseAtomitags(elem.content || '', style.altColor, style.bgColor, parseOpts)}</strong><div class="builder-countdown-numbers" style="display:flex;justify-content:center;gap:10px"></div></section>`;
+  } else if (type === 'form') {
+    const action = elem.submitUrl || '';
+    innerHTML = `<form action="${action}" method="post" style="max-width:680px;margin:${getNum(style.marginTop, 12)}px auto ${getNum(style.marginBottom, 12)}px;padding:24px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 14)}px;background:#ffffff;color:#0f172a;display:flex;flex-direction:column;gap:11px;text-align:left"><h3 style="margin:0">${elem.formTitle || 'Receba as novidades'}</h3><p style="margin:0;color:#475569">${elem.description || ''}</p><input name="name" required placeholder="${elem.namePlaceholder || 'Seu nome'}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><input name="email" type="email" required placeholder="${elem.emailPlaceholder || 'Seu melhor e-mail'}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><button type="submit" style="padding:12px;border:0;border-radius:8px;background:${style.bgColor || '#0ea5e9'};color:${style.textColor || '#ffffff'};font:inherit;font-weight:800;cursor:pointer">${parseAtomitags(elem.content || 'Enviar', style.altColor, style.bgColor, parseOpts)}</button></form>`;
   } else if (type === 'meta-pixel') {
     if (elem.pixelId) {
       innerHTML = `<script>if(typeof fbq === 'function'){ fbq('track', '${elem.pixelEvent || 'PageView'}'); }</script>`;
@@ -605,6 +713,9 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
   }
 
   const bannerClass = type === 'top-banner' ? ' is-top-banner' : '';
+
+  // Em tabelas de e-mail, <tr> precisa ser filho direto de <table>/<tbody>.
+  if (type === 'email-header' || type === 'email-footer') return innerHTML;
 
   if (elem.delayEnabled) {
     const totalSeconds = ((elem.delayMinutes || 0) * 60) + (elem.delaySeconds || 0);

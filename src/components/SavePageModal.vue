@@ -1,10 +1,10 @@
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="modal-backdrop" @click.self="$emit('close')">
-      <div class="save-modal">
+      <div class="save-modal tour-save-modal">
         <div class="modal-header">
           <div>
-            <h3>💾 Salvar Página</h3>
+            <h3><i class="bi bi-floppy-fill"></i> Salvar Página</h3>
             <p>Salve sua página para acessar e editar depois</p>
           </div>
           <button class="btn-close" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
@@ -17,7 +17,7 @@
               type="text"
               class="form-input"
               v-model="pageName"
-              :placeholder="builderMode === 'email' ? 'ex: E-mail Boas-vindas' : 'ex: VSL Funil Dollar App'"
+              :placeholder="pagePlaceholder"
               autofocus
             />
           </div>
@@ -26,22 +26,22 @@
             <label class="form-label">Pasta Destino</label>
             <div class="folder-row">
               <select class="form-select" v-model="folderId">
-                <option value="">📂 Sem pasta (Raiz)</option>
-                <option v-for="f in foldersRegistry" :key="f.id" :value="f.id">📁 {{ f.name }}</option>
+                <option value="">Sem pasta (Raiz)</option>
+                <option v-for="f in foldersRegistry" :key="f.id" :value="f.id">{{ f.name }}</option>
               </select>
             </div>
           </div>
 
-          <div class="type-info-badge" :class="builderMode === 'email' ? 'badge-email' : 'badge-funil'">
-            <i :class="builderMode === 'email' ? 'bi bi-envelope-paper-fill' : 'bi bi-play-btn-fill'"></i>
-            Modo: {{ builderMode === 'email' ? 'Template E-mail' : 'Página Funil' }}
+          <div class="type-info-badge" :class="`badge-${builderMode}`">
+            <i :class="pageModeIcon"></i>
+            Formato: {{ pageModeLabel }}
             <span v-if="currentPageId" style="margin-left: 8px; opacity: 0.7;">(Atualizando página existente)</span>
           </div>
         </div>
 
         <div class="modal-footer">
           <button class="btn-cancel" @click="$emit('close')">Cancelar</button>
-          <button class="btn-save" :disabled="!pageName.trim()" @click="handleSave">
+          <button class="btn-save tour-save-modal-submit" :disabled="!pageName.trim()" @click="handleSave">
             <i class="bi bi-floppy-fill"></i>
             {{ currentPageId ? 'Atualizar Página' : 'Salvar Página' }}
           </button>
@@ -65,6 +65,9 @@ const folderId = ref('');
 
 const builderMode = computed(() => state.builderMode);
 const currentPageId = computed(() => state.currentPageId);
+const pageModeLabel = computed(() => builderMode.value === 'email' ? 'Página de e-mail' : builderMode.value === 'quiz' ? 'Quiz interativo' : 'Página de funil');
+const pageModeIcon = computed(() => builderMode.value === 'email' ? 'bi bi-envelope-paper-fill' : builderMode.value === 'quiz' ? 'bi bi-ui-checks-grid' : 'bi bi-play-btn-fill');
+const pagePlaceholder = computed(() => builderMode.value === 'email' ? 'Ex.: E-mail de boas-vindas' : builderMode.value === 'quiz' ? 'Ex.: Quiz de diagnóstico' : 'Ex.: VSL do produto principal');
 
 watch(() => props.isOpen, (open) => {
   if (open) {
@@ -99,29 +102,30 @@ function handleSave() {
   padding: 20px 24px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.modal-header h3 { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 2px; }
-.modal-header p { font-size: 12.5px; color: #94a3b8; }
-.btn-close { background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; }
+.modal-header h3 { font-size: 17px; font-weight: 800; color: var(--color-surface); margin-bottom: 2px; }
+.modal-header p { font-size: 12.5px; color: var(--color-text-soft); }
+.btn-close { background: none; border: none; color: var(--color-text-soft); font-size: 16px; cursor: pointer; }
 
 .modal-body { padding: 20px 24px; }
 .form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 12.5px; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+.form-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--color-border); margin-bottom: 6px; }
 
 .form-input, .form-select {
   width: 100%; background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
-  padding: 10px 14px; color: #fff; font-size: 14px; outline: none;
+  padding: 10px 14px; color: var(--color-surface); font-size: 14px; outline: none;
 }
 
-.form-input:focus { border-color: #6366f1; }
+.form-input:focus { border-color: var(--color-primary); }
 
 .type-info-badge {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-top: 8px;
 }
 
-.badge-funil { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-.badge-email { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+.badge-funil { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.badge-email { background: rgba(56, 189, 248, 0.15); color: var(--color-primary-bright); }
+.badge-quiz { background: var(--color-primary-subtle); color: var(--color-primary-strong); }
 
 .modal-footer {
   display: flex; gap: 8px; justify-content: flex-end;
@@ -130,16 +134,28 @@ function handleSave() {
 
 .btn-cancel {
   background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0; padding: 9px 18px; border-radius: 9px; font-weight: 600; font-size: 13.5px; cursor: pointer;
+  color: var(--color-border); padding: 9px 18px; border-radius: 9px; font-weight: 600; font-size: 13.5px; cursor: pointer;
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #10b981, #059669);
-  border: none; color: #fff; padding: 9px 20px; border-radius: 9px;
+  background: var(--color-primary);
+  border: none; color: var(--color-surface); padding: 9px 20px; border-radius: 9px;
   font-weight: 700; font-size: 13.5px; cursor: pointer;
   display: flex; align-items: center; gap: 6px;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  box-shadow: none;
 }
 
 .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.modal-backdrop { background: var(--overlay); }
+.save-modal { background: var(--color-surface); border-color: var(--color-border); box-shadow: var(--shadow-modal); color: var(--color-text); }
+.modal-header, .modal-footer { border-color: var(--color-border); }
+.modal-header h3 { color: var(--color-text); }
+.modal-header p, .btn-close { color: var(--color-text-muted); }
+.form-label { color: var(--color-text-secondary); }
+.form-input, .form-select { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text); }
+.form-input:focus, .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.badge-email { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.modal-footer { background: var(--color-surface-soft); }
+.btn-cancel { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text-secondary); }
 </style>

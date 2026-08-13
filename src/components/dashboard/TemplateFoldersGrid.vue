@@ -1,7 +1,7 @@
 <template>
   <section class="dashboard-section">
     <div class="section-header-row">
-      <h2 class="section-h2"><i class="bi bi-grid-1x2-fill" style="color: #34d399;"></i> Pastas de Templates</h2>
+      <h2 class="section-h2"><i class="bi bi-grid-1x2-fill" style="color: var(--color-primary);"></i> Pastas de Templates</h2>
     </div>
 
     <div class="template-folders-grid">
@@ -11,12 +11,12 @@
         @click="$emit('open-template-folder', 'templates-funil')"
       >
         <div class="folder-card-left">
-          <div class="folder-icon-box" style="background: rgba(52, 211, 153, 0.15); color: #34d399;">
+          <div class="folder-icon-box" style="background: var(--color-primary-soft); color: var(--color-primary);">
             <i class="bi bi-folder-fill"></i>
           </div>
           <div>
             <div class="folder-card-name">Templates de Funil</div>
-            <div class="folder-card-sub">VSL, Upsell e Downsell · {{ totalFunnelTemplatesCount }} modelos</div>
+            <div class="folder-card-sub">VSL, upsell e downsell · {{ modelCount(totalFunnelTemplatesCount) }}</div>
           </div>
         </div>
         <div class="folder-card-arrow">
@@ -30,17 +30,33 @@
         @click="$emit('open-template-folder', 'templates-email')"
       >
         <div class="folder-card-left">
-          <div class="folder-icon-box" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
+          <div class="folder-icon-box" style="background: var(--color-primary-soft); color: var(--color-primary);">
             <i class="bi bi-folder-fill"></i>
           </div>
           <div>
             <div class="folder-card-name">Templates de E-mail</div>
-            <div class="folder-card-sub">Sequências de E-mail Marketing · 0 modelos</div>
+            <div class="folder-card-sub">Sequências de e-mail marketing · {{ modelCount(totalEmailTemplatesCount) }}</div>
           </div>
         </div>
         <div class="folder-card-arrow">
           <i class="bi bi-chevron-right"></i>
         </div>
+      </div>
+
+      <div
+        class="template-folder-card"
+        @click="$emit('open-template-folder', 'templates-quiz')"
+      >
+        <div class="folder-card-left">
+          <div class="folder-icon-box">
+            <i class="bi bi-folder-fill"></i>
+          </div>
+          <div>
+            <div class="folder-card-name">Templates de Quiz</div>
+            <div class="folder-card-sub">Perguntas, diagnóstico e oferta · {{ modelCount(totalQuizTemplatesCount) }}</div>
+          </div>
+        </div>
+        <div class="folder-card-arrow"><i class="bi bi-chevron-right"></i></div>
       </div>
     </div>
   </section>
@@ -55,8 +71,17 @@ defineEmits(['open-template-folder']);
 const { customTemplatesRegistry } = useBuilderStore();
 
 const totalFunnelTemplatesCount = computed(() => {
-  return 5 + customTemplatesRegistry.length;
+  return 1 + customTemplatesRegistry.filter(template => templateType(template) === 'funil').length;
 });
+const totalEmailTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => templateType(template) === 'email').length);
+const totalQuizTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => templateType(template) === 'quiz').length);
+const modelCount = count => `${count} ${count === 1 ? 'modelo' : 'modelos'}`;
+function templateType(template) {
+  const category=String(template.category||'').toLowerCase();
+  if(template.emailMode||category.includes('mail')) return 'email';
+  if(template.quizMode||category.includes('quiz')) return 'quiz';
+  return 'funil';
+}
 </script>
 
 <style scoped>
@@ -77,7 +102,7 @@ const totalFunnelTemplatesCount = computed(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #fff;
+  color: var(--color-text);
 }
 
 .template-folders-grid {
@@ -87,8 +112,8 @@ const totalFunnelTemplatesCount = computed(() => {
 }
 
 .template-folder-card {
-  background: rgba(23, 31, 48, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 20px;
   display: flex;
@@ -99,8 +124,8 @@ const totalFunnelTemplatesCount = computed(() => {
 }
 
 .template-folder-card:hover {
-  background: rgba(30, 41, 62, 0.9);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-bright);
   transform: translateY(-2px);
 }
 
@@ -123,21 +148,21 @@ const totalFunnelTemplatesCount = computed(() => {
 .folder-card-name {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .folder-card-sub {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   margin-top: 2px;
 }
 
 .folder-card-arrow {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-size: 16px;
 }
 
 .template-folder-card:hover .folder-card-arrow {
-  color: #fff;
+  color: var(--color-primary-strong);
 }
 </style>

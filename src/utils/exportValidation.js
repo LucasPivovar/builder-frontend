@@ -1,0 +1,14 @@
+export function validateExport(rows = [], settings = {}) {
+  const warnings = [];
+  const elements = rows.flatMap(row => (row.columns || []).flatMap(column => column.elements || []));
+  if (!settings.pageTitle?.trim()) warnings.push('Adicione um título à página para melhorar SEO e a identificação na aba do navegador.');
+  if (!settings.metaDesc?.trim()) warnings.push('Inclua uma meta descrição para melhorar o compartilhamento e SEO.');
+  elements.forEach((element, index) => {
+    const label = `Bloco ${index + 1}`;
+    if (['button', 'pitch-button'].includes(element.type) && (!element.url || element.url === '#')) warnings.push(`${label}: o botão “${element.content || 'sem texto'}” está sem link de destino.`);
+    if (element.type === 'image' && !(element.imageUrl || element.content)) warnings.push(`${label}: inclua uma URL de imagem.`);
+    if (element.type === 'form' && !element.submitUrl) warnings.push(`${label}: o formulário ainda não possui URL de envio; ele funciona somente como demonstração até integrar o backend.`);
+    if (element.type === 'countdown' && !element.targetDate) warnings.push(`${label}: defina a data final da contagem regressiva.`);
+  });
+  return warnings;
+}

@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "concurrently -k -n FRONTEND,API -c cyan,blue \"npm run serve\" \"npm run api:dev\"",
     "serve": "vue-cli-service serve",
+    "api": "npm --prefix backend run start",
+    "api:dev": "npm --prefix backend run start:dev",
+    "api:build": "npm --prefix backend run build",
+    "api:test": "npm --prefix backend run test:e2e",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
@@ -16,6 +21,7 @@
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "concurrently": "^10.0.4",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.20.0"
   },

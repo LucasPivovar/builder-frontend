@@ -2,13 +2,13 @@
   <section class="recent-pages-section">
     <div class="section-header-row">
       <div class="header-title-group">
-        <h2 class="section-h2"><i class="bi bi-clock-history" style="color: #818cf8;"></i> Páginas Recentes</h2>
+        <h2 class="section-h2"><i class="bi bi-clock-history" style="color: var(--color-primary);"></i> Páginas recentes</h2>
         <span class="count-badge">Últimas 5 páginas</span>
       </div>
 
       <div class="header-actions-group">
         <button class="btn-create-new" @click="$emit('create-new')">
-          <i class="bi bi-plus-lg"></i> Criar Nova Página
+          <i class="bi bi-plus-lg"></i> Criar nova página
         </button>
         <a href="#" class="see-all-link" @click.prevent="$emit('see-all')">
           Ver todos <i class="bi bi-arrow-right"></i>
@@ -77,12 +77,12 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #fff;
+  color: var(--color-text);
 }
 
 .count-badge {
-  background: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
   font-size: 11.5px;
   font-weight: 700;
   padding: 3px 10px;
@@ -96,8 +96,8 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
 }
 
 .btn-create-new {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   padding: 8px 16px;
   border-radius: 10px;
@@ -107,12 +107,12 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: none;
 }
 
 .see-all-link {
   font-size: 13.5px;
-  color: #38bdf8;
+  color: var(--color-primary-bright);
   text-decoration: none;
   font-weight: 700;
   display: flex;
@@ -129,8 +129,8 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
 }
 
 .page-item-card {
-  background: rgba(23, 31, 48, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -139,27 +139,27 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
 }
 
 .page-item-card:hover {
-  background: rgba(30, 41, 62, 0.9);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: var(--color-primary-subtle);
+  border-color: var(--color-primary-bright);
   transform: translateY(-4px);
 }
 
 .page-preview-box {
   height: 130px;
-  background: #111827;
+  background: var(--color-primary-soft);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .page-preview-mockup {
   width: 80%;
   height: 80%;
-  background: #1f2937;
+  background: var(--color-surface);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -167,9 +167,9 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
   opacity: 0.8;
 }
 
-.mockup-line { height: 8px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+.mockup-line { height: 8px; background: var(--color-border); border-radius: 4px; }
 .mockup-line.short { width: 50%; }
-.mockup-btn { height: 14px; background: #6366f1; border-radius: 4px; width: 40%; margin-top: 4px; }
+.mockup-btn { height: 14px; background: var(--color-primary); border-radius: 4px; width: 40%; margin-top: 4px; }
 
 .status-tag {
   position: absolute;
@@ -181,15 +181,15 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
   border-radius: 999px;
 }
 
-.status-tag.published { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.status-tag.draft { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.status-tag.published { background: var(--color-primary-soft); color: var(--color-primary-strong); }
+.status-tag.draft { background: var(--color-primary-subtle); color: var(--color-primary-strong); border: 1px solid var(--color-border); }
 
 .category-badge-tag {
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(15, 23, 42, 0.85);
-  color: #38bdf8;
+  background: var(--color-surface);
+  color: var(--color-primary-strong);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 8px;
@@ -203,8 +203,8 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
   flex: 1;
 }
 
-.page-item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #fff; }
-.page-item-date { font-size: 11.5px; color: #94a3b8; margin-bottom: 12px; }
+.page-item-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--color-text); }
+.page-item-date { font-size: 11.5px; color: var(--color-text-muted); margin-bottom: 12px; }
 
 .page-item-actions {
   display: flex;
@@ -215,9 +215,9 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
 
 .btn-edit-builder {
   flex: 1;
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  border: 1px solid var(--color-border-strong);
   padding: 7px;
   border-radius: 8px;
   font-size: 12px;
@@ -229,9 +229,9 @@ defineEmits(['create-new', 'see-all', 'edit-page', 'more-options']);
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
