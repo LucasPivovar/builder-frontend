@@ -1230,7 +1230,7 @@ body.landing-scroll #app {
   background: var(--color-surface) !important;
   border: 1px solid var(--color-border) !important;
   color: var(--color-text) !important;
-  box-shadow: 0 24px 60px rgba(14, 116, 144, .18) !important;
+  box-shadow: 0 24px 60px rgba(40, 25, 96, .18) !important;
 }
 
 .folder-modal .modal-header,

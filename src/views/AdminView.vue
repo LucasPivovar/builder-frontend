@@ -1,7 +1,7 @@
 <template>
   <div class="admin-shell">
     <aside class="admin-sidebar">
-      <div class="admin-brand"><span><i class="bi bi-shield-check"></i></span><div><strong>Admin</strong><small>Funil Builder</small></div></div>
+      <div class="admin-brand"><span><i class="bi bi-shield-check"></i></span><div><strong>Admin</strong><small>Astro Builder</small></div></div>
       <nav>
         <button :class="{ active: tab === 'overview' }" @click="tab = 'overview'"><i class="bi bi-grid-1x2"></i> Visão geral</button>
         <button :class="{ active: tab === 'users' }" @click="tab = 'users'"><i class="bi bi-people"></i> Usuários <em>{{ users.length }}</em></button>

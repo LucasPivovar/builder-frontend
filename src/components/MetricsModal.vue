@@ -42,7 +42,7 @@ function drawChart() {
   const max = Math.max(1, ...chartData.value.flatMap(day => [day.views, day.clicks, day.leads]));
   ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
   for (let line = 0; line < 4; line++) { const y = padding.top + (plotHeight / 3) * line; ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(width - padding.right, y); ctx.stroke(); }
-  const colors = { views: '#0ea5e9', clicks: '#38bdf8', leads: '#0369a1' }; const spacing = plotWidth / chartData.value.length; const groupWidth = Math.min(28, spacing * .6); const barWidth = Math.max(3, groupWidth / 3 - 2);
+  const colors = { views: '#612bf4', clicks: '#2296fc', leads: '#17b5fc' }; const spacing = plotWidth / chartData.value.length; const groupWidth = Math.min(28, spacing * .6); const barWidth = Math.max(3, groupWidth / 3 - 2);
   chartData.value.forEach((day, index) => {
     const baseX = padding.left + index * spacing + (spacing - groupWidth) / 2;
     ['views', 'clicks', 'leads'].forEach((type, barIndex) => {

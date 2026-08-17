@@ -23,10 +23,6 @@
             <option value="name">Nome A–Z</option>
             <option value="oldest">Mais antigas</option>
           </select>
-          <div class="view-switch" aria-label="Modo de visualização">
-            <button type="button" :class="{ active: viewMode === 'cards' }" title="Visualizar em cards" @click="viewMode = 'cards'"><i class="bi bi-grid-3x3-gap-fill"></i></button>
-            <button type="button" :class="{ active: viewMode === 'list' }" title="Visualizar em lista" @click="viewMode = 'list'"><i class="bi bi-list-ul"></i></button>
-          </div>
           <button class="btn-download-folder" type="button" :disabled="!pages.length" @click="$emit('download-folder')">
             <i class="bi bi-file-earmark-zip"></i> Baixar ZIP
           </button>
@@ -38,38 +34,39 @@
     </div>
 
     <!-- Pages inside this folder -->
-    <div class="folder-pages-grid" :class="`view-${viewMode}`">
+    <section class="folder-pages-table">
       <div v-if="displayedPages.length === 0" class="empty-folder-box">
         <i class="bi bi-folder2-open empty-icon"></i>
         <p>Nenhuma página criada nesta pasta ainda.</p>
         <button class="btn-primary-sm" @click="$emit('open-builder')">Criar Primeira Página</button>
       </div>
 
-      <div
-        v-else
-        v-for="page in displayedPages"
-        :key="page.id"
-        class="page-item-card"
-      >
-        <div class="page-preview-box">
-          <span class="category-badge-tag">{{ page.category }}</span>
-          <span class="status-tag" :class="page.statusClass">{{ page.statusText }}</span>
-          <div class="page-preview-mockup">
-            <div class="mockup-line"></div>
-            <div class="mockup-line short"></div>
-            <div class="mockup-btn"></div>
-          </div>
+      <template v-else>
+        <div class="folder-table-head" aria-hidden="true">
+          <span>Status</span>
+          <span>Página</span>
+          <span>Tipo</span>
+          <span>Última edição</span>
+          <span>Ações</span>
         </div>
-        <div class="page-item-info">
-          <div class="page-item-title">{{ page.title }}</div>
-          <div class="page-item-date">{{ page.date }}</div>
-          <div class="page-item-actions">
-            <button class="btn-edit-builder" @click="$emit('edit-page', page.templateId)">Editar no Builder</button>
-            <button class="btn-item-more" @click="$emit('more-options', page)"><i class="bi bi-three-dots-vertical"></i></button>
+        <article v-for="page in displayedPages" :key="page.id" class="folder-page-row">
+          <div class="row-status">
+            <i :class="['bi', page.statusClass === 'published' ? 'bi-broadcast-pin' : 'bi-pencil-square']"></i>
+            <span>{{ page.statusText }}</span>
           </div>
-        </div>
-      </div>
-    </div>
+          <div class="row-page-name">
+            <span class="row-page-icon"><i class="bi bi-file-earmark-richtext"></i></span>
+            <strong>{{ page.title }}</strong>
+          </div>
+          <div><span class="row-category">{{ page.category }}</span></div>
+          <time class="row-date">{{ page.date }}</time>
+          <div class="row-actions">
+            <button class="btn-edit-builder" title="Atribuir DNS" @click="$emit('edit-page', page.templateId)"><i class="bi bi-globe2"></i><span>Atribuir DNS</span></button>
+            <button class="btn-item-more" title="Mais opções" @click="$emit('more-options', page)"><i class="bi bi-three-dots-vertical"></i></button>
+          </div>
+        </article>
+      </template>
+    </section>
   </div>
 </template>
 
@@ -83,7 +80,6 @@ const props = defineProps({
 
 defineEmits(['back', 'open-builder', 'edit-page', 'more-options', 'download-folder']);
 
-const viewMode = ref('cards');
 const sortMode = ref('recent');
 const displayedPages = computed(() => [...(props.pages || [])].sort((a, b) => {
   if (sortMode.value === 'name') return String(a.title || '').localeCompare(String(b.title || ''), 'pt-BR');
@@ -92,10 +88,10 @@ const displayedPages = computed(() => [...(props.pages || [])].sort((a, b) => {
   return sortMode.value === 'oldest' ? aDate - bDate : bDate - aDate;
 }));
 
-const allowedFolderColors = new Set(['#0ea5e9', '#0284c7', '#38bdf8', '#7dd3fc', '#0369a1', '#075985']);
+const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433']);
 
 function folderAccent(color) {
-  return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#0ea5e9';
+  return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#612bf4';
 }
 </script>
 
@@ -169,19 +165,50 @@ function folderAccent(color) {
 .btn-download-folder { display: inline-flex; align-items: center; gap: 7px; padding: 9px 12px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-primary-strong); cursor: pointer; font: inherit; font-size: 12px; font-weight: 800; }
 .btn-download-folder:disabled { opacity: .45; cursor: not-allowed; }
 
-.folder-pages-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+.folder-pages-table {
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
 }
 
-.folder-pages-grid.view-list { grid-template-columns: 1fr; gap: 10px; }
-.folder-pages-grid.view-list .page-item-card { display: grid; grid-template-columns: 160px minmax(0, 1fr); min-height: 104px; }
-.folder-pages-grid.view-list .page-preview-box { height: 100%; min-height: 104px; border-right: 1px solid var(--color-border); border-bottom: 0; }
-.folder-pages-grid.view-list .page-preview-mockup { height: 76px; }
-.folder-pages-grid.view-list .page-item-info { justify-content: center; }
-.folder-pages-grid.view-list .page-item-actions { justify-content: flex-end; margin-top: 10px; }
-.folder-pages-grid.view-list .btn-edit-builder { flex: 0 1 180px; }
+.folder-table-head,
+.folder-page-row {
+  min-width: 760px;
+  display: grid;
+  grid-template-columns: 130px minmax(210px, 1.8fr) minmax(110px, .7fr) minmax(130px, .8fr) 150px;
+  align-items: center;
+  gap: 16px;
+}
+
+.folder-table-head {
+  min-height: 46px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.folder-page-row {
+  min-height: 76px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background .2s ease;
+}
+
+.folder-page-row:last-child { border-bottom: 0; }
+.folder-page-row:hover { background: var(--color-primary-subtle); }
+.row-status { display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
+.row-status i { color: var(--color-primary); font-size: 14px; }
+.row-page-name { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.row-page-name strong { overflow: hidden; color: var(--color-text); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.row-page-icon { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 9px; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 16px; }
+.row-category { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 11px; font-weight: 800; }
+.row-date { color: var(--color-text-muted); font-size: 12px; }
+.row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
 
 .empty-folder-box {
   grid-column: 1 / -1;
@@ -298,6 +325,11 @@ function folderAccent(color) {
 
 .btn-edit-builder {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
   background: var(--color-primary-soft);
   color: var(--color-primary-strong);
   border: 1px solid var(--color-border-strong);
@@ -330,8 +362,6 @@ function folderAccent(color) {
 @media (max-width: 560px) {
   .folder-header { padding: 18px; }
   .folder-badge-icon { width: 42px; height: 42px; }
-  .folder-pages-grid.view-list .page-item-card { grid-template-columns: 1fr; }
-  .folder-pages-grid.view-list .page-preview-box { display: none; }
   .btn-download-folder { flex: 1; justify-content: center; }
 }
 </style>

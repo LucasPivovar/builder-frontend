@@ -157,9 +157,9 @@ const categorizedFolders = computed(() => {
       name: 'Pasta: Templates VSL (Vídeo de Vendas)',
       categoryKey: 'VSL',
       icon: 'bi bi-play-circle-fill',
-      color: '#0ea5e9',
-      bgColor: '#e0f2fe',
-      borderColor: '#7dd3fc',
+      color: '#612bf4',
+      bgColor: '#f0edfa',
+      borderColor: '#c7b8ff',
       defaultTemplates: [
         { id: 'vsl-1', title: 'VSL Vendas de Alta Conversão', subCategory: 'VSL', templateKey: 'vsl' }
       ]

@@ -57,17 +57,19 @@ defineEmits(['navigate']);
   padding: 80px 0 60px 0;
   text-align: center;
   position: relative;
-  overflow: hidden;
+  isolation: isolate;
 }
 
 .glow-bg {
   position: absolute;
-  top: -150px;
+  z-index: 0;
+  top: -210px;
   left: 50%;
   transform: translateX(-50%);
-  width: 700px;
-  height: 700px;
-  background: var(--color-primary-soft);
+  width: min(1040px, 100vw);
+  height: 680px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(97, 43, 244, .28) 0%, rgba(34, 150, 252, .11) 40%, transparent 74%);
   pointer-events: none;
 }
 
@@ -75,6 +77,8 @@ defineEmits(['navigate']);
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .badge-tag {
@@ -92,11 +96,11 @@ defineEmits(['navigate']);
 }
 
 .hero-title {
-  font-size: clamp(32px, 5vw, 56px);
+  font-size: clamp(32px, 4.7vw, 56px);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -1px;
-  max-width: 900px;
+  max-width: 880px;
   margin: 0 auto 20px auto;
 }
 
@@ -153,7 +157,7 @@ defineEmits(['navigate']);
   background: #0f1523;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
-  box-shadow: 0 18px 40px rgba(14, 116, 144, .14);
+  box-shadow: 0 18px 40px rgba(97, 43, 244, .2);
   overflow: hidden;
 }
 

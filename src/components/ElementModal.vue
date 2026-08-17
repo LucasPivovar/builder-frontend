@@ -134,7 +134,7 @@
               </div>
               <div class="quiz-progress-settings-preview">
                 <span>Prévia · etapa 3 de 5</span>
-                <div :style="{ height: `${state.pageSettings.quizProgressHeight || 6}px` }"><i :style="{ width: '60%', backgroundColor: state.pageSettings.quizProgressColor || '#0ea5e9' }"></i></div>
+                <div :style="{ height: `${state.pageSettings.quizProgressHeight || 6}px` }"><i :style="{ width: '60%', backgroundColor: state.pageSettings.quizProgressColor || '#612bf4' }"></i></div>
               </div>
             </div>
             <div class="em-field em-full">
@@ -481,10 +481,17 @@
                       <i class="bi bi-stopwatch-fill"></i> Pitch Delay neste objeto
                     </label>
                     <div v-if="elem.delayEnabled" class="em-delay-mmss">
-                      <input v-model.number="elem.delayMinutes" type="number" min="0" max="180" class="em-input em-mmss-input" placeholder="0" />
-                      <span class="em-mmss-sep">m</span>
-                      <input v-model.number="elem.delaySeconds" type="number" min="0" max="59" class="em-input em-mmss-input" placeholder="0" />
-                      <span class="em-mmss-sep">s</span>
+                      <input
+                        :value="formatDelay(elem)"
+                        class="em-input em-mmss-input"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="6"
+                        placeholder="00:00"
+                        aria-label="Atraso no formato minutos e segundos"
+                        @input="updateDelay(elem, $event.target.value)"
+                        @blur="$event.target.value = formatDelay(elem)"
+                      />
                     </div>
                   </div>
                   <!-- VARIÁVEIS DINÂMICAS -->
@@ -643,10 +650,10 @@
                 <div class="preset-swatches">
                   <button type="button" class="swatch-btn" style="background:#ffffff;" title="Branco / Amarelo VSL" @click="applyColorPreset('#ffffff', '#f1c232', null)"></button>
                   <button type="button" class="swatch-btn" style="background:#f1c232;" title="Amarelo VSL / Fundo Vermelho" @click="applyColorPreset('#ffffff', '#f1c232', '#dc2626')"></button>
-                  <button type="button" class="swatch-btn" style="background:#0ea5e9;" title="Azul SaaS" @click="applyColorPreset('#ffffff', '#0369a1', '#0ea5e9')"></button>
+                  <button type="button" class="swatch-btn" style="background:#612bf4;" title="Púrpura Astro" @click="applyColorPreset('#ffffff', '#4321aa', '#612bf4')"></button>
                   <button type="button" class="swatch-btn" style="background:#10b981;" title="Verde Conversão" @click="applyColorPreset('#ffffff', '#f1c232', '#10b981')"></button>
                   <button type="button" class="swatch-btn" style="background:#ef4444;" title="Vermelho Alerta" @click="applyColorPreset('#ffffff', '#f1c232', '#ef4444')"></button>
-                  <button type="button" class="swatch-btn" style="background:#075985; border:1px solid #38bdf8;" title="Azul Profundo" @click="applyColorPreset('#ffffff', '#38bdf8', '#075985')"></button>
+                  <button type="button" class="swatch-btn" style="background:#07031a; border:1px solid #a854fa;" title="Navy Astro" @click="applyColorPreset('#faf9ff', '#a854fa', '#07031a')"></button>
                 </div>
               </div>
 
@@ -762,6 +769,22 @@ const quizElementTypes = ['quiz-progress', 'quiz-single', 'quiz-multiple', 'quiz
 const elem = computed(() => state.selectedElement);
 const elemStyle = computed(() => elem.value?.style || {});
 const metricItems = computed(() => parseMetricItems(elem.value?.metricsText));
+
+function formatDelay(element) {
+  const minutes = Math.max(0, Math.min(180, Number(element?.delayMinutes) || 0));
+  const seconds = Math.max(0, Math.min(59, Number(element?.delaySeconds) || 0));
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateDelay(element, value) {
+  const match = String(value).match(/^(\d{1,3}):(\d{1,2})$/);
+  if (!match || !element) return;
+  const minutes = Number(match[1]);
+  const seconds = Number(match[2]);
+  if (minutes > 180 || seconds > 59) return;
+  element.delayMinutes = minutes;
+  element.delaySeconds = seconds;
+}
 
 function parseMetricItems(raw) {
   const parsed = String(raw || '').split('\n').map(line => {
@@ -1225,7 +1248,7 @@ const filteredIcons = computed(() => {
 .em-chk-lbl input[type="checkbox"]:checked {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  box-shadow: 0 0 10px rgba(14, 165, 233, 0.42);
+  box-shadow: 0 0 10px rgba(97, 43, 244, 0.42);
 }
 .em-chk-lbl input[type="checkbox"]:checked::after {
   content: '';
@@ -1278,8 +1301,7 @@ const filteredIcons = computed(() => {
   border-radius:8px; padding:8px 12px; flex-wrap:wrap;
 }
 .em-delay-mmss { display:flex; align-items:center; gap:4px; }
-.em-mmss-input { width:54px !important; text-align:center; }
-.em-mmss-sep { color:var(--color-primary-deep); font-size:13px; font-weight:700; }
+.em-mmss-input { width:68px !important; text-align:center; }
 
 /* ─── TEXTAREA & ICON PICKER ─────────────────────── */
 .em-textarea-wrap { position:relative; display:flex; flex-direction:column; gap:4px; }
@@ -1458,15 +1480,15 @@ const filteredIcons = computed(() => {
   transition: all 0.2s ease;
 }
 .theme-card:hover {
-  background: rgba(14, 165, 233, 0.14);
-  border-color: rgba(14, 165, 233, 0.45);
+  background: rgba(97, 43, 244, 0.14);
+  border-color: rgba(97, 43, 244, 0.45);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 .theme-card.active {
-  background: rgba(14, 165, 233, 0.14);
+  background: rgba(97, 43, 244, 0.14);
   border: 1.5px solid var(--color-primary);
-  box-shadow: 0 0 16px rgba(14, 165, 233, 0.22);
+  box-shadow: 0 0 16px rgba(97, 43, 244, 0.22);
 }
 .active-check {
   color: var(--color-primary-bright);

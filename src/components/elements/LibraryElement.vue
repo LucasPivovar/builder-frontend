@@ -11,7 +11,7 @@
     <div v-else-if="element.type === 'divider'" class="library-divider" :style="{ borderColor: style.textColor || '#38bdf8' }"></div>
 
     <figure v-else-if="element.type === 'testimonial'" class="library-card testimonial-card" :style="cardStyle">
-      <i class="bi bi-quote quote-icon" :style="{ color: style.bgColor || '#0ea5e9' }"></i>
+      <i class="bi bi-quote quote-icon" :style="{ color: style.bgColor || '#612bf4' }"></i>
       <blockquote :style="textStyle">{{ element.content }}</blockquote>
       <figcaption>
         <strong :style="textStyle">{{ element.author || 'Cliente verificado' }}</strong>
@@ -67,7 +67,7 @@ const cardStyle = computed(() => ({
   borderRadius: `${style.value.borderRadius || 12}px`,
   borderColor: style.value.borderColor || '#cbd5e1'
 }));
-const buttonStyle = computed(() => ({ backgroundColor: style.value.bgColor || '#0ea5e9', color: style.value.textColor || '#ffffff' }));
+const buttonStyle = computed(() => ({ backgroundColor: style.value.bgColor || '#612bf4', color: style.value.textColor || '#ffffff' }));
 const timeParts = computed(() => {
   const target = new Date(props.element.targetDate || Date.now() + 86400000).getTime();
   let seconds = Math.max(0, Math.floor((target - now.value) / 1000));

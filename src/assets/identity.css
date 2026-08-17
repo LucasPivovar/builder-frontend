@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 /*
- * Identidade visual oficial do Funil Builder.
+ * Identidade visual oficial do Astro Builder.
  * Todas as telas e componentes devem consumir estes tokens.
  * Evite declarar cores ou fontes diretamente nos componentes.
  */
@@ -7,46 +9,58 @@
   color-scheme: light;
 
   /* Tipografia */
-  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-ui: 'Inter', sans-serif;
+  --font-sans: var(--font-ui), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-editor: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
-  /* Azul-celeste, superfícies e texto */
-  --color-primary: #0369a1;
-  --color-primary-hover: #075985;
-  --color-primary-strong: #075985;
-  --color-primary-deep: #0c4a6e;
-  --color-primary-bright: #0ea5e9;
-  --color-primary-border: #7dd3fc;
-  --color-primary-soft: #e0f2fe;
-  --color-primary-subtle: #f0f9ff;
+  /* Aurora Astro: violeta, azul e ciano. */
+  --color-violet: #a854fa;
+  --color-purple: #612bf4;
+  --color-purple-hover: #4a16e0;
+  --color-blue: #2296fc;
+  --color-cyan: #17b5fc;
+  --color-navy: #07031a;
+  --color-white: #faf9ff;
+  --gradient-aurora: linear-gradient(45deg, #a854fa 0%, #612bf4 35%, #395cf9 60%, #2296fc 85%, #17b5fc 100%);
+  --gradient-builder: linear-gradient(90deg, #6652d4, #4e7dc5, #3ecdf0);
 
-  --color-page: #f5fbff;
+  --color-primary: var(--color-purple);
+  --color-primary-hover: var(--color-purple-hover);
+  --color-primary-strong: #4321aa;
+  --color-primary-deep: #2d176d;
+  --color-primary-bright: var(--color-blue);
+  --color-primary-border: #c7b8ff;
+  --color-primary-soft: #f0edfa;
+  --color-primary-subtle: #f8f7fc;
+
+  --color-page: #f8f7fc;
   --color-surface: #ffffff;
-  --color-surface-soft: #f8fdff;
-  --color-surface-hover: #edf9ff;
-  --color-border: #bae6fd;
-  --color-border-strong: #7dd3fc;
-  --color-focus-ring: rgba(14, 165, 233, 0.16);
+  --color-surface-soft: #faf9ff;
+  --color-surface-hover: #f0edfa;
+  --color-border: #e7e4f5;
+  --color-border-strong: #c7b8ff;
+  --color-focus-ring: rgba(97, 43, 244, 0.18);
 
-  --color-text: #0f172a;
-  --color-text-secondary: #334155;
-  --color-text-muted: #5b6b80;
-  --color-text-soft: #64748b;
+  --color-text: #1a1433;
+  --color-text-secondary: #5b566e;
+  --color-text-muted: #777184;
+  --color-text-soft: #8a8599;
   --color-on-primary: #ffffff;
 
-  --color-success: #047857;
-  --color-success-strong: #047857;
-  --color-success-soft: #ecfdf5;
-  --color-success-border: #6ee7b7;
-  --color-danger: #dc2626;
-  --color-danger-strong: #b91c1c;
-  --color-danger-soft: #fff1f2;
-  --color-danger-border: #fecaca;
-  --color-warning: #b45309;
-  --color-warning-strong: #b45309;
-  --color-warning-soft: #fffbeb;
-  --color-warning-border: #fde68a;
+  --color-success: #22c993;
+  --color-success-strong: #158c65;
+  --color-success-soft: #e7faf3;
+  --color-success-border: #8ae3c4;
+  --color-danger: #ff4d6a;
+  --color-danger-strong: #cf2747;
+  --color-danger-soft: #fff0f3;
+  --color-danger-border: #ffb8c5;
+  --color-warning: #f5a623;
+  --color-warning-strong: #be7210;
+  --color-warning-soft: #fff7e7;
+  --color-warning-border: #fbd48f;
 
   /* Estrutura */
   --header-height: 56px;
@@ -55,11 +69,11 @@
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
-  --shadow-sm: 0 4px 14px rgba(14, 116, 144, 0.08);
-  --shadow-main: 0 12px 34px rgba(14, 116, 144, 0.13);
-  --shadow-modal: 0 24px 64px rgba(14, 116, 144, 0.2);
-  --overlay: rgba(15, 23, 42, 0.42);
-  --overlay-strong: rgba(15, 23, 42, 0.68);
+  --shadow-sm: 0 4px 14px rgba(40, 25, 96, 0.08);
+  --shadow-main: 0 12px 34px rgba(40, 25, 96, 0.13);
+  --shadow-modal: 0 24px 64px rgba(7, 3, 26, 0.32);
+  --overlay: rgba(7, 3, 26, 0.44);
+  --overlay-strong: rgba(7, 3, 26, 0.72);
 
   /* Compatibilidade com os componentes existentes */
   --bg-dark: var(--color-page);
@@ -86,4 +100,18 @@ input,
 select,
 textarea {
   font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.page-header-title h1,
+.section-h2,
+.brand-name,
+.nav-brand,
+.auth-brand h1 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }

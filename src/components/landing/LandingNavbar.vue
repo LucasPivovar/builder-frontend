@@ -2,8 +2,8 @@
   <nav class="navbar">
     <div class="container nav-container">
       <a href="#" class="nav-brand" @click.prevent="$emit('navigate', 'landing')">
-        <div class="brand-logo"><i class="bi bi-diagram-3-fill"></i></div>
-        <span>Funil Builder</span>
+        <AstroMark class="brand-logo" variant="dark" />
+        <span>Astro Builder</span>
       </a>
 
       <ul class="nav-links">
@@ -22,6 +22,8 @@
 </template>
 
 <script setup>
+import AstroMark from '../AstroMark.vue';
+
 defineEmits(['navigate']);
 </script>
 
@@ -59,15 +61,8 @@ defineEmits(['navigate']);
 }
 
 .brand-logo {
-  width: 36px;
-  height: 36px;
-  background: var(--color-primary);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-surface);
-  font-size: 18px;
+  --mark-width: 46px;
+  --mark-height: 33px;
 }
 
 .nav-links {

@@ -59,11 +59,14 @@ function toggleFaq(idx) {
   padding: 18px 24px;
   font-weight: 700;
   font-size: 16px;
+  color: var(--color-white);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
+.faq-question i { color: var(--color-cyan); }
 
 .faq-answer {
   padding: 0 24px 18px 24px;

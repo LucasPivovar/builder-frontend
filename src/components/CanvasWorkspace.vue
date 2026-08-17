@@ -12,7 +12,7 @@
     </div>
 
     <div v-if="state.rows.length" class="quiz-phone-frame" :style="{ fontFamily: `'${state.pageSettings.fontFamily || 'Plus Jakarta Sans'}', sans-serif` }">
-      <div class="quiz-auto-progress" :style="{ height:`${state.pageSettings.quizProgressHeight || 6}px` }"><span :style="{ width:`${quizProgress}%`, backgroundColor:state.pageSettings.quizProgressColor || '#0ea5e9' }"></span></div>
+      <div class="quiz-auto-progress" :style="{ height:`${state.pageSettings.quizProgressHeight || 6}px` }"><span :style="{ width:`${quizProgress}%`, backgroundColor:state.pageSettings.quizProgressColor || '#612bf4' }"></span></div>
       <div class="quiz-step-counter">Etapa {{ quizStepIndex + 1 }} de {{ state.rows.length }}</div>
       <div :key="currentQuizRow.id" class="quiz-stage">
         <template v-for="col in currentQuizRow.columns" :key="col.id">
@@ -188,7 +188,7 @@
     class="sandbox-workspace email-workspace"
   >
     <!-- Dotted background wrapper -->
-    <div class="email-outer-bg" :style="{ backgroundColor: state.pageSettings.bgColor || '#f0f9ff' }">
+    <div class="email-outer-bg" :style="{ backgroundColor: state.pageSettings.bgColor || '#f8f7fc' }">
       <div class="email-canvas-label">
         <i class="bi bi-envelope-paper-fill"></i>
         Modo E-mail — {{ EMAIL_MAX_WIDTH }}px fixo &nbsp;·&nbsp; Use a aba "Seções" no painel à direita para editar os objetos

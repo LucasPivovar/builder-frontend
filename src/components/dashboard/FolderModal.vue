@@ -72,15 +72,15 @@ const emit = defineEmits(['close', 'done']);
 const { foldersRegistry, createFolder, renameFolder } = useBuilderStore();
 
 const folderName = ref('');
-const selectedColor = ref('#0ea5e9');
+const selectedColor = ref('#612bf4');
 const parentId = ref('');
 
-const colorOptions = ['#0ea5e9', '#0284c7', '#38bdf8', '#7dd3fc', '#0369a1', '#075985'];
+const colorOptions = ['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433'];
 
 watch(() => props.isOpen, (open) => {
   if (open) {
     folderName.value = props.mode === 'rename' && props.folder ? props.folder.name : '';
-    selectedColor.value = '#0ea5e9';
+    selectedColor.value = '#612bf4';
     parentId.value = '';
   }
 });

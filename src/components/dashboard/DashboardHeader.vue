@@ -11,6 +11,9 @@
     </div>
 
     <div class="header-actions">
+      <button class="btn-tour tour-guided-launch" @click="$emit('start-tour')" title="Iniciar tour guiado">
+        <i class="bi bi-compass"></i><span>Tour guiado</span>
+      </button>
       <button class="btn-icon-top notification-trigger" @click="$emit('notify')" title="Notificações">
         <i class="bi bi-bell"></i>
         <span v-if="unreadCount" class="notification-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
@@ -28,7 +31,7 @@ defineProps({
   unreadCount: { type: Number, default: 0 }
 });
 
-defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
+defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth', 'start-tour']);
 </script>
 
 <style scoped>
@@ -73,6 +76,24 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
   gap: 12px;
 }
 
+.btn-tour {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 13px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-primary-strong);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-tour:hover { background: var(--color-primary-soft); }
+
 .btn-create-blank {
   background: var(--color-primary);
   color: var(--color-surface);
@@ -108,6 +129,8 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth']);
   .header-search { flex: 1; width: auto; }
   .header-search input { font-size: 12px; }
   .header-actions { gap: 6px; }
+  .btn-tour { width: 36px; height: 36px; padding: 0; justify-content: center; }
+  .btn-tour span { display: none; }
   .btn-create-blank { width: 36px; height: 36px; padding: 0; justify-content: center; font-size: 0; }
   .btn-create-blank i { font-size: 17px; }
   .btn-icon-top { width: 36px; height: 36px; }

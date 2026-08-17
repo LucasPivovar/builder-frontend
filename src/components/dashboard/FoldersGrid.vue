@@ -55,14 +55,14 @@ defineProps({
 defineEmits(['see-all', 'open-folder', 'create-folder', 'rename-folder', 'delete-folder']);
 
 const { pagesRegistry } = useBuilderStore();
-const allowedFolderColors = new Set(['#0ea5e9', '#0284c7', '#38bdf8', '#7dd3fc', '#0369a1', '#075985']);
+const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433']);
 
 function getFolderPageCount(folderId) {
   return pagesRegistry.filter(p => p.folderId === folderId).length;
 }
 
 function folderAccent(color) {
-  return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#0ea5e9';
+  return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#612bf4';
 }
 </script>
 

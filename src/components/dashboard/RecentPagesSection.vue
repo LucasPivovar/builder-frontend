@@ -7,7 +7,7 @@
       </div>
 
       <div class="header-actions-group">
-        <button class="btn-create-new" @click="$emit('create-new')">
+        <button class="btn-create-new tour-create-page" @click="$emit('create-new')">
           <i class="bi bi-plus-lg"></i> Criar nova página
         </button>
         <a href="#" class="see-all-link" @click.prevent="$emit('see-all')">

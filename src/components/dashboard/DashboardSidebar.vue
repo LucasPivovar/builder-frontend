@@ -1,8 +1,8 @@
 <template>
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon"><i class="bi bi-diagram-3-fill"></i></div>
-      <span class="brand-name">Funil & Builder</span>
+      <AstroMark class="brand-icon" />
+      <span class="brand-name">Astro Builder</span>
     </div>
 
     <nav class="sidebar-menu">
@@ -69,44 +69,6 @@
         <span class="badge-count">{{ foldersCount }}</span>
       </a>
 
-      <!-- Label de Categoria: TEMPLATES -->
-      <div class="menu-group-title" style="margin-top: 18px;">
-        <span>TEMPLATES</span>
-      </div>
-
-      <a
-        class="menu-item"
-        :class="{ active: activeTab === 'templates' }"
-        @click="$emit('select-tab', 'templates')"
-      >
-        <i class="bi bi-collection-fill"></i>
-        <span>Todos os Templates</span>
-        <span class="badge-count">{{ funilTemplatesCount + emailTemplatesCount + quizTemplatesCount }}</span>
-      </a>
-
-      <a
-        class="menu-item"
-        :class="{ active: activeTab === 'templates-funil' }"
-        @click="$emit('select-tab', 'templates-funil')"
-      >
-        <i class="bi bi-grid-1x2-fill"></i>
-        <span>Templates de Funil</span>
-        <span class="badge-count">{{ funilTemplatesCount }}</span>
-      </a>
-
-      <a
-        class="menu-item"
-        :class="{ active: activeTab === 'templates-email' }"
-        @click="$emit('select-tab', 'templates-email')"
-      >
-        <i class="bi bi-envelope-paper-fill"></i>
-        <span>Templates de E-mail</span>
-        <span class="badge-count">{{ emailTemplatesCount }}</span>
-      </a>
-      <a class="menu-item" :class="{ active: activeTab === 'templates-quiz' }" @click="$emit('select-tab', 'templates-quiz')">
-        <i class="bi bi-ui-checks-grid"></i><span>Templates de Quiz</span><span class="badge-count">{{ quizTemplatesCount }}</span>
-      </a>
-
       <!-- Label de Categoria: CONTA & SISTEMA -->
       <div class="menu-group-title" style="margin-top: 18px;">
         <span>CONTA & SISTEMA</span>
@@ -154,6 +116,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import AstroMark from '../AstroMark.vue';
 
 defineEmits(['select-tab']);
 
@@ -197,20 +160,14 @@ const userInitial = computed(() => {
 }
 
 .brand-icon {
-  width: 38px;
-  height: 38px;
-  background: var(--color-primary);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-surface);
-  font-size: 20px;
+  --mark-width: 46px;
+  --mark-height: 33px;
 }
 
 .brand-name {
   font-size: 17px;
   font-weight: 800;
+  font-family: var(--font-display);
   color: var(--color-text);
 }
 

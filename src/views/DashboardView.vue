@@ -22,6 +22,7 @@
         @open-builder="handleOpenBuilder"
         @notify="openNotifications"
         @open-auth="handleAuthNavigate"
+        @start-tour="startTour"
       />
 
       <main class="content-area">
@@ -33,18 +34,13 @@
               <h1>Página Inicial</h1>
               <p>Visão geral dos seus projetos, pastas e templates</p>
             </div>
-            <div class="dashboard-header-actions">
-              <button class="btn-tour-launch" @click="startTour"><i class="bi bi-compass"></i> Tour guiado</button>
-              <button class="btn-create-new tour-create-page" @click="openCreateModal()">
-              <i class="bi bi-plus-circle-fill"></i> Criar nova página
-              </button>
-            </div>
           </div>
 
           <QuickActions
-            @open-builder="handleOpenBuilder"
-            @open-create-modal="openCreateModal()"
-            @select-templates="setActiveTab('templates')"
+            :pages-count="pagesRegistry.length"
+            :online-pages-count="onlinePagesCount"
+            :draft-pages-count="draftPagesCount"
+            :folders-count="foldersRegistry.length"
           />
           <RecentPagesSection
             :pages="recentPages"
@@ -241,7 +237,7 @@ import FolderModal from '../components/dashboard/FolderModal.vue';
 import NotificationsModal from '../components/dashboard/NotificationsModal.vue';
 import SettingsPanel from '../components/dashboard/SettingsPanel.vue';
 import SupportPanel from '../components/dashboard/SupportPanel.vue';
-import { useProductTour } from '../composables/useProductTour';
+import { PRODUCT_TOUR_EVENT, useProductTour } from '../composables/useProductTour';
 import { clearAuthSession, getNotifications, markAllNotificationsRead, markNotificationRead } from '../services/api';
 import { generateExportedHTML } from '../utils/htmlExporter';
 import { createZipBlob, safeFileName } from '../utils/zip';
@@ -265,7 +261,7 @@ const showFolderModal = ref(false);
 const folderModalMode = ref('create');
 const folderBeingRenamed = ref(null);
 const createModalRef = ref(null);
-const allowedFolderColors = new Set(['#0ea5e9', '#0284c7', '#38bdf8', '#7dd3fc', '#0369a1', '#075985']);
+const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433']);
 const showNotifications = ref(false);
 const notificationsLoading = ref(false);
 const notifications = ref([]);
@@ -277,6 +273,10 @@ const currentUser = computed(() => {
   } catch (error) {
     return null;
   }
+});
+const tourSeenKey = computed(() => {
+  const identifier = currentUser.value?.id || currentUser.value?.email || 'anonymous';
+  return `vbs_tour_seen_${String(identifier).toLowerCase()}`;
 });
 
 async function handleTourAction(event) {
@@ -307,12 +307,15 @@ async function handleTourAction(event) {
 
 let tourIntroTimer;
 onMounted(() => {
-  window.addEventListener('vbs-tour-action', handleTourAction);
-  if (localStorage.getItem('vbs_tour_seen') !== 'true') tourIntroTimer = setTimeout(() => startTour(), 650);
+  window.addEventListener(PRODUCT_TOUR_EVENT, handleTourAction);
+  if (localStorage.getItem(tourSeenKey.value) !== 'true') {
+    localStorage.setItem(tourSeenKey.value, 'true');
+    tourIntroTimer = setTimeout(() => startTour(), 650);
+  }
   loadNotifications();
 });
 onUnmounted(() => {
-  window.removeEventListener('vbs-tour-action', handleTourAction);
+  window.removeEventListener(PRODUCT_TOUR_EVENT, handleTourAction);
   clearTimeout(tourIntroTimer);
 });
 
@@ -420,6 +423,8 @@ function normalizedPageType(pageOrType) {
 const funilPagesCount = computed(() => pagesRegistry.filter(p => normalizedPageType(p) === 'funil').length);
 const emailPagesCount = computed(() => pagesRegistry.filter(p => normalizedPageType(p) === 'email').length);
 const quizPagesCount = computed(() => pagesRegistry.filter(p => normalizedPageType(p) === 'quiz').length);
+const onlinePagesCount = computed(() => pagesRegistry.filter(page => page.statusClass === 'published' || page.status === 'published').length);
+const draftPagesCount = computed(() => pagesRegistry.length - onlinePagesCount.value);
 const emailTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => Boolean(template.emailMode) || String(template.category || '').toLowerCase().includes('mail')).length);
 const funilTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => { const category=String(template.category||'').toLowerCase(); return !template.emailMode && !template.quizMode && !category.includes('mail') && !category.includes('quiz'); }).length);
 const quizTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => template.quizMode || String(template.category || '').toLowerCase().includes('quiz')).length);
@@ -478,7 +483,7 @@ const folderGroups = computed(() => {
     groups.push({
       folderId: null,
       folderName: 'Páginas sem pasta',
-      color: '#0ea5e9',
+      color: '#612bf4',
       pages: rootPages.map(p => ({
         id: p.id,
         title: p.name,
@@ -606,7 +611,7 @@ async function selectNotification(item) {
 }
 
 function folderAccent(color) {
-  return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#0ea5e9';
+  return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#612bf4';
 }
 </script>
 

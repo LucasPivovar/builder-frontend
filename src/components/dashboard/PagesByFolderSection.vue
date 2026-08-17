@@ -8,7 +8,7 @@
     >
       <div class="folder-block-header">
         <div class="folder-block-title">
-          <i class="bi bi-folder2-open folder-icon-open" :style="{ color: group.color || '#0ea5e9' }"></i>
+          <i class="bi bi-folder2-open folder-icon-open" :style="{ color: group.color || '#612bf4' }"></i>
           <h3>{{ group.folderName }}</h3>
           <span class="folder-count-badge">{{ group.pages.length }} páginas</span>
         </div>

@@ -3,8 +3,8 @@
     <div class="auth-card">
       <!-- Brand -->
       <div class="auth-brand">
-        <div class="brand-logo"><i class="bi bi-diagram-3-fill"></i></div>
-        <h1>Funil Builder</h1>
+        <AstroMark class="brand-logo" />
+        <h1>Astro Builder</h1>
         <p>Crie páginas de funil e templates profissionais</p>
       </div>
 
@@ -152,6 +152,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import AstroMark from '../AstroMark.vue';
 import { useRouter, useRoute } from 'vue-router';
 import { login, register, storeAuthSession } from '../../services/api';
 import { useBuilderStore } from '../../composables/useBuilderStore';
@@ -282,7 +283,7 @@ async function handleRegister() {
 }
 
 .auth-brand { text-align: center; margin-bottom: 28px; }
-.brand-logo { font-size: 40px; margin-bottom: 10px; }
+.brand-logo { --mark-width: 78px; --mark-height: 56px; margin-bottom: 10px; }
 .auth-brand h1 { font-size: 22px; font-weight: 900; color: var(--color-surface); margin-bottom: 4px; }
 .auth-brand p { font-size: 13.5px; color: var(--color-text-soft); }
 
@@ -383,20 +384,19 @@ async function handleRegister() {
 .auth-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  box-shadow: 0 18px 46px rgba(14, 116, 144, 0.14);
+  box-shadow: 0 18px 46px rgba(40, 25, 96, 0.14);
 }
 .auth-brand h1 { color: var(--color-text); }
 .auth-brand p, .form-label, .check-label { color: var(--color-text-secondary); }
-.brand-logo { color: var(--color-surface); }
-.auth-tabs { background: var(--color-primary-soft); }
+.auth-tabs { background: var(--color-surface); }
 .tab-btn { color: var(--color-primary-strong); }
 .tab-btn.active { background: var(--color-primary); color: var(--color-surface); }
 .form-input { background: var(--color-surface-soft); border-color: var(--color-border); color: var(--color-text); }
 .form-input::placeholder { color: var(--color-text-soft); }
-.form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, .13); }
+.form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(97, 43, 244, .13); }
 .input-icon, .btn-toggle-pass { color: var(--color-primary-hover); }
 .link-forgot, .link-terms { color: var(--color-primary-hover); }
-.btn-auth { background: var(--color-primary); box-shadow: 0 6px 16px rgba(14, 165, 233, .24); }
+.btn-auth { background: var(--gradient-aurora); box-shadow: 0 6px 16px rgba(97, 43, 244, .24); }
 .btn-auth:hover { background: var(--color-primary-hover); }
 .auth-divider::before { background: var(--color-primary-soft); }
 .auth-divider span { background: var(--color-surface); color: var(--color-text-muted); }

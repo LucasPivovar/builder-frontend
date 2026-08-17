@@ -11,13 +11,13 @@ const routes = [
     path: '/',
     name: 'LandingPage',
     component: LandingPageView,
-    meta: { title: 'Funil Builder' }
+    meta: { title: 'Astro Builder' }
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { title: 'Dashboard | Funil Builder', requiresAuth: true }
+    meta: { title: 'Dashboard | Astro Builder', requiresAuth: true }
   },
   {
     path: '/auth',
@@ -29,13 +29,13 @@ const routes = [
     path: '/builder',
     name: 'Builder',
     component: BuilderView,
-    meta: { title: 'Construtor | Funil Builder', requiresAuth: true }
+    meta: { title: 'Construtor | Astro Builder', requiresAuth: true }
   },
   {
     path: '/admin',
     name: 'Admin',
     component: AdminView,
-    meta: { title: 'Painel Admin | Funil Builder', requiresAuth: true }
+    meta: { title: 'Painel Admin | Astro Builder', requiresAuth: true }
   },
   {
     path: '/:pathMatch(.*)*',
