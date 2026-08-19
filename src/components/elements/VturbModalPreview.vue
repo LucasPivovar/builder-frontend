@@ -13,7 +13,7 @@
 
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue';
-import { getNum } from '../../utils/atomitags';
+import { getNum } from '../../utils/astrotags';
 
 const props = defineProps({
   element: { type: Object, required: true }

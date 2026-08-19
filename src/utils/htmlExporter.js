@@ -1,4 +1,4 @@
-import { hexToRgba, getNum } from './atomitags.js';
+import { hexToRgba, getNum } from './astrotags.js';
 
 export function generateFullHTML(stateOrRows, pageSettingsParam) {
   let rows = [];
@@ -24,9 +24,9 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
   if (pageSettings.metaPixel) {
     const p = pageSettings.metaPixel.trim();
     if (p.includes('<script')) {
-      metaPixelScript = p;
-    } else {
-      metaPixelScript = `
+      metaPixelScript += '\n' + p + '\n';
+    } else if (p) {
+      metaPixelScript += `
         <!-- Meta Pixel Code -->
         <script>
         !function(f,b,e,v,n,t,s)
@@ -40,18 +40,48 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
         fbq('init', '${p}');
         fbq('track', 'PageView');
         </script>
+        <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=${p}&ev=PageView&noscript=1"
+        /></noscript>
         <!-- End Meta Pixel Code -->
       `;
     }
   }
 
-  // Coleta scripts de head do VTurb
+  // Coleta scripts de head do VTurb e Meta Pixel dos elementos
   let vturbHeadCode = '';
   for (const row of rows) {
     for (const col of row.columns) {
       for (const elem of col.elements) {
         if (elem.type === 'vturb-player' && elem.vturbHead) {
           vturbHeadCode += elem.vturbHead + '\n';
+        }
+        if (elem.type === 'meta-pixel') {
+          if (elem.pixelCode && elem.pixelCode.includes('<script')) {
+            metaPixelScript += '\n' + elem.pixelCode + '\n';
+          } else if (elem.pixelId) {
+            const pid = elem.pixelId.trim();
+            const pevent = elem.pixelEvent || 'PageView';
+            metaPixelScript += `
+              <!-- Meta Pixel Code -->
+              <script>
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '${pid}');
+              fbq('track', '${pevent}');
+              </script>
+              <noscript><img height="1" width="1" style="display:none"
+              src="https://www.facebook.com/tr?id=${pid}&ev=${pevent}&noscript=1"
+              /></noscript>
+              <!-- End Meta Pixel Code -->
+            `;
+          }
         }
       }
     }

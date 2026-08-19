@@ -15,7 +15,7 @@
 
 <script setup>
 import { ref, watch, onMounted, nextTick, computed } from 'vue';
-import { getNum } from '../../utils/atomitags';
+import { getNum } from '../../utils/astrotags';
 
 const props = defineProps({
   element: { type: Object, required: true }

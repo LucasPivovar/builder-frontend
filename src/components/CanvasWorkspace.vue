@@ -334,7 +334,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
-import { getNum } from '../utils/atomitags';
+import { getNum } from '../utils/astrotags';
 import TopBannerElement from './elements/TopBannerElement.vue';
 import HeadingElement from './elements/HeadingElement.vue';
 import ParagraphElement from './elements/ParagraphElement.vue';

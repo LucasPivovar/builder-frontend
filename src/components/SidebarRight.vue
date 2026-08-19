@@ -127,7 +127,7 @@
           <div class="gps-icon"><i class="bi bi-gear-wide-connected"></i></div>
           <div class="gps-info">
             <span class="gps-title">Configurações Gerais da Página</span>
-            <span class="gps-subtitle">{{ state.builderMode === 'quiz' ? 'Progresso, cores, título, SEO e rastreamento' : 'Título, cor de fundo, SEO e rastreamento' }}</span>
+            <span class="gps-subtitle">{{ state.builderMode === 'quiz' ? 'Progresso, cores, título e SEO' : 'Título, cor de fundo e SEO' }}</span>
           </div>
           <i class="bi bi-chevron-right" style="color:var(--text-dim); font-size:12px;"></i>
         </div>

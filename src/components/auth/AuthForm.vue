@@ -8,12 +8,6 @@
         <p>Crie páginas de funil e templates profissionais</p>
       </div>
 
-      <!-- Tabs -->
-      <div class="auth-tabs">
-        <button type="button" class="tab-btn" :class="{ active: mode === 'login' }" @click="switchMode('login')">Entrar</button>
-        <button type="button" class="tab-btn" :class="{ active: mode === 'register' }" @click="switchMode('register')">Criar conta</button>
-      </div>
-
       <!-- Login Form -->
       <form v-if="mode === 'login'" @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
@@ -58,6 +52,13 @@
           <span v-else><i class="bi bi-hourglass-split"></i> Aguarde...</span>
         </button>
 
+        <!-- Switch to Register -->
+        <div class="auth-switch-box">
+          <span>Não tem uma conta?</span>
+          <button type="button" class="btn-switch-link" @click="switchMode('register')">
+            Cadastre-se agora
+          </button>
+        </div>
       </form>
 
       <!-- Register Form -->
@@ -145,6 +146,14 @@
           <span v-if="!loading"><i class="bi bi-person-plus-fill"></i> Criar minha conta</span>
           <span v-else><i class="bi bi-hourglass-split"></i> Criando conta...</span>
         </button>
+
+        <!-- Switch to Login -->
+        <div class="auth-switch-box">
+          <span>Já tem uma conta?</span>
+          <button type="button" class="btn-switch-link" @click="switchMode('login')">
+            Fazer login
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -273,54 +282,51 @@ async function handleRegister() {
 }
 
 .auth-card {
-  background: rgba(13, 18, 32, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 22px;
   padding: 36px;
   width: 440px;
   max-width: 100%;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 18px 46px rgba(40, 25, 96, 0.14);
 }
 
 .auth-brand { text-align: center; margin-bottom: 28px; }
 .brand-logo { --mark-width: 78px; --mark-height: 56px; margin-bottom: 10px; }
-.auth-brand h1 { font-size: 22px; font-weight: 900; color: var(--color-surface); margin-bottom: 4px; }
-.auth-brand p { font-size: 13.5px; color: var(--color-text-soft); }
-
-.auth-tabs { display: flex; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 3px; margin-bottom: 24px; }
-.tab-btn { flex: 1; padding: 9px; border-radius: 10px; border: none; background: none; color: var(--color-text-soft); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.tab-btn.active { background: var(--color-primary); color: var(--color-surface); }
+.auth-brand h1 { font-size: 22px; font-weight: 900; color: var(--color-text); margin-bottom: 4px; }
+.auth-brand p { font-size: 13.5px; color: var(--color-text-secondary); }
 
 .auth-form { display: flex; flex-direction: column; gap: 0; }
 
 .form-group { margin-bottom: 14px; }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.form-label { display: block; font-size: 12px; font-weight: 700; color: var(--color-border); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .input-wrapper { position: relative; }
-.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-soft); font-size: 14px; pointer-events: none; }
-.btn-toggle-pass { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-text-soft); cursor: pointer; font-size: 14px; padding: 4px; }
+.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-primary-hover); font-size: 14px; pointer-events: none; }
+.btn-toggle-pass { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-primary-hover); cursor: pointer; font-size: 14px; padding: 4px; }
 
 .form-input {
   width: 100%; padding: 10px 14px 10px 38px;
-  background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px; color: var(--color-surface); font-size: 14px; outline: none;
+  background: var(--color-surface-soft); border: 1px solid var(--color-border);
+  border-radius: 10px; color: var(--color-text); font-size: 14px; outline: none;
   transition: border-color 0.2s;
 }
 
-.form-input:focus { border-color: var(--color-primary); }
+.form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(97, 43, 244, .13); }
 .form-input.has-icon-right { padding-right: 38px; }
+.form-input::placeholder { color: var(--color-text-soft); }
 
 .form-row-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 
-.check-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-soft); cursor: pointer; }
+.check-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
 .check-label input[type="checkbox"] { accent-color: var(--color-primary); width: 14px; height: 14px; cursor: pointer; }
 
 .link-forgot, .link-terms { color: var(--color-primary-hover); font-size: 12.5px; text-decoration: none; font-weight: 600; }
 .link-forgot:hover, .link-terms:hover { color: var(--color-primary-strong); text-decoration: underline; }
 
 .password-strength { margin-top: 6px; display: flex; align-items: center; gap: 8px; }
-.strength-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
+.strength-bar { flex: 1; height: 4px; background: rgba(0,0,0,0.06); border-radius: 999px; overflow: hidden; }
 .strength-fill { height: 100%; border-radius: 999px; transition: width 0.3s, background 0.3s; }
 .strength-fill.weak { background: #ef4444; }
 .strength-fill.fair { background: var(--color-primary-bright); }
@@ -347,59 +353,43 @@ async function handleRegister() {
 }
 
 .btn-auth {
-  width: 100%; padding: 12px;
-  background: var(--color-primary); border: none; color: var(--color-surface);
+  width: 100%; padding: 13px;
+  background: var(--gradient-aurora); border: none; color: #ffffff;
   font-size: 15px; font-weight: 800; border-radius: 12px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  box-shadow: none;
+  box-shadow: 0 6px 16px rgba(97, 43, 244, .24);
   transition: all 0.2s;
 }
 
-.btn-auth:hover { background: var(--color-primary-hover); }
-.btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-auth:hover { background: var(--color-primary-hover); transform: translateY(-1px); }
+.btn-auth:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-.auth-divider { text-align: center; margin: 20px 0 14px; position: relative; }
-.auth-divider::before {
-  content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-}
-.auth-divider span {
-  position: relative; background: #0d1220; padding: 0 12px;
-  color: var(--color-text-muted); font-size: 12px;
-}
-
-.social-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-.btn-social {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--color-border); padding: 10px; border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer;
-  transition: all 0.2s;
+/* Switch Links Underneath the Button */
+.auth-switch-box {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.btn-social:hover { background: rgba(255, 255, 255, 0.1); }
-
-/* Auth follows the same clear sky-blue visual language as the studio. */
-.auth-wrapper { background: var(--color-primary-subtle); }
-.auth-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 18px 46px rgba(40, 25, 96, 0.14);
+.btn-switch-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.15s ease;
 }
-.auth-brand h1 { color: var(--color-text); }
-.auth-brand p, .form-label, .check-label { color: var(--color-text-secondary); }
-.auth-tabs { background: var(--color-surface); }
-.tab-btn { color: var(--color-primary-strong); }
-.tab-btn.active { background: var(--color-primary); color: var(--color-surface); }
-.form-input { background: var(--color-surface-soft); border-color: var(--color-border); color: var(--color-text); }
-.form-input::placeholder { color: var(--color-text-soft); }
-.form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(97, 43, 244, .13); }
-.input-icon, .btn-toggle-pass { color: var(--color-primary-hover); }
-.link-forgot, .link-terms { color: var(--color-primary-hover); }
-.btn-auth { background: var(--gradient-aurora); box-shadow: 0 6px 16px rgba(97, 43, 244, .24); }
-.btn-auth:hover { background: var(--color-primary-hover); }
-.auth-divider::before { background: var(--color-primary-soft); }
-.auth-divider span { background: var(--color-surface); color: var(--color-text-muted); }
-.btn-social { background: var(--color-surface-soft); border-color: var(--color-border); color: var(--color-text); }
-.btn-social:hover { background: var(--color-primary-soft); }
+
+.btn-switch-link:hover {
+  color: var(--color-primary-hover);
+}
 </style>

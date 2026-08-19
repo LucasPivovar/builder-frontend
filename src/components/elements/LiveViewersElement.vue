@@ -10,7 +10,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { parseAtomitags, hexToRgba, getNum } from '../../utils/atomitags';
+import { parseAstrotags as parseAtomitags, hexToRgba, getNum } from '../../utils/astrotags';
 
 const props = defineProps({
   element: { type: Object, required: true }

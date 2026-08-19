@@ -264,8 +264,19 @@
                   <!-- META PIXEL -->
                   <div v-else-if="elem.type === 'meta-pixel'" class="em-field-stack">
                     <div class="em-field">
-                      <label class="em-lbl">ID do Meta Pixel</label>
-                      <input v-model="elem.pixelId" class="em-input" type="text" placeholder="123456789012345" />
+                      <label class="em-lbl">
+                        <i class="bi bi-code-square"></i> Cole o Código Completo do Meta Pixel (Script / HTML)
+                      </label>
+                      <textarea
+                        v-model="elem.pixelCode"
+                        class="em-input em-ta-main"
+                        placeholder="<!-- Meta Pixel Code -->&#10;<script>&#10;!function(f,b,e,v,n,t,s)...&#10;fbq('init', '426292223103034');&#10;fbq('track', 'PageView');&#10;</script>&#10;<noscript><img ... /></noscript>&#10;<!-- End Meta Pixel Code -->"
+                        @input="onPixelCodeInput"
+                      ></textarea>
+                    </div>
+                    <div class="em-field">
+                      <label class="em-lbl">Ou digite apenas o ID do Pixel</label>
+                      <input v-model="elem.pixelId" class="em-input" type="text" placeholder="Ex: 426292223103034" />
                     </div>
                     <div class="em-field">
                       <label class="em-lbl">Evento do Pixel</label>
@@ -689,9 +700,9 @@
                 </template>
               </div>
 
-              <!-- ATOMITAGS PANEL -->
-              <div class="em-at-panel" v-if="showAtomitags(elem)">
-                <div class="em-at-header">Conheça as <strong class="em-at-hl">atomitags</strong> que você pode usar nos elementos de texto</div>
+              <!-- ASTROTAGS PANEL -->
+              <div class="em-at-panel" v-if="showAstrotags(elem)">
+                <div class="em-at-header">Conheça as <strong class="em-at-hl">astrotags</strong> que você pode usar nos elementos de texto</div>
                 <div class="em-at-grid4">
                   <div class="em-at-card"><div class="em-at-k">$cidade</div><div class="em-at-v">→ {{ elem.cityName || 'Curitiba' }}</div></div>
                   <div class="em-at-card"><div class="em-at-k">$hoje-ext</div><div class="em-at-v">→ {{ todayExt }}</div></div>
@@ -744,7 +755,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
-import { getNum } from '../utils/atomitags';
+import { getNum } from '../utils/astrotags';
 import TopBannerElement from './elements/TopBannerElement.vue';
 import HeadingElement from './elements/HeadingElement.vue';
 import ParagraphElement from './elements/ParagraphElement.vue';
@@ -940,7 +951,16 @@ function hasStyleOptions(e) {
   return !['meta-pixel'].includes(e.type);
 }
 
-function showAtomitags(e) {
+function onPixelCodeInput() {
+  if (!elem.value || !elem.value.pixelCode) return;
+  const match = elem.value.pixelCode.match(/fbq\(\s*['"]init['"]\s*,\s*['"]([0-9]+)['"]\s*\)/) ||
+                elem.value.pixelCode.match(/id=([0-9]{8,20})/);
+  if (match && match[1]) {
+    elem.value.pixelId = match[1];
+  }
+}
+
+function showAstrotags(e) {
   if (!e) return false;
   return ['heading', 'quiz-question', 'paragraph', 'button', 'quiz-next', 'top-banner', 'pitch-button', 'live-viewers'].includes(e.type);
 }
@@ -1343,7 +1363,7 @@ const filteredIcons = computed(() => {
 .em-ip-btn:hover { background:rgba(14,165,233,0.14); border-color:rgba(14,165,233,0.45); color:var(--color-text); }
 .em-ip-name { font-size:8px; color:var(--color-primary-deep); overflow:hidden; max-width:50px; text-overflow:ellipsis; white-space:nowrap; }
 
-/* ─── ATOMITAGS PANEL ────────────────────────────── */
+/* ─── ASTROTAGS PANEL ────────────────────────────── */
 .em-at-panel { padding:14px 20px; background:rgba(255,255,255,0.012); }
 .em-at-header { font-size:12px; color:var(--color-primary-deep); margin-bottom:10px; }
 .em-at-hl { color:var(--color-primary); }
@@ -1548,7 +1568,7 @@ const filteredIcons = computed(() => {
 .em-chk-lbl:hover, .em-icon-trigger:hover, .em-ip-cat:hover, .em-ip-cat.active, .em-ip-btn:hover, .em-at-q-btn:hover, .em-tab-btn.active { background: var(--color-primary-soft) !important; border-color: var(--color-primary-border) !important; color: var(--color-primary-strong) !important; }
 .em-chk-lbl input[type="checkbox"] { border-color: var(--color-primary-border); background: var(--color-surface); }
 .em-chk-lbl input[type="checkbox"]:checked { background: var(--color-primary); border-color: var(--color-primary); box-shadow: none; }
-.em-icon-picker, .global-theme-presets-box, .atomitags-guide-box, .color-presets-bar, .em-at-panel { background: var(--color-surface-soft) !important; border-color: var(--color-border) !important; }
+.em-icon-picker, .global-theme-presets-box, .astrotags-guide-box, .color-presets-bar, .em-at-panel { background: var(--color-surface-soft) !important; border-color: var(--color-border) !important; }
 .em-at-panel { border-top: 1px solid var(--color-border); }
 .em-at-header, .em-at-k, .preset-label, .em-ip-name { color: var(--color-primary-strong) !important; }
 .em-at-v { color: var(--color-text-muted) !important; }
