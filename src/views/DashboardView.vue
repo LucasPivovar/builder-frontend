@@ -3,9 +3,6 @@
     <DashboardSidebar
       :activeTab="activeTab"
       :pagesCount="pagesRegistry.length"
-      :funilPagesCount="funilPagesCount"
-      :emailPagesCount="emailPagesCount"
-      :quizPagesCount="quizPagesCount"
       :foldersCount="foldersRegistry.length"
       :templatesCount="customTemplatesRegistry.length"
       :funilTemplatesCount="funilTemplatesCount"
@@ -58,40 +55,35 @@
           <TemplateFoldersGrid @open-template-folder="setActiveTab" />
         </template>
 
-        <!-- ══ TODAS AS PÁGINAS / FUNIL ══ -->
-        <template v-else-if="['todas-paginas', 'funil', 'email-pages', 'quiz-pages'].includes(activeTab)">
+        <!-- ══ PÁGINAS ══ -->
+        <template v-else-if="activeTab === 'todas-paginas'">
           <div class="page-header-title">
             <div class="title-group">
-              <h1>{{ activeTab === 'funil' ? 'Páginas — Funil' : activeTab === 'email-pages' ? 'Páginas — E-mail' : activeTab === 'quiz-pages' ? 'Quizzes interativos' : 'Todas as páginas' }}</h1>
+              <h1>Páginas</h1>
               <p>{{ countLabel(filteredPages.length, 'página encontrada', 'páginas encontradas') }}</p>
             </div>
             <div class="header-right-row">
-              <select class="filter-select" v-model="selectedCategory">
-                <option value="todas">Todas categorias</option>
-                <option value="funil">Funil & Vendas</option>
-                <option value="email">E-mail Template</option>
-                <option value="quiz">Quiz interativo</option>
-              </select>
               <button class="btn-create-new" @click="openCreateModal()">
                 <i class="bi bi-plus-circle-fill"></i> Nova Página
               </button>
             </div>
           </div>
 
-          <PagesByCategorySection
-            v-if="activeTab === 'todas-paginas'"
-            :groups="pageCategoryGroups"
-            @open-category="setActiveTab"
-            @create-category="openCreateModalForType"
-            @edit-page="handleEditPage"
-            @more-options="showPageOptions"
+          <AnalyticsOverview
+            :totals="analyticsSummary.totals || {}"
+            :pages="analyticsSummary.pages || []"
+            :videos="analyticsSummary.videos || []"
           />
           <PagesByFolderSection
-            v-else
-            :folderGroups="folderGroups"
+            :folderGroups="pagesFolderGroups"
+            @create-new="openCreateModal()"
             @see-all-folder="openFolderById"
             @edit-page="handleEditPage"
             @more-options="showPageOptions"
+            @publish-page="handlePublishPage"
+            @assign-dns="handleAssignDns"
+            @open-publication="openPublicationUrl"
+            @open-metrics="openPageMetrics"
           />
         </template>
 
@@ -126,6 +118,10 @@
               @edit-page="handleEditPage"
               @more-options="showPageOptions"
               @download-folder="downloadSelectedFolder"
+              @publish-page="handlePublishPage"
+              @assign-dns="handleAssignDns"
+              @open-publication="openPublicationUrl"
+              @open-metrics="openPageMetrics"
             />
           </template>
         </template>
@@ -193,6 +189,26 @@
       @close="pageOptionsTarget = null"
       @save="handleSavePageOptions"
       @edit="handleEditFromOptions"
+      @delete="handleDeletePage"
+      @unpublish="handleUnpublishPage"
+    />
+
+    <DnsModal
+      :isOpen="Boolean(dnsTargetPage)"
+      :page="dnsTargetPage"
+      @close="dnsTargetPage = null"
+      @save="handleSaveDns"
+      @verify="handleVerifyDns"
+    />
+
+    <ConfirmModal
+      :isOpen="Boolean(confirmAction)"
+      :title="confirmAction?.title"
+      :message="confirmAction?.message"
+      :confirmLabel="confirmAction?.confirmLabel"
+      :icon="confirmAction?.icon"
+      @cancel="confirmAction = null"
+      @confirm="runConfirmAction"
     />
 
     <FolderModal
@@ -210,6 +226,7 @@
       :loading="notificationsLoading"
       @close="showNotifications = false"
       @read-all="readAllNotifications"
+      @clear="clearAllNotifications"
       @select="selectNotification"
     />
 
@@ -226,19 +243,21 @@ import DashboardHeader from '../components/dashboard/DashboardHeader.vue';
 import QuickActions from '../components/dashboard/QuickActions.vue';
 import RecentPagesSection from '../components/dashboard/RecentPagesSection.vue';
 import PagesByFolderSection from '../components/dashboard/PagesByFolderSection.vue';
-import PagesByCategorySection from '../components/dashboard/PagesByCategorySection.vue';
+import AnalyticsOverview from '../components/dashboard/AnalyticsOverview.vue';
 import FoldersGrid from '../components/dashboard/FoldersGrid.vue';
 import TemplateFoldersGrid from '../components/dashboard/TemplateFoldersGrid.vue';
 import TemplatesGrid from '../components/dashboard/TemplatesGrid.vue';
 import FolderDetail from '../components/dashboard/FolderDetail.vue';
 import CreateNewModal from '../components/dashboard/CreateNewModal.vue';
 import PageActionsModal from '../components/dashboard/PageActionsModal.vue';
+import DnsModal from '../components/dashboard/DnsModal.vue';
+import ConfirmModal from '../components/dashboard/ConfirmModal.vue';
 import FolderModal from '../components/dashboard/FolderModal.vue';
 import NotificationsModal from '../components/dashboard/NotificationsModal.vue';
 import SettingsPanel from '../components/dashboard/SettingsPanel.vue';
 import SupportPanel from '../components/dashboard/SupportPanel.vue';
 import { PRODUCT_TOUR_EVENT, useProductTour } from '../composables/useProductTour';
-import { clearAuthSession, getNotifications, markAllNotificationsRead, markNotificationRead } from '../services/api';
+import { clearAuthSession, clearNotifications, deletePublication, getAnalyticsSummary, getNotifications, getPublications, markAllNotificationsRead, markNotificationRead, publishPage, verifyPublicationDomain } from '../services/api';
 import { generateExportedHTML } from '../utils/htmlExporter';
 import { createZipBlob, safeFileName } from '../utils/zip';
 
@@ -246,26 +265,28 @@ const router = useRouter();
 const { start: startTour } = useProductTour();
 const {
   showToast, loadTemplate, loadPage, deleteFolder, newBlankCanvas,
-  pagesRegistry, foldersRegistry, customTemplatesRegistry, flushWorkspaceToBackend, updatePageDetails, closeTemplateBuilder
+  pagesRegistry, foldersRegistry, customTemplatesRegistry, flushWorkspaceToBackend, updatePageDetails, closeTemplateBuilder, deletePage
 } = useBuilderStore();
 
 const activeTab = ref('home');
 const searchQuery = ref('');
-const selectedCategory = ref('todas');
 const selectedFolder = ref(null);
 const showCreateModal = ref(false);
 const creationFolderId = ref('');
 const pageOptionsTarget = ref(null);
+const dnsTargetPage = ref(null);
+const confirmAction = ref(null);
 const templateLibraryFilter = ref('all');
 const showFolderModal = ref(false);
 const folderModalMode = ref('create');
 const folderBeingRenamed = ref(null);
 const createModalRef = ref(null);
-const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433']);
 const showNotifications = ref(false);
 const notificationsLoading = ref(false);
 const notifications = ref([]);
 const notificationUnread = ref(0);
+const publications = ref([]);
+const analyticsSummary = ref({ totals: {}, pages: [], videos: [] });
 
 const currentUser = computed(() => {
   try {
@@ -313,6 +334,8 @@ onMounted(() => {
     tourIntroTimer = setTimeout(() => startTour(), 650);
   }
   loadNotifications();
+  loadPublications();
+  loadAnalyticsSummary();
 });
 onUnmounted(() => {
   window.removeEventListener(PRODUCT_TOUR_EVENT, handleTourAction);
@@ -327,20 +350,12 @@ function setActiveTab(tab) {
   }
   activeTab.value = tab;
   selectedFolder.value = null;
-  if (tab === 'funil') selectedCategory.value = 'funil';
-  else if (tab === 'email-pages') selectedCategory.value = 'email';
-  else if (tab === 'quiz-pages') selectedCategory.value = 'quiz';
-  else if (tab === 'todas-paginas') selectedCategory.value = 'todas';
+  if (tab === 'todas-paginas') loadAnalyticsSummary();
 }
 
 function openCreateModal(folderId = null) {
   creationFolderId.value = folderId || '';
   showCreateModal.value = true;
-}
-
-function openCreateModalForType(type) {
-  openCreateModal();
-  nextTick(() => createModalRef.value?.selectType?.(type));
 }
 
 function handleOpenBuilder(templateKey) {
@@ -376,7 +391,8 @@ function handleEditPage(pageId) {
 
 function showPageOptions(page) {
   const pageId = page?.id || page?.templateId;
-  pageOptionsTarget.value = pagesRegistry.find(item => item.id === pageId) || null;
+  const source = pagesRegistry.find(item => item.id === pageId) || null;
+  pageOptionsTarget.value = source ? { ...source, publication: findPublication(source.id) } : null;
   if (!pageOptionsTarget.value) showToast('Página não encontrada', 'error');
 }
 
@@ -389,6 +405,186 @@ function handleEditFromOptions(pageId) {
   handleEditPage(pageId);
 }
 
+async function handleDeletePage(pageId) {
+  const page = pagesRegistry.find(item => item.id === pageId);
+  if (!page) {
+    pageOptionsTarget.value = null;
+    return;
+  }
+  confirmAction.value = {
+    title: 'Excluir página',
+    message: `A página "${page.name}" será removida do dashboard e, se estiver publicada, também sairá do ar.`,
+    confirmLabel: 'Excluir página',
+    icon: 'bi bi-trash3',
+    action: () => deletePageConfirmed(page.id)
+  };
+}
+
+async function deletePageConfirmed(pageId) {
+  const page = pagesRegistry.find(item => item.id === pageId);
+  if (!page) return;
+  const publication = findPublication(page.id);
+  try {
+    if (publication?.id) await deletePublication(publication.id).catch(() => null);
+    deletePage(page.id);
+    pageOptionsTarget.value = null;
+    await loadPublications();
+    await flushWorkspaceToBackend().catch(() => false);
+    showToast('Página excluída.', 'info');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível excluir a página.', 'error');
+  }
+}
+
+async function handleUnpublishPage(pageId) {
+  const page = pagesRegistry.find(item => item.id === pageId);
+  const publication = page ? findPublication(page.id) : null;
+  if (!page || !publication) {
+    pageOptionsTarget.value = null;
+    showToast('Publicação não encontrada.', 'error');
+    return;
+  }
+
+  confirmAction.value = {
+    title: 'Despublicar página',
+    message: `A publicação de "${page.name}" será removida e o domínio deixará de abrir esta página.`,
+    confirmLabel: 'Despublicar',
+    icon: 'bi bi-cloud-slash',
+    action: () => unpublishPageConfirmed(publication.id)
+  };
+}
+
+async function unpublishPageConfirmed(publicationId) {
+  try {
+    await deletePublication(publicationId);
+    pageOptionsTarget.value = null;
+    dnsTargetPage.value = null;
+    await loadPublications();
+    showToast('Página despublicada.', 'info');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível despublicar.', 'error');
+  }
+}
+
+async function handlePublishPage(page) {
+  const source = pagesRegistry.find(item => item.id === (page?.id || page?.templateId));
+  if (!source) {
+    showToast('Página não encontrada.', 'error');
+    return;
+  }
+
+  try {
+    const result = await publishSavedPage(source);
+    showToast(`Página publicada: ${result.publicUrl}`, 'success', 4200);
+    if (result.publicUrl) window.open(result.publicUrl, '_blank', 'noopener');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível publicar a página.', 'error');
+  }
+}
+
+function openPublicationUrl(page) {
+  const publication = page?.publication || findPublication(page?.id || page?.templateId);
+  const url = publication?.customDomainUrl && publication.domainStatus === 'active'
+    ? publication.customDomainUrl
+    : publication?.publicUrl || page?.publicUrl;
+  if (!url) {
+    showToast('Publique a página antes de abrir a URL.', 'info');
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
+function openPageMetrics(page) {
+  const pageId = page?.id || page?.templateId;
+  if (!pageId) {
+    showToast('Página não encontrada.', 'error');
+    return;
+  }
+  router.push(`/dashboard/metricas/${pageId}`);
+}
+
+async function handleAssignDns(page) {
+  const source = pagesRegistry.find(item => item.id === (page?.id || page?.templateId));
+  if (!source) {
+    showToast('Página não encontrada.', 'error');
+    return;
+  }
+
+  if (!findPublication(source.id)) {
+    showToast('Publique a página antes de atribuir DNS.', 'info');
+    return;
+  }
+
+  dnsTargetPage.value = {
+    ...page,
+    title: page.title || source.name,
+    customDomain: page.customDomain || findPublication(source.id)?.customDomain || '',
+    publication: findPublication(source.id)
+  };
+}
+
+async function handleSaveDns({ page, domain }) {
+  const source = pagesRegistry.find(item => item.id === (page?.id || page?.templateId));
+  if (!source) {
+    showToast('Página não encontrada.', 'error');
+    return;
+  }
+  try {
+    const result = await publishSavedPage(source, domain);
+    const dnsText = result.domainStatus === 'active'
+      ? `DNS ativo: ${result.dns?.host || domain}`
+      : `DNS pendente: crie CNAME ${result.dns?.host || domain} -> ${result.dns?.value || 'pages.seudominio.com'}`;
+    dnsTargetPage.value = null;
+    showToast(dnsText, 'success', 6000);
+  } catch (error) {
+    showToast(error.message || 'Não foi possível atribuir DNS.', 'error');
+  }
+}
+
+async function handleVerifyDns(publicationId) {
+  try {
+    const result = await verifyPublicationDomain(publicationId);
+    await loadPublications();
+    const source = pagesRegistry.find(item => item.id === result.pageId);
+    if (source) {
+      dnsTargetPage.value = {
+        id: source.id,
+        templateId: source.id,
+        title: source.name,
+        customDomain: result.customDomain || '',
+        publication: result
+      };
+    }
+    showToast(result.domainStatus === 'active' ? 'DNS ativo.' : 'DNS ainda pendente.', result.domainStatus === 'active' ? 'success' : 'info');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível verificar DNS.', 'error');
+  }
+}
+
+async function runConfirmAction() {
+  const action = confirmAction.value?.action;
+  confirmAction.value = null;
+  if (action) await action();
+}
+
+async function publishSavedPage(page, customDomain = '') {
+  const html = generateExportedHTML(page.rows || [], {
+    ...(page.pageSettings || {}),
+    builderMode: page.builderMode || page.type || 'funil',
+    pageTitle: page.pageSettings?.pageTitle || page.name || 'Página publicada',
+    trackingKey: page.id
+  });
+  const result = await publishPage({
+    pageId: page.id,
+    pageName: page.name || 'Página publicada',
+    slug: page.name || page.id,
+    customDomain: customDomain || undefined,
+    html
+  });
+  await loadPublications();
+  return result;
+}
+
 // ─── Folders ─────────────────────────────────────────────────────────────────
 function openFolder(folder) {
   selectedFolder.value = folder;
@@ -396,8 +592,9 @@ function openFolder(folder) {
 }
 
 function openFolderById(folderId) {
-  const f = foldersRegistry.find(f => f.id === folderId);
-  if (f) openFolder(f);
+  if (!folderId) return;
+  const folder = foldersRegistry.find(item => item.id === folderId);
+  if (folder) openFolder(folder);
 }
 
 function handleRenameFolder(folder) {
@@ -420,10 +617,7 @@ function normalizedPageType(pageOrType) {
   return 'funil';
 }
 
-const funilPagesCount = computed(() => pagesRegistry.filter(p => normalizedPageType(p) === 'funil').length);
-const emailPagesCount = computed(() => pagesRegistry.filter(p => normalizedPageType(p) === 'email').length);
-const quizPagesCount = computed(() => pagesRegistry.filter(p => normalizedPageType(p) === 'quiz').length);
-const onlinePagesCount = computed(() => pagesRegistry.filter(page => page.statusClass === 'published' || page.status === 'published').length);
+const onlinePagesCount = computed(() => pagesRegistry.filter(page => Boolean(findPublication(page.id)) || page.statusClass === 'published' || page.status === 'published').length);
 const draftPagesCount = computed(() => pagesRegistry.length - onlinePagesCount.value);
 const emailTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => Boolean(template.emailMode) || String(template.category || '').toLowerCase().includes('mail')).length);
 const funilTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => { const category=String(template.category||'').toLowerCase(); return !template.emailMode && !template.quizMode && !category.includes('mail') && !category.includes('quiz'); }).length);
@@ -437,8 +631,7 @@ const recentPages = computed(() => {
       id: p.id,
       title: p.name,
       category: pageCategory(p.type),
-      statusClass: p.statusClass || 'draft',
-      statusText: p.statusText || 'Rascunho',
+      ...pagePublicationState(p),
       date: formatDate(p.lastEditedAt || p.updatedAt),
       rawUpdatedAt: p.lastEditedAt || p.updatedAt,
       templateId: p.id
@@ -448,55 +641,59 @@ const recentPages = computed(() => {
 const filteredPages = computed(() => {
   return pagesRegistry.filter(p => {
     const matchSearch = !searchQuery.value || p.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchCat = selectedCategory.value === 'todas' || normalizedPageType(p) === selectedCategory.value;
-    return matchSearch && matchCat;
+    return matchSearch;
   });
 });
 
-const folderGroups = computed(() => {
-  const groups = [];
-
-  // Pages with folder
-  foldersRegistry.forEach(folder => {
-    const pages = filteredPages.value.filter(p => p.folderId === folder.id);
-    if (pages.length > 0) {
-      groups.push({
-        folderId: folder.id,
-        folderName: folder.name,
-        color: folderAccent(folder.color),
-        pages: pages.map(p => ({
-          id: p.id,
-          title: p.name,
-          category: pageCategory(p.type),
-          statusClass: p.statusClass || 'draft',
-          statusText: p.statusText || 'Rascunho',
-          date: formatDate(p.updatedAt),
-          templateId: p.id
-        }))
-      });
-    }
-  });
-
-  // Pages without folder (root)
-  const rootPages = filteredPages.value.filter(p => !p.folderId);
-  if (rootPages.length > 0) {
-    groups.push({
-      folderId: null,
-      folderName: 'Páginas sem pasta',
-      color: '#612bf4',
-      pages: rootPages.map(p => ({
+const allPages = computed(() => {
+  return [...filteredPages.value]
+    .sort((a, b) => new Date(b.lastEditedAt || b.updatedAt || 0) - new Date(a.lastEditedAt || a.updatedAt || 0))
+    .map(p => {
+      const publication = findPublication(p.id);
+      const folder = foldersRegistry.find(item => item.id === p.folderId);
+      const metrics = analyticsSummary.value.pages?.find(item => item.pageId === p.id) || {};
+      return {
         id: p.id,
         title: p.name,
         category: pageCategory(p.type),
-        statusClass: p.statusClass || 'draft',
-        statusText: p.statusText || 'Rascunho',
-        date: formatDate(p.updatedAt),
-        templateId: p.id
-      }))
+        folderName: folder?.name || '',
+        publicUrl: publication?.publicUrl || '',
+        ...pagePublicationState(p),
+        date: formatDate(p.lastEditedAt || p.updatedAt),
+        rawUpdatedAt: p.lastEditedAt || p.updatedAt,
+        templateId: p.id,
+        publication,
+        metrics
+      };
+    });
+});
+
+const pagesFolderGroups = computed(() => {
+  const groups = [];
+  const pages = allPages.value;
+  const rootPages = pages.filter(page => !pagesRegistry.find(item => item.id === page.id)?.folderId);
+
+  foldersRegistry.forEach(folder => {
+    const folderPages = pages.filter(page => pagesRegistry.find(item => item.id === page.id)?.folderId === folder.id);
+    if (!folderPages.length && searchQuery.value) return;
+    groups.push({
+      folderId: folder.id,
+      folderName: folder.name,
+      color: folder.color,
+      pages: folderPages
+    });
+  });
+
+  if (rootPages.length) {
+    groups.unshift({
+      folderId: null,
+      folderName: 'Sem pasta',
+      color: '#64748b',
+      pages: rootPages
     });
   }
 
-  return groups;
+  return groups.filter(group => group.pages.length || !searchQuery.value);
 });
 
 const selectedFolderPages = computed(() => {
@@ -504,28 +701,20 @@ const selectedFolderPages = computed(() => {
   return pagesRegistry
     .filter(p => p.folderId === selectedFolder.value.id)
     .sort((a, b) => new Date(b.lastEditedAt || b.updatedAt || 0) - new Date(a.lastEditedAt || a.updatedAt || 0))
-    .map(p => ({
-      id: p.id,
-      title: p.name,
-      category: pageCategory(p.type),
-      statusClass: p.statusClass || 'draft',
-      statusText: p.statusText || 'Rascunho',
-      date: formatDate(p.lastEditedAt || p.updatedAt),
-      rawUpdatedAt: p.lastEditedAt || p.updatedAt,
-      templateId: p.id
-    }));
-});
-
-const pageCategoryGroups = computed(() => {
-  const configs = [
-    { key:'funil', tab:'funil', title:'Funil', shortLabel:'VSL · 100%', itemLabel:'funil', description:'Landing pages e páginas de vendas em largura total', icon:'bi bi-funnel-fill', emptyText:'Crie uma página VSL responsiva.' },
-    { key:'email', tab:'email-pages', title:'E-mail', shortLabel:'E-mail · 600px', itemLabel:'e-mail', description:'Campanhas com largura fixa e compatível com caixas de entrada', icon:'bi bi-envelope-paper-fill', emptyText:'Crie seu primeiro template de e-mail.' },
-    { key:'quiz', tab:'quiz-pages', title:'Quiz', shortLabel:'Quiz · 460px', itemLabel:'quiz', description:'Experiências interativas organizadas em etapas', icon:'bi bi-ui-checks-grid', emptyText:'Crie seu primeiro quiz interativo.' }
-  ];
-  return configs.map(config => ({
-    ...config,
-    pages: pagesRegistry.filter(page => normalizedPageType(page) === config.key).sort((a,b)=>new Date(b.lastEditedAt||b.updatedAt||0)-new Date(a.lastEditedAt||a.updatedAt||0)).map(page => ({ id:page.id, title:page.name, date:formatDate(page.lastEditedAt||page.updatedAt), templateId:page.id, category:pageCategory(normalizedPageType(page)) }))
-  }));
+    .map(p => {
+      const metrics = analyticsSummary.value.pages?.find(item => item.pageId === p.id) || {};
+      return {
+        id: p.id,
+        title: p.name,
+        category: pageCategory(p.type),
+        ...pagePublicationState(p),
+        date: formatDate(p.lastEditedAt || p.updatedAt),
+        rawUpdatedAt: p.lastEditedAt || p.updatedAt,
+        templateId: p.id,
+        publication: findPublication(p.id),
+        metrics
+      };
+    });
 });
 
 function downloadSelectedFolder() {
@@ -582,6 +771,37 @@ async function loadNotifications() {
     notifications.value = [];
   }
 }
+async function loadPublications() {
+  try {
+    publications.value = await getPublications();
+  } catch {
+    publications.value = [];
+  }
+}
+async function loadAnalyticsSummary() {
+  try {
+    analyticsSummary.value = await getAnalyticsSummary();
+  } catch {
+    analyticsSummary.value = { totals: {}, pages: [], videos: [] };
+  }
+}
+
+function findPublication(pageId) {
+  return publications.value.find(item => item.pageId === pageId);
+}
+
+function pagePublicationState(page) {
+  const publication = findPublication(page.id);
+  const isPublished = Boolean(publication) || page.statusClass === 'published' || page.status === 'published';
+  const hasPendingDomain = publication?.customDomain && publication.domainStatus !== 'active';
+  return {
+    isPublished,
+    publication,
+    customDomain: publication?.customDomain || '',
+    statusClass: isPublished ? 'published' : 'draft',
+      statusText: hasPendingDomain ? 'DNS pendente' : isPublished ? 'Publicado' : 'Rascunho'
+  };
+}
 function pageCategory(type) { const normalized=normalizedPageType(type); return normalized === 'email' ? 'E-mail' : normalized === 'quiz' ? 'Quiz' : 'Funil'; }
 function countLabel(count, singular, plural) { return `${count} ${count === 1 ? singular : plural}`; }
 
@@ -598,6 +818,12 @@ async function readAllNotifications() {
   notificationUnread.value = Number(data.unread || 0);
 }
 
+async function clearAllNotifications() {
+  const data = await clearNotifications();
+  notifications.value = data.items || [];
+  notificationUnread.value = Number(data.unread || 0);
+}
+
 async function selectNotification(item) {
   if (!item.read) {
     const data = await markNotificationRead(item.id);
@@ -610,9 +836,6 @@ async function selectNotification(item) {
   else if (item.action === 'projects') setActiveTab('todas-paginas');
 }
 
-function folderAccent(color) {
-  return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#612bf4';
-}
 </script>
 
 <style scoped>

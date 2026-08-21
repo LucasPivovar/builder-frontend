@@ -397,7 +397,33 @@
                   </div>
 
                   <div v-else-if="quizElementTypes.includes(elem.type)" class="em-field-stack">
-                    <div v-if="['quiz-single','quiz-multiple','quiz-yes-no'].includes(elem.type)" class="em-field"><label class="em-lbl">Opções (uma por linha)</label><textarea v-model="elem.optionsText" class="em-input em-ta-sm"></textarea></div>
+                    <div v-if="['quiz-single','quiz-multiple','quiz-yes-no'].includes(elem.type)" class="em-field quiz-options-editor">
+                      <div class="quiz-options-header">
+                        <div>
+                          <label class="em-lbl">Alternativas</label>
+                          <small>{{ elem.type === 'quiz-multiple' ? 'O visitante pode escolher mais de uma.' : 'O visitante escolhe uma opção.' }}</small>
+                        </div>
+                        <button type="button" class="em-add-metric" @click="addQuizOption"><i class="bi bi-plus-lg"></i> Adicionar</button>
+                      </div>
+                      <div class="quiz-option-list">
+                        <div v-for="(option, index) in quizOptions" :key="index" class="quiz-option-row">
+                          <span class="quiz-option-index">{{ elem.type === 'quiz-multiple' ? String.fromCharCode(65 + index) : index + 1 }}</span>
+                          <div class="quiz-option-fields">
+                            <div class="quiz-option-main-line">
+                              <input :value="option.label" class="em-input" :placeholder="`Alternativa ${index + 1}`" @input="updateQuizOption(index, 'label', $event.target.value)" />
+                              <input :value="option.icon" class="em-input quiz-option-icon-input" maxlength="10" placeholder="Marcador" @input="updateQuizOption(index, 'icon', $event.target.value)" />
+                            </div>
+                            <input :value="option.description" class="em-input quiz-option-desc-input" placeholder="Descrição opcional para orientar a escolha" @input="updateQuizOption(index, 'description', $event.target.value)" />
+                          </div>
+                          <button type="button" class="em-remove-metric" :disabled="quizOptions.length <= minQuizOptions" title="Remover alternativa" @click="removeQuizOption(index)"><i class="bi bi-trash3"></i></button>
+                        </div>
+                      </div>
+                      <div class="quiz-option-presets">
+                        <button type="button" @click="applyQuizOptionPreset([{ label:'Sim', description:'Quero seguir por esse caminho', icon:'✓' }, { label:'Não', description:'Prefiro outra opção', icon:'×' }])">Sim / Não</button>
+                        <button type="button" @click="applyQuizOptionPreset([{ label:'18–24', description:'Começando agora', icon:'1' }, { label:'25–34', description:'Fase de crescimento', icon:'2' }, { label:'35–44', description:'Mais experiência', icon:'3' }, { label:'45+', description:'Alta maturidade', icon:'4' }])">Idade</button>
+                        <button type="button" @click="applyQuizOptionPreset([{ label:'Iniciante', description:'Estou dando os primeiros passos', icon:'A' }, { label:'Intermediário', description:'Já tenho alguma experiência', icon:'B' }, { label:'Avançado', description:'Quero algo mais direto', icon:'C' }])">Nível</button>
+                      </div>
+                    </div>
                     <div v-if="['quiz-progress','quiz-loading'].includes(elem.type)" class="em-field"><label class="em-lbl">Progresso (%)</label><input v-model.number="elem.progress" class="em-input" type="number" min="0" max="100"></div>
                     <div v-if="elem.type === 'quiz-loading'" class="em-field"><label class="em-lbl">Texto do carregamento</label><input v-model="elem.content" class="em-input" type="text"></div>
                     <div v-if="elem.type === 'quiz-metric'" class="em-field em-metrics-editor">
@@ -780,6 +806,8 @@ const quizElementTypes = ['quiz-progress', 'quiz-single', 'quiz-multiple', 'quiz
 const elem = computed(() => state.selectedElement);
 const elemStyle = computed(() => elem.value?.style || {});
 const metricItems = computed(() => parseMetricItems(elem.value?.metricsText));
+const quizOptions = computed(() => getQuizOptions(elem.value));
+const minQuizOptions = computed(() => elem.value?.type === 'quiz-yes-no' ? 2 : 1);
 
 function formatDelay(element) {
   const minutes = Math.max(0, Math.min(180, Number(element?.delayMinutes) || 0));
@@ -824,6 +852,57 @@ function addMetric() {
 function removeMetric(index) {
   if (metricItems.value.length === 1) return;
   saveMetricItems(metricItems.value.filter((_, itemIndex) => itemIndex !== index));
+}
+
+function getQuizOptions(element) {
+  if (!element) return [];
+  const values = Array.isArray(element.options)
+    ? element.options
+    : String(element.optionsText || 'Opção 1\nOpção 2').split('\n');
+  const cleaned = values.map(normalizeQuizOption).filter(option => option.label);
+  return cleaned.length ? cleaned : [{ label: 'Opção 1', description: '', icon: '' }, { label: 'Opção 2', description: '', icon: '' }];
+}
+
+function normalizeQuizOption(value) {
+  if (value && typeof value === 'object') {
+    return {
+      label: String(value.label || value.text || value.title || '').trim(),
+      description: String(value.description || value.subtitle || '').trim(),
+      icon: String(value.icon || value.marker || '').trim()
+    };
+  }
+  return { label: String(value || '').trim(), description: '', icon: '' };
+}
+
+function saveQuizOptions(values) {
+  if (!elem.value) return;
+  const cleaned = values.map(normalizeQuizOption).filter(option => option.label);
+  const fallback = elem.value.type === 'quiz-yes-no'
+    ? [{ label: 'Sim', description: '', icon: '' }, { label: 'Não', description: '', icon: '' }]
+    : [{ label: 'Opção 1', description: '', icon: '' }];
+  const finalValues = cleaned.length ? cleaned : fallback;
+  elem.value.options = finalValues;
+  elem.value.optionsText = finalValues.map(option => option.label).join('\n');
+}
+
+function updateQuizOption(index, field, value) {
+  const values = quizOptions.value.map(option => ({ ...option }));
+  values[index] = { ...values[index], [field]: value };
+  saveQuizOptions(values);
+}
+
+function addQuizOption() {
+  const next = quizOptions.value.length + 1;
+  saveQuizOptions([...quizOptions.value, { label: `Opção ${next}`, description: '', icon: '' }]);
+}
+
+function removeQuizOption(index) {
+  if (quizOptions.value.length <= minQuizOptions.value) return;
+  saveQuizOptions(quizOptions.value.filter((_, itemIndex) => itemIndex !== index));
+}
+
+function applyQuizOptionPreset(values) {
+  saveQuizOptions(values);
 }
 
 const marginVerticalValue = computed(() => {
@@ -1407,6 +1486,20 @@ const filteredIcons = computed(() => {
 .em-remove-metric { width:34px; height:34px; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-danger); cursor:pointer; transition:.18s ease; }
 .em-remove-metric:hover:not(:disabled) { border-color:var(--color-danger); background:var(--color-danger-soft); transform:translateY(-1px); }
 .em-remove-metric:disabled { opacity:.32; cursor:not-allowed; }
+.quiz-options-editor { gap:10px; }
+.quiz-options-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.quiz-options-header>div { display:flex; flex-direction:column; gap:3px; }
+.quiz-options-header small { color:var(--color-text-muted); font-size:11px; line-height:1.4; }
+.quiz-option-list { display:flex; flex-direction:column; gap:8px; }
+.quiz-option-row { display:grid; grid-template-columns:34px 1fr 34px; align-items:start; gap:8px; padding:8px; border:1px solid var(--color-border); border-radius:11px; background:var(--color-surface-soft); animation:emMetricIn .22s ease both; }
+.quiz-option-index { width:30px; height:30px; display:grid; place-items:center; border:1px solid var(--color-border); border-radius:999px; background:var(--color-surface); color:var(--color-primary-strong); font-size:11px; font-weight:900; }
+.quiz-option-fields { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.quiz-option-main-line { display:grid; grid-template-columns:minmax(0,1fr) 92px; gap:7px; }
+.quiz-option-icon-input { text-align:center; font-weight:800; }
+.quiz-option-desc-input { font-size:12px; min-height:34px; }
+.quiz-option-presets { display:flex; flex-wrap:wrap; gap:6px; padding-top:2px; }
+.quiz-option-presets button { min-height:30px; border:1px solid var(--color-border); border-radius:8px; padding:0 10px; background:var(--color-surface); color:var(--color-text-secondary); font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
+.quiz-option-presets button:hover { border-color:var(--color-primary-border); background:var(--color-primary-soft); color:var(--color-primary-strong); }
 @keyframes emMetricIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
 @media(max-width:720px){.em-metric-row{grid-template-columns:24px 1fr 34px}.em-metric-name{grid-column:2}.em-remove-metric{grid-column:3;grid-row:1/3;align-self:center}}
 

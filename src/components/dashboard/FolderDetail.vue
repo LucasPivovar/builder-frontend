@@ -45,6 +45,7 @@
         <div class="folder-table-head" aria-hidden="true">
           <span>Status</span>
           <span>Página</span>
+          <span>URL publicada</span>
           <span>Tipo</span>
           <span>Última edição</span>
           <span>Ações</span>
@@ -56,12 +57,57 @@
           </div>
           <div class="row-page-name">
             <span class="row-page-icon"><i class="bi bi-file-earmark-richtext"></i></span>
-            <strong>{{ page.title }}</strong>
+            <button type="button" @click="$emit('edit-page', page.templateId || page.id)">
+              <strong>{{ page.title }}</strong>
+              <small>Editar página</small>
+            </button>
+          </div>
+          <div class="row-public-url">
+            <button
+              v-if="page.publication?.publicUrl"
+              type="button"
+              @click="$emit('open-publication', page)"
+            >
+              <i class="bi bi-box-arrow-up-right"></i>
+              <span>{{ displayUrl(page) }}</span>
+            </button>
+            <span v-else>Publicação pendente</span>
           </div>
           <div><span class="row-category">{{ page.category }}</span></div>
           <time class="row-date">{{ page.date }}</time>
           <div class="row-actions">
-            <button class="btn-edit-builder" title="Atribuir DNS" @click="$emit('edit-page', page.templateId)"><i class="bi bi-globe2"></i><span>Atribuir DNS</span></button>
+            <button
+              v-if="page.isPublished"
+              class="btn-open-page"
+              title="Abrir página publicada"
+              @click="$emit('open-publication', page)"
+            >
+              <i class="bi bi-box-arrow-up-right"></i><span>Abrir</span>
+            </button>
+            <button
+              class="btn-open-page"
+              type="button"
+              title="Ver métricas da página"
+              @click="$emit('open-metrics', page)"
+            >
+              <i class="bi bi-graph-up-arrow"></i><span>Métricas</span>
+            </button>
+            <button
+              v-if="page.isPublished"
+              class="btn-edit-builder"
+              title="Atribuir DNS"
+              @click="$emit('assign-dns', page)"
+            >
+              <i class="bi bi-globe2"></i><span>Atribuir DNS</span>
+            </button>
+            <button
+              v-else
+              class="btn-edit-builder"
+              title="Publicar página"
+              @click="$emit('publish-page', page)"
+            >
+              <i class="bi bi-cloud-arrow-up"></i><span>Publicar</span>
+            </button>
             <button class="btn-item-more" title="Mais opções" @click="$emit('more-options', page)"><i class="bi bi-three-dots-vertical"></i></button>
           </div>
         </article>
@@ -78,7 +124,7 @@ const props = defineProps({
   pages: Array
 });
 
-defineEmits(['back', 'open-builder', 'edit-page', 'more-options', 'download-folder']);
+defineEmits(['back', 'open-builder', 'edit-page', 'more-options', 'download-folder', 'publish-page', 'assign-dns', 'open-publication', 'open-metrics']);
 
 const sortMode = ref('recent');
 const displayedPages = computed(() => [...(props.pages || [])].sort((a, b) => {
@@ -93,6 +139,15 @@ const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc',
 function folderAccent(color) {
   return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#612bf4';
 }
+
+function displayUrl(page) {
+  const publication = page?.publication || {};
+  const url = publication.customDomainUrl && publication.domainStatus === 'active'
+    ? publication.customDomainUrl
+    : publication.publicUrl || page.publicUrl || '';
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+
 </script>
 
 <style scoped>
@@ -174,9 +229,9 @@ function folderAccent(color) {
 
 .folder-table-head,
 .folder-page-row {
-  min-width: 760px;
+  min-width: 1040px;
   display: grid;
-  grid-template-columns: 130px minmax(210px, 1.8fr) minmax(110px, .7fr) minmax(130px, .8fr) 150px;
+  grid-template-columns: 120px minmax(190px, 1.25fr) minmax(210px, 1.2fr) 82px 112px 318px;
   align-items: center;
   gap: 16px;
 }
@@ -204,8 +259,14 @@ function folderAccent(color) {
 .row-status { display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
 .row-status i { color: var(--color-primary); font-size: 14px; }
 .row-page-name { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.row-page-name button { min-width:0; display:grid; gap:3px; padding:0; border:0; background:transparent; color:inherit; text-align:left; cursor:pointer; font:inherit; }
 .row-page-name strong { overflow: hidden; color: var(--color-text); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.row-page-name small { overflow:hidden; color:var(--color-text-muted); font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
 .row-page-icon { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 9px; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 16px; }
+.row-public-url { min-width:0; }
+.row-public-url button { max-width:100%; display:inline-flex; align-items:center; gap:6px; padding:0; border:0; background:transparent; color:var(--color-primary-strong); font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
+.row-public-url button span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.row-public-url > span { color:var(--color-text-muted); font-size:11px; font-weight:700; }
 .row-category { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 11px; font-weight: 800; }
 .row-date { color: var(--color-text-muted); font-size: 12px; }
 .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
@@ -324,7 +385,6 @@ function folderAccent(color) {
 }
 
 .btn-edit-builder {
-  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -339,6 +399,24 @@ function folderAccent(color) {
   font-weight: 700;
   cursor: pointer;
 }
+
+.btn-open-page {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  white-space:nowrap;
+  border:1px solid var(--color-border);
+  background:var(--color-surface);
+  color:var(--color-text-secondary);
+  padding:8px 9px;
+  border-radius:8px;
+  font-size:12.5px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.btn-open-page:hover { border-color:var(--color-primary-border); color:var(--color-primary-strong); }
 
 .btn-item-more {
   width: 32px;

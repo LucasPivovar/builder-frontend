@@ -143,12 +143,13 @@ defineProps({
 
 defineEmits(['use-template', 'switch-funnel']);
 
-const { customTemplatesRegistry } = useBuilderStore();
+const { customTemplatesRegistry, platformTemplatesRegistry } = useBuilderStore();
+const availableTemplates = computed(() => [...platformTemplatesRegistry, ...customTemplatesRegistry]);
 
 const customEmailTemplates = computed(() => {
-  return customTemplatesRegistry.filter(t => (t.category || '').toLowerCase().includes('mail'));
+  return availableTemplates.value.filter(t => t.emailMode || (t.category || '').toLowerCase().includes('mail'));
 });
-const customQuizTemplates = computed(() => customTemplatesRegistry.filter(t => t.quizMode || (t.category || '').toLowerCase().includes('quiz')));
+const customQuizTemplates = computed(() => availableTemplates.value.filter(t => t.quizMode || (t.category || '').toLowerCase().includes('quiz')));
 
 const categorizedFolders = computed(() => {
   const baseFolders = [
@@ -167,7 +168,7 @@ const categorizedFolders = computed(() => {
   ];
 
   return baseFolders.map(folder => {
-    const customItems = customTemplatesRegistry.filter(t => {
+    const customItems = availableTemplates.value.filter(t => {
       const cat = (t.category || '').toLowerCase();
       const targetCat = folder.categoryKey.toLowerCase();
       if (targetCat === 'vsl') return (cat.includes('vsl') || cat.includes('funil') || cat === '') && !cat.includes('quiz') && !cat.includes('mail');

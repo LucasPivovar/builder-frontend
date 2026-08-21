@@ -4,6 +4,7 @@ import DashboardView from '../views/DashboardView.vue';
 import AuthView from '../views/AuthView.vue';
 import BuilderView from '../views/BuilderView.vue';
 import AdminView from '../views/AdminView.vue';
+import PageMetricsView from '../views/PageMetricsView.vue';
 import { hasAuthToken } from '../services/api';
 
 const routes = [
@@ -18,6 +19,12 @@ const routes = [
     name: 'Dashboard',
     component: DashboardView,
     meta: { title: 'Dashboard | Astro Builder', requiresAuth: true }
+  },
+  {
+    path: '/dashboard/metricas/:pageId',
+    name: 'PageMetrics',
+    component: PageMetricsView,
+    meta: { title: 'Métricas da página | Astro Builder', requiresAuth: true }
   },
   {
     path: '/auth',

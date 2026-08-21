@@ -29,6 +29,16 @@
             <span><strong>Editar no Builder</strong><small>Abrir esta página para continuar a edição.</small></span>
             <i class="bi bi-arrow-right"></i>
           </button>
+
+          <button class="delete-page" type="button" @click="$emit('delete', page.id)">
+            <i class="bi bi-trash3"></i>
+            <span><strong>Excluir página</strong><small>Remover esta página do dashboard.</small></span>
+          </button>
+
+          <button v-if="page.publication" class="unpublish-page" type="button" @click="$emit('unpublish', page.id)">
+            <i class="bi bi-cloud-slash"></i>
+            <span><strong>Despublicar</strong><small>Tirar a página do ar e remover DNS vinculado.</small></span>
+          </button>
         </div>
 
         <footer>
@@ -49,7 +59,7 @@ const props = defineProps({
   folders: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(['close', 'save', 'edit']);
+const emit = defineEmits(['close', 'save', 'edit', 'delete', 'unpublish']);
 const draftName = ref('');
 const draftFolderId = ref('');
 
@@ -84,9 +94,12 @@ input, select { width: 100%; border: 1px solid var(--color-border); border-radiu
 input:focus, select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
 .edit-now { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 11px; padding: 13px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-primary-subtle); color: var(--color-primary-strong); cursor: pointer; text-align: left; }
 .edit-now > i:first-child { font-size: 20px; }
-.edit-now span { display: grid; gap: 2px; }
-.edit-now strong { color: var(--color-text); font-size: 12px; }
-.edit-now small { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; }
+.edit-now span, .delete-page span, .unpublish-page span { display: grid; gap: 2px; }
+.edit-now strong, .delete-page strong, .unpublish-page strong { color: var(--color-text); font-size: 12px; }
+.edit-now small, .delete-page small, .unpublish-page small { color: var(--color-text-muted); font-size: 10.5px; font-weight: 500; }
+.delete-page, .unpublish-page { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 11px; padding: 13px; border: 1px solid rgba(239,68,68,.26); border-radius: 12px; background: rgba(239,68,68,.07); color: #dc2626; cursor: pointer; text-align: left; }
+.unpublish-page { border-color: var(--color-border); background: var(--color-surface-soft); color: var(--color-text-secondary); }
+.delete-page > i:first-child, .unpublish-page > i:first-child { font-size: 19px; }
 .button-secondary, .button-primary { border-radius: 9px; padding: 9px 14px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 800; }
 .button-secondary { border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-secondary); }
 .button-primary { border: 1px solid var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }

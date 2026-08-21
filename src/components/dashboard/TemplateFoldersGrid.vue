@@ -68,13 +68,14 @@ import { useBuilderStore } from '../../composables/useBuilderStore';
 
 defineEmits(['open-template-folder']);
 
-const { customTemplatesRegistry } = useBuilderStore();
+const { customTemplatesRegistry, platformTemplatesRegistry } = useBuilderStore();
+const availableTemplates = computed(() => [...platformTemplatesRegistry, ...customTemplatesRegistry]);
 
 const totalFunnelTemplatesCount = computed(() => {
-  return 1 + customTemplatesRegistry.filter(template => templateType(template) === 'funil').length;
+  return 1 + availableTemplates.value.filter(template => templateType(template) === 'funil').length;
 });
-const totalEmailTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => templateType(template) === 'email').length);
-const totalQuizTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => templateType(template) === 'quiz').length);
+const totalEmailTemplatesCount = computed(() => 1 + availableTemplates.value.filter(template => templateType(template) === 'email').length);
+const totalQuizTemplatesCount = computed(() => 1 + availableTemplates.value.filter(template => templateType(template) === 'quiz').length);
 const modelCount = count => `${count} ${count === 1 ? 'modelo' : 'modelos'}`;
 function templateType(template) {
   const category=String(template.category||'').toLowerCase();

@@ -27,31 +27,8 @@
         @click="$emit('select-tab', 'todas-paginas')"
       >
         <i class="bi bi-collection-fill"></i>
-        <span>Todas as Páginas</span>
+        <span>Páginas</span>
         <span class="badge-count">{{ pagesCount }}</span>
-      </a>
-
-      <a
-        class="menu-item"
-        :class="{ active: activeTab === 'funil' }"
-        @click="$emit('select-tab', 'funil')"
-      >
-        <i class="bi bi-funnel-fill"></i>
-        <span>Funil</span>
-        <span class="badge-count">{{ funilPagesCount }}</span>
-      </a>
-
-      <a
-        class="menu-item"
-        :class="{ active: activeTab === 'email-pages' }"
-        @click="$emit('select-tab', 'email-pages')"
-      >
-        <i class="bi bi-envelope-paper-fill"></i>
-        <span>E-mails</span>
-        <span class="badge-count">{{ emailPagesCount }}</span>
-      </a>
-      <a class="menu-item" :class="{ active: activeTab === 'quiz-pages' }" @click="$emit('select-tab', 'quiz-pages')">
-        <i class="bi bi-ui-checks-grid"></i><span>Quizzes</span><span class="badge-count">{{ quizPagesCount }}</span>
       </a>
 
       <!-- Label de Categoria: ORGANIZAÇÃO -->
@@ -100,7 +77,7 @@
         @click="$emit('select-tab', 'support')"
       >
         <i class="bi bi-headset"></i>
-        <span>Suporte</span>
+        <span>Tickets</span>
       </a>
     </nav>
 
@@ -123,9 +100,6 @@ defineEmits(['select-tab']);
 const props = defineProps({
   activeTab: String,
   pagesCount: Number,
-  funilPagesCount: Number,
-  emailPagesCount: Number,
-  quizPagesCount: Number,
   foldersCount: Number,
   templatesCount: Number,
   funilTemplatesCount: { type: Number, default: 1 },

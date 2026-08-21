@@ -79,11 +79,20 @@ export const register = (account) => apiRequest('/auth/register', { method: 'POS
 export const getProfile = () => apiRequest('/auth/me');
 export const getWorkspace = () => apiRequest('/workspace');
 export const saveWorkspace = (workspace) => apiRequest('/workspace', { method: 'PUT', body: workspace, timeout: 20000 });
+export const publishPage = (publication) => apiRequest('/publications', { method: 'POST', body: publication, timeout: 30000 });
+export const getPublications = () => apiRequest('/publications');
+export const deletePublication = (id) => apiRequest(`/publications/${id}`, { method: 'DELETE' });
+export const verifyPublicationDomain = (id) => apiRequest(`/publications/${id}/verify-domain`, { method: 'PATCH', timeout: 20000 });
 export const getNotifications = () => apiRequest('/notifications');
+export const clearNotifications = () => apiRequest('/notifications', { method: 'DELETE' });
 export const markNotificationRead = (id) => apiRequest(`/notifications/${id}/read`, { method: 'PATCH' });
 export const markAllNotificationsRead = () => apiRequest('/notifications/read-all', { method: 'PATCH' });
+export const getPlatformTemplates = () => apiRequest('/workspace/platform-templates');
+export const getAnalyticsSummary = () => apiRequest('/analytics/summary');
 export const getAdminOverview = () => apiRequest('/admin/overview');
 export const getAdminUsers = () => apiRequest('/admin/users');
+export const getAdminHistory = () => apiRequest('/admin/history');
+export const createAdminAlert = (alert) => apiRequest('/admin/alerts', { method: 'POST', body: alert });
 export const getAdminUserWorkspace = (userId) => apiRequest(`/admin/users/${userId}/workspace`);
 export const restoreAdminBackup = (userId, backupId) => apiRequest(`/admin/users/${userId}/backups/${backupId}/restore`, { method: 'POST' });
 

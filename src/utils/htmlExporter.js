@@ -1,5 +1,25 @@
 import { hexToRgba, getNum } from './astrotags.js';
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeQuizOption(value) {
+  if (value && typeof value === 'object') {
+    return {
+      label: String(value.label || value.text || value.title || '').trim(),
+      description: String(value.description || value.subtitle || '').trim(),
+      icon: String(value.icon || value.marker || '').trim()
+    };
+  }
+  return { label: String(value || '').trim(), description: '', icon: '' };
+}
+
 export function generateFullHTML(stateOrRows, pageSettingsParam) {
   let rows = [];
   let pageSettings = {};
@@ -220,7 +240,7 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
     .quiz-step{display:none;flex-direction:column;width:100%;margin:0!important;padding:28px 20px!important;border:1px solid #bae6fd;border-radius:24px;background:#fff;box-shadow:0 12px 34px rgba(14,116,144,.13)}
     .quiz-step.active{display:flex;animation:quizIn .3s ease}.quiz-step .builder-col{gap:14px}
     .quiz-progress{border-radius:999px;background:#e0f2fe;overflow:hidden}.quiz-progress span{display:block;height:100%;border-radius:inherit;background:#0ea5e9}.quiz-step-label{text-align:right;margin:7px 0 12px;color:#7890a8;font-size:9px;font-weight:800;text-transform:uppercase}
-    .quiz-options{display:flex;flex-direction:column;gap:9px}.quiz-option{min-height:58px;display:grid;grid-template-columns:30px 1fr 18px;gap:10px;align-items:center;width:100%;padding:10px 14px;border:1px solid #bae6fd;border-radius:14px;background:#fff;color:#0f172a;font:inherit;font-size:15px;text-align:left;cursor:pointer}.quiz-option:hover,.quiz-option.selected{border-color:#0ea5e9;background:#f0f9ff}.quiz-options.quiz-required .quiz-option{border-color:#0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.12)}.quiz-option-mark{width:27px;height:27px;border:1px solid #bae6fd;border-radius:50%;display:grid;place-items:center;font-size:10px}.quiz-option.selected .quiz-option-mark{background:#0ea5e9;color:#fff}
+    .quiz-options{display:flex;flex-direction:column;gap:9px}.quiz-option{min-height:58px;display:grid;grid-template-columns:32px 1fr 18px;gap:10px;align-items:center;width:100%;padding:11px 14px;border:1px solid #bae6fd;border-radius:14px;background:#fff;color:#0f172a;font:inherit;font-size:15px;text-align:left;cursor:pointer}.quiz-option:hover,.quiz-option.selected{border-color:#0ea5e9;background:#f0f9ff}.quiz-options.quiz-required .quiz-option{border-color:#0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.12)}.quiz-option-mark{width:29px;height:29px;border:1px solid #bae6fd;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900}.quiz-option-copy{display:flex;min-width:0;flex-direction:column;gap:2px}.quiz-option-copy strong{font-size:15px;line-height:1.25;overflow-wrap:anywhere}.quiz-option-copy small{color:#64748b;font-size:12px;line-height:1.25;overflow-wrap:anywhere}.quiz-option.selected .quiz-option-mark{background:#0ea5e9;color:#fff}
     .quiz-loading{display:flex;flex-direction:column;gap:9px;padding:12px 2px}.quiz-loading-header{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#0f172a;font-size:13px;font-weight:700}.quiz-loading-header strong{color:#0369a1}.quiz-loading-bar{height:12px;border-radius:999px;background:#e0f2fe;overflow:hidden}.quiz-loading-bar span{position:relative;display:block;height:100%;background:#0ea5e9;transform-origin:left;animation:quizLoadGrow 1.15s cubic-bezier(.22,1,.36,1) both}.quiz-loading-bar span:after{content:'';position:absolute;inset:0;width:45%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-120%);animation:quizLoadShimmer 1.45s ease-in-out .35s infinite}.quiz-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.quiz-metrics article{min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #bae6fd;border-radius:14px;animation:quizMetricIn .35s cubic-bezier(.22,1,.36,1) both}.quiz-metrics strong{font-size:22px;color:#0369a1}.quiz-metrics span{margin-top:8px;color:#64748b;font-size:12px;text-align:center}
     .quiz-price{border:2px solid #0ea5e9;border-radius:15px;overflow:hidden}.quiz-price>small{display:block;padding:6px;text-align:center;background:#0ea5e9;color:#fff;font-weight:800}.quiz-price>div{display:flex;justify-content:space-between;align-items:center;padding:16px}.quiz-price span{display:flex;flex-direction:column}.quiz-price em{font-style:normal;color:#64748b;font-size:11px}.quiz-price b{font-size:20px;color:#0369a1}
     @keyframes quizIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}@keyframes quizLoadGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes quizLoadShimmer{0%{transform:translateX(-120%)}70%,100%{transform:translateX(320%)}}@keyframes quizMetricIn{from{opacity:0;transform:translateY(9px) scale(.98)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.quiz-step,.quiz-loading-bar span,.quiz-loading-bar span:after,.quiz-metrics article{animation:none!important}}
@@ -446,22 +466,105 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
   <script>
     (function() {
       var pageKey = '${trackingKey || 'draft'}';
-      function record(type, target) {
-        var payload = { source: 'visual-builder', type: 'metric', metric: { pageKey: pageKey, type: type, target: target || '', createdAt: new Date().toISOString() } };
+      var pageName = ${JSON.stringify(pageTitle)};
+      var sessionKey = 'ab_session_' + pageKey;
+      var sessionId = sessionStorage.getItem(sessionKey) || (Date.now().toString(36) + Math.random().toString(36).slice(2));
+      var startedAt = Date.now();
+      var maxScroll = 0;
+      sessionStorage.setItem(sessionKey, sessionId);
+      function record(type, target, value, meta) {
+        var metric = { pageKey: pageKey, pageId: pageKey, pageName: pageName, type: type, target: target || '', value: Number(value) || 0, sessionId: sessionId, referrer: document.referrer || '', meta: meta || {}, createdAt: new Date().toISOString() };
+        var payload = { source: 'visual-builder', type: 'metric', metric: metric };
         try {
           var saved = JSON.parse(localStorage.getItem('builder_metrics_v1') || '[]');
-          saved.unshift(payload.metric);
+          saved.unshift(metric);
           localStorage.setItem('builder_metrics_v1', JSON.stringify(saved.slice(0, 1000)));
+        } catch (e) {}
+        try {
+          var body = JSON.stringify(metric);
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/analytics/events', new Blob([body], { type: 'application/json' }));
+          } else {
+            fetch('/api/analytics/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function(){});
+          }
         } catch (e) {}
         if (window.parent !== window) window.parent.postMessage(payload, '*');
       }
       record('page_view');
       document.addEventListener('click', function(event) {
-        var link = event.target.closest && event.target.closest('a');
-        if (link) record('cta_click', link.getAttribute('href') || '');
+        var target = event.target.closest && event.target.closest('a, button, [role="button"], .canvas-btn, .canvas-pitch-btn');
+        if (target) record('cta_click', target.innerText || target.getAttribute('href') || target.getAttribute('aria-label') || '', 1, { href: target.getAttribute('href') || '' });
       });
       document.addEventListener('submit', function(event) {
-        record('form_submit', event.target.getAttribute('action') || '');
+        record('form_submit', event.target.getAttribute('action') || '', 1);
+      });
+      window.addEventListener('scroll', function() {
+        var doc = document.documentElement;
+        var height = Math.max(1, doc.scrollHeight - window.innerHeight);
+        maxScroll = Math.max(maxScroll, Math.round((window.scrollY / height) * 100));
+      }, { passive: true });
+      setInterval(function(){ record('time_on_page', 'page', Math.round((Date.now() - startedAt) / 1000)); startedAt = Date.now(); }, 15000);
+      window.addEventListener('beforeunload', function(){ record('scroll_depth', 'page', maxScroll); record('time_on_page', 'page', Math.round((Date.now() - startedAt) / 1000)); });
+      function bindVideos() {
+        document.querySelectorAll('video').forEach(function(video, index) {
+          if (video.dataset.analyticsBound) return;
+          video.dataset.analyticsBound = '1';
+          var target = video.getAttribute('id') || video.getAttribute('src') || ('video-' + (index + 1));
+          var last = 0;
+          video.addEventListener('play', function(){ record('video_play', target, Math.round(video.currentTime || 0)); });
+          video.addEventListener('timeupdate', function(){
+            var now = Math.round(video.currentTime || 0);
+            if (now - last >= 5) { last = now; record('video_progress', target, 5, { currentTime: now, duration: Math.round(video.duration || 0) }); }
+          });
+          video.addEventListener('ended', function(){ record('video_complete', target, Math.round(video.duration || video.currentTime || 0)); });
+        });
+        document.querySelectorAll('vturb-smartplayer, .canvas-vturb-wrapper').forEach(function(player, index) {
+          if (player.dataset.analyticsBound) return;
+          player.dataset.analyticsBound = '1';
+          var smart = player.matches && player.matches('vturb-smartplayer') ? player : player.querySelector('vturb-smartplayer');
+          var target = (smart && smart.getAttribute('id')) || player.getAttribute('data-video-id') || ('vturb-' + (index + 1));
+          var played = false;
+          var lastProgress = 0;
+          function markPlay(value) {
+            if (!played) {
+              played = true;
+              record('video_play', target, Number(value) || 0, { provider: 'vturb' });
+            }
+          }
+          player.addEventListener('click', function(){ markPlay(0); });
+          if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function(entries) {
+              entries.forEach(function(entry) {
+                if (entry.isIntersecting && entry.intersectionRatio >= 0.5) markPlay(0);
+              });
+            }, { threshold: [0.5] });
+            observer.observe(player);
+          }
+          var progressTimer = setInterval(function() {
+            try {
+              var instances = window.smartplayer && window.smartplayer.instances ? window.smartplayer.instances : [];
+              instances.forEach(function(inst) {
+                var video = inst && inst.video;
+                if (!video || !(video.currentTime > 0)) return;
+                markPlay(video.currentTime);
+                var now = Math.round(video.currentTime || 0);
+                if (now - lastProgress >= 5) {
+                  lastProgress = now;
+                  record('video_progress', target, 5, { provider: 'vturb', currentTime: now, duration: Math.round(video.duration || 0) });
+                }
+                if (video.ended) {
+                  record('video_complete', target, Math.round(video.duration || video.currentTime || 0), { provider: 'vturb' });
+                  clearInterval(progressTimer);
+                }
+              });
+            } catch (e) {}
+          }, 1000);
+        });
+      }
+      bindVideos();
+      setInterval(bindVideos, 3000);
+      document.addEventListener('quiz:complete', function(event) {
+        record('quiz_answer', 'quiz_complete', 1, event.detail || {});
       });
     })();
   </script>
@@ -709,8 +812,9 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
   } else if (type === 'quiz-progress') {
     innerHTML = `<div class="quiz-progress"><span style="width:${Math.max(0,Math.min(100,Number(elem.progress)||0))}%"></span></div>`;
   } else if (['quiz-single','quiz-multiple','quiz-yes-no'].includes(type)) {
-    const options = String(elem.optionsText || 'Opção 1\nOpção 2').split('\n').map(value => value.trim()).filter(Boolean);
-    innerHTML = `<div class="quiz-options" data-multiple="${type === 'quiz-multiple'}">${options.map((option,index)=>`<button type="button" class="quiz-option" data-value="${option.replace(/"/g,'&quot;')}"><span class="quiz-option-mark">${type === 'quiz-multiple' ? String.fromCharCode(65+index) : ''}</span><span>${option}</span><span>›</span></button>`).join('')}</div>`;
+    const optionSource = Array.isArray(elem.options) ? elem.options : String(elem.optionsText || 'Opção 1\nOpção 2').split('\n');
+    const options = optionSource.map(normalizeQuizOption).filter(option => option.label);
+    innerHTML = `<div class="quiz-options" data-multiple="${type === 'quiz-multiple'}">${options.map((option,index)=>`<button type="button" class="quiz-option" data-value="${escapeHtml(option.label)}"><span class="quiz-option-mark">${escapeHtml(option.icon || (type === 'quiz-multiple' ? String.fromCharCode(65+index) : ''))}</span><span class="quiz-option-copy"><strong>${escapeHtml(option.label)}</strong>${option.description ? `<small>${escapeHtml(option.description)}</small>` : ''}</span><span>›</span></button>`).join('')}</div>`;
   } else if (type === 'quiz-loading') {
     const progress=Math.max(0,Math.min(100,Number(elem.progress)||0)); innerHTML=`<div class="quiz-loading"><div class="quiz-loading-header"><span>${elem.content || 'Analisando suas respostas...'}</span><strong>${progress}%</strong></div><div class="quiz-loading-bar"><span style="width:${progress}%"></span></div></div>`;
   } else if (type === 'quiz-metric') {

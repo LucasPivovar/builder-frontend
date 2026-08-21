@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { generateExportedHTML } from '../utils/htmlExporter';
-import { getStoredUser, getWorkspace, hasAuthToken, saveWorkspace as saveWorkspaceRequest } from '../services/api';
+import { getPlatformTemplates, getStoredUser, getWorkspace, hasAuthToken, saveWorkspace as saveWorkspaceRequest } from '../services/api';
 
 const WORKSPACE_SYNC_KEYS = new Set([
   'pages_registry_v1',
@@ -127,17 +127,17 @@ const defaultQuizRows = [
   { id:'quiz-step-1', columns:[{ id:'quiz-col-1', flex:1, elements:[
     { id:'quiz-title-1', type:'quiz-question', content:'Vamos começar!', style:{fontSize:'31px',fontWeight:'900',textColor:'#0f172a',hasTransparentBg:true,align:'center',marginTop:0,marginBottom:8} },
     { id:'quiz-text-1', type:'paragraph', content:'Selecione a sua idade para iniciarmos o quiz.', style:{fontSize:'16px',fontWeight:'400',textColor:'#64748b',hasTransparentBg:true,align:'center',marginBottom:18} },
-    { id:'quiz-single-1', type:'quiz-single', optionsText:'18–24\n25–34\n35–54\n55–65+', style:{marginBottom:8} },
+    { id:'quiz-single-1', type:'quiz-single', options:[{label:'18–24',description:'Começando agora',icon:'1'},{label:'25–34',description:'Fase de crescimento',icon:'2'},{label:'35–54',description:'Mais experiência',icon:'3'},{label:'55–65+',description:'Alta maturidade',icon:'4'}], optionsText:'18–24\n25–34\n35–54\n55–65+', style:{marginBottom:8} },
     { id:'quiz-next-1', type:'quiz-next', content:'Continuar', url:'#quiz-next', openInNewTab:false, style:{bgColor:'#0ea5e9',textColor:'#ffffff',fontSize:'16px',fontWeight:'800',paddingVertical:16,paddingHorizontal:28,borderRadius:12,align:'center',marginTop:10} }
   ]}]},
   { id:'quiz-step-2', columns:[{ id:'quiz-col-2', flex:1, elements:[
     { id:'quiz-title-2', type:'quiz-question', content:'Sobre quais temas você mais gosta de responder?', style:{fontSize:'26px',fontWeight:'900',textColor:'#0f172a',hasTransparentBg:true,align:'center',marginBottom:15} },
-    { id:'quiz-multiple-2', type:'quiz-multiple', optionsText:'Desenvolvimento pessoal\nSaúde e bem-estar\nEstilo de vida\nCuriosidades em geral', style:{marginBottom:8} },
+    { id:'quiz-multiple-2', type:'quiz-multiple', options:[{label:'Desenvolvimento pessoal',description:'Hábitos, foco e evolução',icon:'A'},{label:'Saúde e bem-estar',description:'Rotina, energia e qualidade de vida',icon:'B'},{label:'Estilo de vida',description:'Preferências e objetivos pessoais',icon:'C'},{label:'Curiosidades em geral',description:'Assuntos leves e variados',icon:'D'}], optionsText:'Desenvolvimento pessoal\nSaúde e bem-estar\nEstilo de vida\nCuriosidades em geral', style:{marginBottom:8} },
     { id:'quiz-next-2', type:'quiz-next', content:'Continuar', url:'#quiz-next', openInNewTab:false, style:{bgColor:'#0ea5e9',textColor:'#ffffff',fontSize:'16px',fontWeight:'800',paddingVertical:16,paddingHorizontal:28,borderRadius:12,align:'center'} }
   ]}]},
   { id:'quiz-step-3', columns:[{ id:'quiz-col-3', flex:1, elements:[
     { id:'quiz-title-3', type:'quiz-question', content:'Você costuma planejar as suas atividades?', style:{fontSize:'28px',fontWeight:'900',textColor:'#0f172a',hasTransparentBg:true,align:'center',marginBottom:15} },
-    { id:'quiz-yesno-3', type:'quiz-yes-no', optionsText:'Costumo planejar\nApenas deixo fluir', style:{marginBottom:12} },
+    { id:'quiz-yesno-3', type:'quiz-yes-no', options:[{label:'Costumo planejar',description:'Gosto de ter clareza antes de agir',icon:'✓'},{label:'Apenas deixo fluir',description:'Prefiro decidir no caminho',icon:'×'}], optionsText:'Costumo planejar\nApenas deixo fluir', style:{marginBottom:12} },
     { id:'quiz-next-3', type:'quiz-next', content:'Continuar', url:'#quiz-next', openInNewTab:false, style:{bgColor:'#0ea5e9',textColor:'#ffffff',fontSize:'16px',fontWeight:'800',paddingVertical:16,paddingHorizontal:28,borderRadius:12,align:'center'} }
   ]}]},
   { id:'quiz-step-4', columns:[{ id:'quiz-col-4', flex:1, elements:[
@@ -167,6 +167,7 @@ function showToast(message, type = 'success', duration = 2800) {
 
 // ─── Custom Templates Registry ───────────────────────────────────────────────
 const customTemplatesRegistry = reactive(lsGet('custom_templates_v1', []));
+const platformTemplatesRegistry = reactive([]);
 
 // Dados locais separados do conteúdo da página, prontos para futura migração a uma API.
 const versionsRegistry = reactive(lsGet('page_versions_v1', []));
@@ -211,6 +212,18 @@ function applyWorkspaceData(data = {}) {
     lsSet('builder_metrics_v1', metricsRegistry);
   } finally {
     suppressBackendSync = false;
+  }
+}
+
+async function loadPlatformTemplates() {
+  if (!hasAuthToken()) return [];
+  try {
+    const templates = await getPlatformTemplates();
+    platformTemplatesRegistry.splice(0, platformTemplatesRegistry.length, ...(Array.isArray(templates) ? templates : []));
+    return platformTemplatesRegistry;
+  } catch {
+    platformTemplatesRegistry.splice(0, platformTemplatesRegistry.length);
+    return [];
   }
 }
 
@@ -270,6 +283,7 @@ async function hydrateWorkspaceFromBackend() {
     if (!response.initialized) await persistWorkspaceNow();
   }
 
+  await loadPlatformTemplates();
   if (user?.id) localStorage.setItem('vbs_workspace_owner', user.id);
   return true;
 }
@@ -501,9 +515,9 @@ export function useBuilderStore() {
     if (type === 'quiz-question') return { ...base, content:'Escreva a pergunta desta etapa', style:{...baseStyle,fontSize:'28px',fontWeight:'900',textColor:'#0f172a',hasTransparentBg:true,align:'center',marginBottom:14} };
     if (type === 'quiz-next') return { ...base, content:'Continuar', url:'#quiz-next', openInNewTab:false, style:{...baseStyle,bgColor:'#0ea5e9',textColor:'#ffffff',fontSize:'16px',fontWeight:'800',paddingVertical:16,paddingHorizontal:28,borderRadius:12,align:'center',marginTop:10} };
     if (type === 'quiz-progress') return { ...base, content:'Progresso', progress:25, style:{...baseStyle,hasTransparentBg:true,marginBottom:18} };
-    if (type === 'quiz-single') return { ...base, content:'Escolha uma opção', optionsText:'Opção 1\nOpção 2\nOpção 3', style:{...baseStyle,hasTransparentBg:true,marginBottom:8} };
-    if (type === 'quiz-multiple') return { ...base, content:'Escolha uma ou mais opções', optionsText:'Opção A\nOpção B\nOpção C', style:{...baseStyle,hasTransparentBg:true,marginBottom:8} };
-    if (type === 'quiz-yes-no') return { ...base, content:'Escolha uma resposta', optionsText:'Sim\nNão', style:{...baseStyle,hasTransparentBg:true,marginBottom:8} };
+    if (type === 'quiz-single') return { ...base, content:'Escolha uma opção', options:[{label:'Opção 1',description:'Explique quando essa escolha faz sentido',icon:'1'},{label:'Opção 2',description:'Mostre outro caminho possível',icon:'2'},{label:'Opção 3',description:'Use uma descrição curta e direta',icon:'3'}], optionsText:'Opção 1\nOpção 2\nOpção 3', style:{...baseStyle,hasTransparentBg:true,marginBottom:8} };
+    if (type === 'quiz-multiple') return { ...base, content:'Escolha uma ou mais opções', options:[{label:'Opção A',description:'Primeiro interesse do visitante',icon:'A'},{label:'Opção B',description:'Segundo interesse do visitante',icon:'B'},{label:'Opção C',description:'Terceiro interesse do visitante',icon:'C'}], optionsText:'Opção A\nOpção B\nOpção C', style:{...baseStyle,hasTransparentBg:true,marginBottom:8} };
+    if (type === 'quiz-yes-no') return { ...base, content:'Escolha uma resposta', options:[{label:'Sim',description:'Quero seguir por esse caminho',icon:'✓'},{label:'Não',description:'Prefiro outra opção',icon:'×'}], optionsText:'Sim\nNão', style:{...baseStyle,hasTransparentBg:true,marginBottom:8} };
     if (type === 'quiz-loading') return { ...base, content:'Analisando suas respostas...', progress:72, style:{...baseStyle,hasTransparentBg:true,marginBottom:12} };
     if (type === 'quiz-metric') return { ...base, content:'Métricas', metricsText:'72%|Taxa de conversão\n56%|Retenção', style:{...baseStyle,hasTransparentBg:true,marginBottom:12} };
     if (type === 'quiz-price') return { ...base, content:'Plano PRO', description:'Acesso completo', price:'R$ 197,00', badge:'Recomendado', style:{...baseStyle,hasTransparentBg:true,marginBottom:12} };
@@ -850,12 +864,14 @@ export function useBuilderStore() {
 
     // Custom JSON templates
     const custom = customTemplatesRegistry.find(t => t.id === templateTypeOrKey || t.key === templateTypeOrKey);
-    if (custom && custom.json) {
-      setRows(custom.json.rows || []);
-      if (custom.json.pageSettings) state.pageSettings = { ...state.pageSettings, ...JSON.parse(JSON.stringify(custom.json.pageSettings)) };
-      state.builderMode = syncViewportForMode(custom.quizMode || String(custom.category || '').toLowerCase().includes('quiz') ? 'quiz' : custom.emailMode || String(custom.category || '').toLowerCase().includes('mail') ? 'email' : 'funil');
+    const platform = platformTemplatesRegistry.find(t => t.id === templateTypeOrKey || t.sourceTemplateId === templateTypeOrKey || t.key === templateTypeOrKey);
+    const selectedTemplate = custom || platform;
+    if (selectedTemplate && selectedTemplate.json) {
+      setRows(selectedTemplate.json.rows || []);
+      if (selectedTemplate.json.pageSettings) state.pageSettings = { ...state.pageSettings, ...JSON.parse(JSON.stringify(selectedTemplate.json.pageSettings)) };
+      state.builderMode = syncViewportForMode(selectedTemplate.quizMode || String(selectedTemplate.category || '').toLowerCase().includes('quiz') ? 'quiz' : selectedTemplate.emailMode || String(selectedTemplate.category || '').toLowerCase().includes('mail') ? 'email' : 'funil');
       state.currentPageId = null;
-      showToast(`Template "${custom.name}" carregado!`, 'success');
+      showToast(`Template "${selectedTemplate.name}" carregado!`, 'success');
       return;
     }
 
@@ -1114,7 +1130,7 @@ export function useBuilderStore() {
   function closeSummaryModal() { state.isSummaryModalOpen = false; }
 
   return {
-    state, toasts, customTemplatesRegistry, pagesRegistry, foldersRegistry, versionsRegistry, metricsRegistry,
+    state, toasts, customTemplatesRegistry, platformTemplatesRegistry, pagesRegistry, foldersRegistry, versionsRegistry, metricsRegistry,
     undoStack, redoStack, undo, redo, colorThemesList,
     showToast, setViewport, setBuilderMode,
     addRow, duplicateRow, deleteRow,
@@ -1124,7 +1140,7 @@ export function useBuilderStore() {
     moveElementUp, moveElementDown, applyGlobalColorTheme,
     savePage, loadPage, deletePage, newBlankCanvas, movePage, updatePageDetails,
     createFolder, renameFolder, deleteFolder, moveFolder,
-    registerCustomTemplate, deleteCustomTemplate, loadTemplate,
+    registerCustomTemplate, deleteCustomTemplate, loadTemplate, loadPlatformTemplates,
     startTemplateBuilder, saveTemplateFromBuilder, closeTemplateBuilder,
     createVersion, getVersions, restoreVersion, openVersionModal, closeVersionModal,
     recordMetric, getMetrics, clearMetrics, openMetricsModal, closeMetricsModal,
