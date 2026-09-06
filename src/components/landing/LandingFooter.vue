@@ -3,8 +3,7 @@
     <div class="container footer-center-container">
       <!-- Centered Brand Logo -->
       <a href="#" class="footer-brand" @click.prevent="$emit('navigate', 'landing')">
-        <AstroMark class="brand-logo" />
-        <span class="brand-name">Astro Builder</span>
+        <AstroMark class="brand-logo" variant="white" lockup />
       </a>
 
       <!-- Description & Copyright Underneath in Center -->
@@ -61,8 +60,8 @@ defineEmits(['navigate']);
 }
 
 .brand-logo {
-  --mark-width: 44px;
-  --mark-height: 32px;
+  --mark-width: 190px;
+  --mark-height: 43px;
 }
 
 .brand-name {

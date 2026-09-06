@@ -1,11 +1,15 @@
 <template>
-  <span class="astro-mark" :class="`is-${variant}`" role="img" aria-label="Astro Builder"></span>
+  <img class="astro-mark" :src="asset" alt="AstroBuilder" />
 </template>
 
 <script setup>
-defineProps({
-  variant: { type: String, default: 'light' }
-});
+import { computed } from 'vue';
+import iconColor from '../assets/brand/astrobuilder-icon-v2.png';
+import iconWhite from '../assets/brand/astrobuilder-icon-white-v2.png';
+import logoColor from '../assets/brand/astrobuilder-logo-v2.png';
+import logoWhite from '../assets/brand/astrobuilder-logo-white-v2.png';
+const props = defineProps({ variant: { type: String, default: 'light' }, lockup: { type: Boolean, default: false } });
+const asset = computed(() => props.lockup ? (props.variant === 'white' || props.variant === 'dark' ? logoWhite : logoColor) : (props.variant === 'white' || props.variant === 'dark' ? iconWhite : iconColor));
 </script>
 
 <style scoped>
@@ -14,13 +18,6 @@ defineProps({
   height: var(--mark-height, 30px);
   display: inline-block;
   flex: 0 0 auto;
-  background-image: url('../assets/astro-brand-reference.png');
-  background-repeat: no-repeat;
-  /* Monograma completo, sem a tipografia ou bordas da prancha de referência. */
-  background-size: 365% 385%;
-  background-position: 19.3% 79%;
-  overflow: hidden;
+  object-fit: contain;
 }
-
-.astro-mark.is-dark { background-position: 19.3% 10.2%; }
 </style>

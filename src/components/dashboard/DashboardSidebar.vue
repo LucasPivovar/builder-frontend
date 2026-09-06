@@ -1,8 +1,7 @@
 <template>
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <AstroMark class="brand-icon" />
-      <span class="brand-name">Astro Builder</span>
+      <AstroMark class="brand-lockup" variant="white" lockup />
     </div>
 
     <nav class="sidebar-menu">
@@ -116,10 +115,7 @@ const userInitial = computed(() => {
   border-bottom: 1px solid #302442;
 }
 
-.brand-icon {
-  --mark-width: 46px;
-  --mark-height: 33px;
-}
+.brand-lockup { --mark-width: 190px; --mark-height: 43px; }
 
 .brand-name {
   font-size: 17px;

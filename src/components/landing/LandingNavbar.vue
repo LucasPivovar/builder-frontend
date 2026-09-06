@@ -2,8 +2,7 @@
   <nav class="navbar" :class="{ 'menu-open': isMobileMenuOpen }">
     <div class="container nav-container">
       <a href="#" class="nav-brand" @click.prevent="navigate('landing')">
-        <AstroMark class="brand-logo" />
-        <span>Astro Builder</span>
+        <AstroMark class="brand-logo" lockup />
       </a>
 
       <!-- Desktop Links -->
@@ -112,8 +111,8 @@ function navigate(target) {
 }
 
 .brand-logo {
-  --mark-width: 44px;
-  --mark-height: 32px;
+  --mark-width: 180px;
+  --mark-height: 41px;
 }
 
 .nav-links {
@@ -269,8 +268,7 @@ function navigate(target) {
 }
 
 @media (max-width: 480px) {
-  .nav-brand span { font-size: 16.5px; }
-  .brand-logo { --mark-width: 38px; --mark-height: 28px; }
+  .brand-logo { --mark-width: 154px; --mark-height: 36px; }
   .container { padding: 0 16px; }
 }
 </style>

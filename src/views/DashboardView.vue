@@ -31,7 +31,6 @@
               <h1>Seus projetos</h1>
               <p>Escolha uma pasta para acessar e organizar as páginas do projeto</p>
             </div>
-            <button class="btn-create-new" @click="showFolderModal = true"><i class="bi bi-folder-plus"></i> Nova pasta</button>
           </div>
           <div class="home-overview-grid">
             <FoldersGrid
@@ -270,7 +269,7 @@ import { generateExportedHTML } from '../utils/htmlExporter';
 import { createZipBlob, safeFileName } from '../utils/zip';
 
 const router = useRouter();
-const { start: startTour } = useProductTour();
+const { state: tourState, start: beginTour } = useProductTour();
 const {
   showToast, loadTemplate, loadPage, deleteFolder, newBlankCanvas,
   pagesRegistry, foldersRegistry, customTemplatesRegistry, flushWorkspaceToBackend, updatePageDetails, closeTemplateBuilder, deletePage
@@ -281,6 +280,15 @@ const activeTab = ref(requestedDashboardTab || 'home');
 if (requestedDashboardTab) sessionStorage.removeItem('vbs_dashboard_tab');
 const searchQuery = ref('');
 const selectedFolder = ref(null);
+
+async function startTour() {
+  activeTab.value = 'home';
+  selectedFolder.value = null;
+  showCreateModal.value = false;
+  showFolderModal.value = false;
+  await nextTick();
+  beginTour();
+}
 const showCreateModal = ref(false);
 const creationFolderId = ref('');
 const pageOptionsTarget = ref(null);
@@ -384,6 +392,11 @@ function openCreateModal(folderId = null) {
 
 function handleFolderDone(folder) {
   showFolderModal.value = false;
+  if (tourState.open && folder?.id) {
+    createPageAfterFolder.value = false;
+    openFolder(folder);
+    return;
+  }
   if (createPageAfterFolder.value && folder?.id) {
     createPageAfterFolder.value = false;
     creationFolderId.value = folder.id;

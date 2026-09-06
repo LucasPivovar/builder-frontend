@@ -326,6 +326,7 @@ async function handlePageClick(event) {
 function closeOpenSurfaces() {
   emitProductTour('command', { action: 'cancel-tour' });
   [
+    '.tour-folder-modal .btn-close',
     '.create-modal .btn-close',
     '.tour-element-modal .em-close',
     '.tour-save-modal .btn-close',
