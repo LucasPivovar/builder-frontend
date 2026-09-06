@@ -79,9 +79,9 @@
                 <i class="bi bi-floppy-fill"></i>
                 <span class="btn-label">Salvar</span>
               </button>
-              <button class="btn-builder-export" title="Exportar Código HTML">
-                <i class="bi bi-download"></i>
-                <span class="btn-label">Exportar</span>
+              <button class="btn-builder-export" title="Publicar Página">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+                <span class="btn-label">Publicar</span>
               </button>
             </div>
           </div>

@@ -45,7 +45,7 @@
       </div>
 
       <button class="action-button save-button tour-save" :title="state.isTemplateBuilder ? 'Publicar template' : 'Salvar página'" @click="$emit('open-save')"><i :class="state.isTemplateBuilder ? 'bi bi-cloud-arrow-up-fill' : 'bi bi-floppy-fill'"></i><span>{{ state.isTemplateBuilder ? (state.currentTemplateId ? 'Atualizar template' : 'Publicar template') : 'Salvar' }}</span></button>
-      <button class="action-button export-button tour-export" title="Exportar HTML" @click="$emit('open-export')"><i class="bi bi-download"></i><span>Exportar</span></button>
+      <button class="action-button export-button tour-export" title="Publicar página" @click="$emit('open-export')"><i class="bi bi-cloud-arrow-up-fill"></i><span>Publicar</span></button>
     </div>
   </header>
 </template>

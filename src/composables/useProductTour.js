@@ -122,8 +122,8 @@ export const productTourSteps = [
     selector: '.tour-export',
     actionSelector: '.tour-export',
     placement: 'bottom',
-    title: 'Exporte o resultado',
-    body: 'Gere o HTML final para publicar em qualquer hospedagem. Com isso, o fluxo principal está completo.',
+    title: 'Publique a página',
+    body: 'Publique sua página no servidor ou configure o domínio. Com isso, o fluxo principal está completo.',
     action: 'open-export',
     readySelector: '.tour-export-modal',
     finishAfterAction: true
