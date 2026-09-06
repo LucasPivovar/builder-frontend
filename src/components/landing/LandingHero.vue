@@ -2,6 +2,8 @@
   <section class="hero-section">
     <div class="hero-bg-overlay"></div>
     <div class="container hero-container">
+      <AstroMark class="hero-brand-logo" lockup />
+
       <!-- Top Announcement Badge -->
       <div class="badge-tag">
         <span class="badge-dot"></span>
@@ -333,6 +335,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import AstroMark from '../AstroMark.vue';
 
 defineEmits(['navigate']);
 
@@ -374,6 +377,12 @@ function selectBlock(type, title) {
   padding: 0 24px;
   position: relative;
   z-index: 1;
+}
+
+.hero-brand-logo {
+  --mark-width: 214px;
+  --mark-height: 47px;
+  margin-bottom: 22px;
 }
 
 .badge-tag {

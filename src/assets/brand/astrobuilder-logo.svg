@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 286 64" role="img" aria-label="AstroBuilder">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 64" role="img" aria-label="AstroBuilder">
   <defs><linearGradient id="g" x1="10" y1="54" x2="54" y2="10" gradientUnits="userSpaceOnUse"><stop stop-color="#2563eb"/><stop offset="1" stop-color="#6d32f5"/></linearGradient></defs>
   <rect width="64" height="64" rx="16" fill="#f4f1ff"/><path d="M14 48 29.1 15.5a3.2 3.2 0 0 1 5.8 0L50 48h-9.6l-3.1-7H26.7l-3.1 7H14Zm16-14.6h4L32 28.8l-2 4.6Z" fill="url(#g)"/><path d="M9.5 31.5c4.2 6.2 13.8 10.7 25.2 11.1 10.3.3 18.3-2.8 20.8-7.5" fill="none" stroke="#18a4f7" stroke-width="3" stroke-linecap="round"/><circle cx="53.5" cy="31.5" r="3.5" fill="#18a4f7"/>
-  <text x="78" y="40" fill="#171126" font-family="Poppins,Arial,sans-serif" font-size="25" font-weight="800" letter-spacing="-.7">Astro<tspan fill="#5428d3">Builder</tspan></text>
+  <text x="78" y="41" fill="#171126" font-family="Space Grotesk, Inter, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="0">Astro<tspan fill="#3f3a52" font-weight="600">Builder</tspan></text>
 </svg>
