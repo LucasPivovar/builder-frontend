@@ -5,7 +5,7 @@
       <nav>
         <button :class="{ active: tab === 'overview' }" @click="tab = 'overview'"><i class="bi bi-grid-1x2"></i> Visão geral</button>
         <button :class="{ active: tab === 'users' }" @click="tab = 'users'"><i class="bi bi-people"></i> Usuários <em>{{ users.length }}</em></button>
-        <button :class="{ active: tab === 'projects' }" @click="tab = 'projects'"><i class="bi bi-folder2-open"></i> Projetos</button>
+        <button :class="{ active: tab === 'projects' }" @click="tab = 'projects'"><i class="bi bi-collection"></i> Todas as páginas <em>{{ allPages.length }}</em></button>
         <button :class="{ active: tab === 'templates' }" @click="tab = 'templates'"><i class="bi bi-layout-text-window"></i> Templates <em>{{ customTemplatesRegistry.length + 3 }}</em></button>
         <button :class="{ active: tab === 'alerts' }" @click="tab = 'alerts'"><i class="bi bi-megaphone"></i> Alertas</button>
         <button :class="{ active: tab === 'history' }" @click="tab = 'history'"><i class="bi bi-clock-history"></i> Histórico</button>
@@ -34,15 +34,113 @@
           </section>
         </template>
 
-        <template v-else-if="tab === 'users' || tab === 'projects'">
-          <section class="section-heading"><div><h2>{{ tab === 'users' ? 'Todos os usuários' : 'Projetos por usuário' }}</h2><p>{{ tab === 'users' ? 'Consulte contas e abra seus espaços de trabalho.' : 'Encontre páginas e backups para recuperação.' }}</p></div><label class="admin-search"><i class="bi bi-search"></i><input v-model="query" placeholder="Buscar nome ou e-mail"></label></section>
+        <template v-else-if="tab === 'users'">
+          <section class="section-heading">
+            <div>
+              <h2>Todos os usuários</h2>
+              <p>Consulte contas cadastradas e abra seus espaços de trabalho para recuperação ou edição.</p>
+            </div>
+            <label class="admin-search">
+              <i class="bi bi-search"></i>
+              <input v-model="query" placeholder="Buscar por nome ou e-mail">
+            </label>
+          </section>
           <section class="users-table-card">
-            <div class="table-head"><span>Usuário</span><span>Projetos</span><span>Pastas</span><span>Última atividade</span><span>Status</span><span></span></div>
+            <div class="table-head">
+              <span>Usuário</span>
+              <span>Projetos</span>
+              <span>Pastas</span>
+              <span>Última atividade</span>
+              <span>Status</span>
+              <span></span>
+            </div>
             <button v-for="user in filteredUsers" :key="user.id" class="user-row" @click="openUser(user)">
-              <span class="user-cell"><span class="avatar">{{ initials(user.name) }}</span><span><strong>{{ user.name }}</strong><small>{{ user.email }}</small></span></span>
-              <span><strong>{{ user.projects }}</strong><small>páginas</small></span><span><strong>{{ user.folders }}</strong><small>pastas</small></span><span><strong>{{ formatDate(user.workspaceUpdatedAt || user.updatedAt) }}</strong><small>revisão {{ user.revision }}</small></span><span><em class="status-pill" :class="{ inactive: !user.active }">{{ user.active ? 'Ativo' : 'Inativo' }}</em></span><span class="row-action"><i class="bi bi-chevron-right"></i></span>
+              <span class="user-cell">
+                <span class="avatar">{{ initials(user.name) }}</span>
+                <span><strong>{{ user.name }}</strong><small>{{ user.email }}</small></span>
+              </span>
+              <span><strong>{{ user.projects }}</strong><small>páginas</small></span>
+              <span><strong>{{ user.folders }}</strong><small>pastas</small></span>
+              <span><strong>{{ formatDate(user.workspaceUpdatedAt || user.updatedAt) }}</strong><small>revisão {{ user.revision }}</small></span>
+              <span><em class="status-pill" :class="{ inactive: !user.active }">{{ user.active ? 'Ativo' : 'Inativo' }}</em></span>
+              <span class="row-action"><i class="bi bi-chevron-right"></i></span>
             </button>
             <div v-if="!filteredUsers.length" class="empty-table"><i class="bi bi-person-x"></i><strong>Nenhum usuário encontrado</strong></div>
+          </section>
+        </template>
+
+        <template v-else-if="tab === 'projects'">
+          <section class="section-heading">
+            <div>
+              <h2>Todas as páginas da plataforma</h2>
+              <p>Visualize, acesse e edite qualquer página de qualquer usuário diretamente no construtor.</p>
+            </div>
+            <label class="admin-search">
+              <i class="bi bi-search"></i>
+              <input v-model="pageQuery" placeholder="Buscar por página, usuário, pasta ou slug">
+            </label>
+          </section>
+          <section class="pages-table-card">
+            <div class="pages-head">
+              <span>Página</span>
+              <span>Usuário</span>
+              <span>Pasta</span>
+              <span>Domínio / Link</span>
+              <span>Atualizada</span>
+              <span style="text-align: right;">Ações</span>
+            </div>
+            <article v-for="p in filteredPages" :key="p.userId + ':' + p.pageId" class="pages-row">
+              <span class="page-cell">
+                <span class="page-type-icon"><i :class="projectIcon(p)"></i></span>
+                <span>
+                  <strong>{{ p.pageName }}</strong>
+                  <small>{{ projectLabel(p) }} {{ p.slug ? ('· /' + p.slug) : '' }}</small>
+                </span>
+              </span>
+              <span class="user-meta-cell">
+                <strong>{{ p.userName }}</strong>
+                <small>{{ p.userEmail }}</small>
+              </span>
+              <span>
+                <em class="folder-pill"><i class="bi bi-folder-fill"></i> {{ p.folderName || 'Raiz' }}</em>
+              </span>
+              <span class="domain-cell">
+                <template v-if="p.published">
+                  <a :href="p.customDomainUrl || p.publicUrl" target="_blank" class="page-link" :title="p.customDomainUrl || p.publicUrl">
+                    <i class="bi bi-globe"></i> {{ p.customDomain || 'Link público' }}
+                  </a>
+                  <small :class="['status-subpill', p.domainStatus]">{{ p.customDomain ? (p.domainStatus === 'active' ? 'DNS ativo' : 'DNS pendente') : 'Publicado' }}</small>
+                </template>
+                <template v-else>
+                  <em class="status-subpill draft">Não publicada</em>
+                </template>
+              </span>
+              <span>
+                <time>{{ formatDate(p.updatedAt) }}</time>
+              </span>
+              <span class="page-row-actions">
+                <button
+                  class="btn-admin-edit"
+                  @click="router.push({ path: '/builder', query: { adminUser: p.userId, page: p.pageId } })"
+                  title="Abrir e editar no Builder"
+                >
+                  <i class="bi bi-pencil-square"></i> Abrir no Builder
+                </button>
+                <a
+                  v-if="p.published"
+                  :href="p.customDomainUrl || p.publicUrl"
+                  target="_blank"
+                  class="btn-admin-visit"
+                  title="Visitar página"
+                >
+                  <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+              </span>
+            </article>
+            <div v-if="!filteredPages.length" class="empty-table">
+              <i class="bi bi-window-x"></i>
+              <strong>Nenhuma página encontrada</strong>
+            </div>
           </section>
         </template>
 
@@ -103,6 +201,7 @@
             <template v-else-if="userDetails">
               <div class="drawer-summary"><div><strong>{{ workspacePages.length }}</strong><small>Projetos</small></div><div><strong>{{ workspaceFolders.length }}</strong><small>Pastas</small></div><div><strong>{{ userDetails.backups.length }}</strong><small>Backups</small></div></div>
               <div class="drawer-actions"><button @click="downloadWorkspace"><i class="bi bi-download"></i> Baixar backup completo</button></div>
+              <div class="drawer-actions"><button v-for="page in workspacePages" :key="page.id" @click="router.push({ path: '/builder', query: { adminUser: selectedUser.id, page: page.id } })"><i class="bi bi-pencil-square"></i> Abrir {{ page.name }} no builder</button></div>
               <section class="drawer-section"><div class="drawer-section-title"><h3>Projetos salvos</h3><span>{{ workspacePages.length }}</span></div><div v-if="workspacePages.length" class="project-list"><article v-for="page in workspacePages" :key="page.id"><span class="project-icon"><i :class="projectIcon(page)"></i></span><div><strong>{{ page.name }}</strong><small>{{ folderName(page.folderId) }} · {{ formatDate(page.updatedAt || page.createdAt) }}</small></div><em>{{ projectLabel(page) }}</em></article></div><div v-else class="drawer-empty">Nenhum projeto salvo neste espaço.</div></section>
               <section class="drawer-section"><div class="drawer-section-title"><h3>Histórico de recuperação</h3><span>{{ userDetails.backups.length }}</span></div><div v-if="userDetails.backups.length" class="backup-list"><article v-for="backup in userDetails.backups" :key="backup.id"><div><strong>Revisão {{ backup.revision }}</strong><small>{{ backup.reason }} · {{ formatDate(backup.createdAt) }}</small></div><span>{{ projectCount(backup.pagesCount) }}</span><button :disabled="restoring === backup.id" @click="restoreBackup(backup)">{{ restoring === backup.id ? 'Restaurando...' : 'Restaurar' }}</button></article></div><div v-else class="drawer-empty">Os backups aparecerão após novos salvamentos.</div></section>
             </template>
@@ -138,13 +237,13 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useBuilderStore } from '../composables/useBuilderStore';
-import { createAdminAlert, getAdminHistory, getAdminOverview, getAdminUsers, getAdminUserWorkspace, restoreAdminBackup } from '../services/api';
+import { createAdminAlert, getAdminHistory, getAdminOverview, getAdminPages, getAdminUsers, getAdminUserWorkspace, restoreAdminBackup } from '../services/api';
 
 defineEmits(['navigate', 'open-builder']);
 const router = useRouter();
 const route = useRoute();
 const { customTemplatesRegistry, deleteCustomTemplate, flushWorkspaceToBackend, startTemplateBuilder, showToast } = useBuilderStore();
-const tab = ref(route.query.tab === 'templates' ? 'templates' : 'overview'); const loading = ref(true); const error = ref(''); const overview = ref({}); const users = ref([]); const query = ref('');
+const tab = ref(route.query.tab === 'templates' ? 'templates' : 'overview'); const loading = ref(true); const error = ref(''); const overview = ref({}); const users = ref([]); const allPages = ref([]); const query = ref(''); const pageQuery = ref('');
 const selectedUser = ref(null); const userDetails = ref(null); const detailsLoading = ref(false); const restoring = ref('');
 const historyItems = ref([]);
 const sendingAlert = ref(false);
@@ -163,12 +262,24 @@ const stats = computed(() => [
   { label:'Pastas criadas', value:overview.value.folders || 0, note:'Organização dos usuários', icon:'bi bi-folder2-open' },
   { label:'Versões protegidas', value:overview.value.versions || 0, note:'Histórico dentro dos projetos', icon:'bi bi-clock-history' }
 ]);
+const filteredPages = computed(() => {
+  const term = pageQuery.value.trim().toLowerCase();
+  return allPages.value.filter(p =>
+    !term ||
+    p.pageName.toLowerCase().includes(term) ||
+    p.userName.toLowerCase().includes(term) ||
+    p.userEmail.toLowerCase().includes(term) ||
+    (p.folderName && p.folderName.toLowerCase().includes(term)) ||
+    (p.slug && p.slug.toLowerCase().includes(term)) ||
+    (p.customDomain && p.customDomain.toLowerCase().includes(term))
+  );
+});
 const filteredUsers = computed(() => { const term=query.value.trim().toLowerCase(); return users.value.filter(user => !term || `${user.name} ${user.email}`.toLowerCase().includes(term)); });
 const workspacePages = computed(() => userDetails.value?.workspace?.data?.pages || []); const workspaceFolders = computed(() => userDetails.value?.workspace?.data?.folders || []);
 const canCreateTemplate = computed(() => Boolean(templateForm.name.trim()));
 const canSendAlert = computed(() => Boolean(alertForm.title.trim() && alertForm.message.trim() && (alertForm.target !== 'user' || alertForm.userId)));
 onMounted(loadAdminData);
-async function loadAdminData(){ loading.value=true; error.value=''; try { [overview.value,users.value,historyItems.value]=await Promise.all([getAdminOverview(),getAdminUsers(),getAdminHistory().catch(()=>[])]); } catch(e){ error.value=e.status===403?'Sua conta não possui permissão administrativa.':e.message; } finally { loading.value=false; } }
+async function loadAdminData(){ loading.value=true; error.value=''; try { [overview.value,users.value,historyItems.value,allPages.value]=await Promise.all([getAdminOverview(),getAdminUsers(),getAdminHistory().catch(()=>[]),getAdminPages().catch(()=>[])]); } catch(e){ error.value=e.status===403?'Sua conta não possui permissão administrativa.':e.message; } finally { loading.value=false; } }
 async function loadHistory(){ try { historyItems.value=await getAdminHistory(); } catch(e){ showToast(e.message,'error'); } }
 async function sendAlert(){ if(!canSendAlert.value)return; sendingAlert.value=true; try { const result=await createAdminAlert(alertForm); showToast(`Alerta enviado para ${result.delivered} usuário(s).`,'success'); alertForm.title=''; alertForm.message=''; alertForm.type='info'; alertForm.target='all'; alertForm.userId=''; await loadHistory(); } catch(e){ showToast(e.message,'error'); } finally { sendingAlert.value=false; } }
 async function openUser(user){ selectedUser.value=user; detailsLoading.value=true; try { userDetails.value=await getAdminUserWorkspace(user.id); } catch(e){ showToast(e.message,'error'); closeUser(); } finally { detailsLoading.value=false; } }
@@ -203,4 +314,33 @@ async function removeTemplate(template){ if(!window.confirm(`Excluir o template 
 .admin-form-card,.history-table-card{padding:18px;border:1px solid var(--color-border);border-radius:15px;background:var(--color-surface);box-shadow:var(--shadow-sm)}.admin-form-card{display:flex;flex-direction:column;gap:14px}.admin-form-card label{display:flex;flex-direction:column;gap:6px}.admin-form-card label>span{color:var(--color-text-secondary);font-size:10px;font-weight:900;text-transform:uppercase}.admin-form-card input,.admin-form-card select,.admin-form-card textarea{width:100%;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-soft);color:var(--color-text);padding:10px 11px;font:inherit;font-size:12px;outline:0}.admin-form-card input:focus,.admin-form-card select:focus,.admin-form-card textarea:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-primary-soft)}.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:12px}.admin-form-card footer{display:flex;justify-content:flex-end}.history-table-card{overflow:auto;padding:0}.history-row{min-width:850px;display:grid;grid-template-columns:100px minmax(260px,1.7fr) minmax(130px,.8fr) minmax(150px,1fr) 150px;gap:14px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--color-border)}.history-row:last-child{border-bottom:0}.history-head{background:var(--color-surface-soft);color:var(--color-text-muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}.history-row strong{display:block;color:var(--color-text);font-size:12px}.history-row small{display:block;margin-top:3px;color:var(--color-text-muted);font-size:10px;line-height:1.4}.history-row span,.history-row time{min-width:0;overflow:hidden;color:var(--color-text-secondary);font-size:11px;text-overflow:ellipsis}.event-pill{display:inline-flex;padding:4px 8px;border-radius:999px;background:var(--color-primary-soft);color:var(--color-primary-strong);font-style:normal;font-size:9px;font-weight:900}.event-pill.error{background:var(--color-danger-soft);color:var(--color-danger-strong)}.event-pill.pending,.event-pill.warning{background:#fef3c7;color:#92400e}.event-pill.success{background:#dcfce7;color:#166534}
 .drawer-overlay{position:fixed;inset:0;z-index:13000;background:var(--color-overlay);display:flex;justify-content:flex-end}.user-drawer{width:min(560px,100%);height:100%;overflow:auto;background:var(--color-surface);box-shadow:var(--shadow-xl)}.user-drawer>header{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid var(--color-border);background:var(--color-surface)}.drawer-user{display:flex;align-items:center;gap:12px}.avatar.large{width:46px;height:46px;border-radius:13px}.drawer-user h2{margin:0;font-size:16px}.drawer-user p{margin:3px 0 0;color:var(--color-text-muted);font-size:11px}.user-drawer>header>button{width:36px;height:36px;border:0;border-radius:9px;background:var(--color-surface-soft);cursor:pointer}.drawer-loading{min-height:300px;display:flex;align-items:center;justify-content:center;gap:10px}.drawer-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 20px}.drawer-summary div{display:flex;flex-direction:column;padding:13px;border-radius:11px;background:var(--color-primary-subtle);border:1px solid var(--color-primary-border)}.drawer-summary strong{font-size:19px}.drawer-summary small{font-size:9px;color:var(--color-text-muted)}.drawer-actions{padding:0 20px 5px}.drawer-actions button{width:100%;padding:10px;border:1px solid var(--color-primary-border);border-radius:9px;background:var(--color-primary-soft);color:var(--color-primary-strong);font:inherit;font-size:11px;font-weight:900;cursor:pointer}.drawer-section{padding:18px 20px;border-top:1px solid var(--color-border)}.drawer-section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.drawer-section-title h3{margin:0;font-size:13px}.drawer-section-title span{padding:2px 7px;border-radius:999px;background:var(--color-surface-soft);font-size:9px}.project-list article,.backup-list article{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-border)}.project-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:9px;background:var(--color-primary-soft);color:var(--color-primary-strong)}.project-list article>div,.backup-list article>div{display:flex;flex:1;flex-direction:column}.project-list strong,.backup-list strong{font-size:11px}.project-list small,.backup-list small{font-size:9px;color:var(--color-text-muted);margin-top:3px}.project-list em{font-style:normal;font-size:9px;color:var(--color-primary-strong)}.backup-list article>span{font-size:9px;color:var(--color-text-muted)}.backup-list button{padding:6px 9px;border:1px solid var(--color-primary-border);border-radius:7px;background:var(--color-surface);color:var(--color-primary-strong);font-size:9px;font-weight:900;cursor:pointer}.drawer-empty{padding:22px;border-radius:10px;background:var(--color-surface-soft);text-align:center;color:var(--color-text-muted);font-size:10px}.drawer-enter-active,.drawer-leave-active{transition:opacity .2s}.drawer-enter-active .user-drawer,.drawer-leave-active .user-drawer{transition:transform .25s ease}.drawer-enter-from,.drawer-leave-to{opacity:0}.drawer-enter-from .user-drawer,.drawer-leave-to .user-drawer{transform:translateX(100%)}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:1000px){.stats-grid{grid-template-columns:repeat(2,1fr)}.overview-grid{grid-template-columns:1fr}.template-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.admin-shell{display:block}.admin-sidebar{position:static;width:100%;height:auto;padding:10px}.admin-brand{display:none}.admin-sidebar nav{flex-direction:row;overflow:auto}.admin-sidebar nav button{min-width:max-content}.back-button{margin-top:8px}.admin-topbar{height:auto;padding:14px}.status-online{display:none}.admin-content{padding:14px}.welcome-card{align-items:flex-start;gap:14px}.stats-grid,.template-grid{grid-template-columns:1fr}.section-heading{align-items:flex-start;gap:12px;flex-direction:column}.template-heading-actions{width:100%}.template-heading-actions button{flex:1}.admin-search{width:100%}.table-head{display:none}.user-row{grid-template-columns:1fr auto}.user-row>span:nth-child(2),.user-row>span:nth-child(3),.user-row>span:nth-child(4),.user-row>span:nth-child(5){display:none}.overview-grid{grid-template-columns:1fr}.type-selector{grid-template-columns:1fr}.template-modal>header,.template-modal form{padding:17px}.template-modal footer{flex-direction:column-reverse}.template-modal footer button{width:100%}}
+
+.pages-table-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 15px; overflow: hidden; }
+.pages-head, .pages-row { display: grid; grid-template-columns: 2fr 1.3fr .9fr 1.3fr .9fr 170px; gap: 12px; align-items: center; }
+.pages-head { padding: 11px 16px; background: var(--color-surface-soft); color: var(--color-text-muted); font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .5px; }
+.pages-row { width: 100%; padding: 12px 16px; border-top: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; }
+.pages-row:hover { background: var(--color-primary-subtle); }
+.page-cell { display: flex; align-items: center; gap: 10px; }
+.page-type-icon { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 15px; flex-shrink: 0; }
+.page-cell span:last-child { display: flex; flex-direction: column; }
+.page-cell strong { font-size: 12px; color: var(--color-text); }
+.page-cell small { font-size: 10px; color: var(--color-text-muted); margin-top: 2px; }
+.user-meta-cell { display: flex; flex-direction: column; }
+.user-meta-cell strong { font-size: 11px; color: var(--color-text); }
+.user-meta-cell small { font-size: 10px; color: var(--color-text-muted); }
+.folder-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 6px; background: var(--color-surface-soft); font-style: normal; font-size: 10px; font-weight: 700; color: var(--color-text-secondary); }
+.domain-cell { display: flex; flex-direction: column; gap: 3px; }
+.page-link { font-size: 11px; font-weight: 700; color: var(--color-primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.page-link:hover { text-decoration: underline; }
+.status-subpill { display: inline-block; font-size: 9px; font-weight: 800; border-radius: 4px; padding: 1px 5px; width: max-content; }
+.status-subpill.active { background: #dcfce7; color: #166534; }
+.status-subpill.pending { background: #fef3c7; color: #92400e; }
+.status-subpill.draft { background: var(--color-surface-soft); color: var(--color-text-muted); font-style: normal; }
+.pages-row time { font-size: 11px; color: var(--color-text-muted); }
+.page-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.btn-admin-edit { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border: 1px solid var(--color-primary-border); border-radius: 8px; background: var(--color-primary); color: #ffffff; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; transition: filter 0.15s; }
+.btn-admin-edit:hover { filter: brightness(1.08); }
+.btn-admin-visit { display: inline-grid; place-items: center; width: 31px; height: 31px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text-secondary); text-decoration: none; font-size: 12px; }
+.btn-admin-visit:hover { background: var(--color-surface-soft); color: var(--color-primary); }
+
 </style>

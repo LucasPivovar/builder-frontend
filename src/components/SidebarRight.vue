@@ -282,6 +282,7 @@ const vslObjects = [
   { type: 'top-banner', title: 'Banner Topo', icon: 'bi bi-exclamation-triangle-fill' },
   { type: 'vturb-player', title: 'Player VTurb', icon: 'bi bi-play-circle-fill' },
   { type: 'pitch-button', title: 'Botão CTA Pitch', icon: 'bi bi-lightning-charge-fill' },
+  { type: 'smart-popup', title: 'Popup inteligente (Modal)', icon: 'bi bi-window-stack' },
   { type: 'upsell-buttons', title: 'Botões Upsell', icon: 'bi bi-bag-check-fill' },
   { type: 'live-viewers', title: 'Espectadores Ao Vivo', icon: 'bi bi-eye-fill' },
   { type: 'countdown', title: 'Contagem', icon: 'bi bi-stopwatch-fill' },
@@ -412,6 +413,7 @@ function getElementIcon(elem) {
     'button': 'bi bi-menu-button-wide-fill',
     'vturb-player': 'bi bi-play-circle-fill',
     'pitch-button': 'bi bi-lightning-charge-fill',
+    'smart-popup': 'bi bi-window-stack',
     'upsell-buttons': 'bi bi-bag-check-fill',
     'live-viewers': 'bi bi-eye-fill',
     'meta-pixel': 'bi bi-lightning-fill',
@@ -431,6 +433,7 @@ function getSectionTitle(row, index) {
 
   for (const col of row.columns) {
     for (const elem of col.elements || []) {
+      if (elem.type === 'smart-popup') return `Popup inteligente`;
       if (elem.type === 'top-banner') return `Banner Topo`;
       if (elem.type === 'heading' && elem.content) {
         const txt = elem.content.replace(/\n/g, ' ').trim();
@@ -450,6 +453,7 @@ function getSectionTitle(row, index) {
 
 function getElementTypeLabel(elem) {
   const map = {
+    'smart-popup': 'Popup inteligente',
     'top-banner': 'Banner',
     'heading': 'Título',
     'paragraph': 'Parágrafo',
@@ -470,6 +474,9 @@ function getElementTypeLabel(elem) {
 }
 
 function getElementSummary(elem) {
+  if (elem.type === 'smart-popup') {
+    return (elem.blocks && elem.blocks.length) ? `${elem.blocks.length} blocos` : 'Popup inteligente';
+  }
   if (elem.type === 'meta-pixel') {
     return `ID: ${elem.pixelId || '123456'}`;
   }

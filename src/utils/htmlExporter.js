@@ -1,4 +1,5 @@
 import { hexToRgba, getNum } from './astrotags.js';
+import { renderSmartPopup } from './smartPopup.js';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -45,7 +46,7 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
     const p = pageSettings.metaPixel.trim();
     if (p.includes('<script')) {
       metaPixelScript += '\n' + p + '\n';
-    } else if (p) {
+    } else if (/^\d+$/.test(p)) {
       metaPixelScript += `
         <!-- Meta Pixel Code -->
         <script>
@@ -57,8 +58,10 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '${p}');
-        fbq('track', 'PageView');
+        window.__abPixels = window.__abPixels || {};
+        if (!window.__abPixels['${p}']) { fbq('init', '${p}'); window.__abPixels['${p}'] = true; }
+        var pixelKey = 'ab_pixel_${trackingKey}_${p}_PageView';
+        try { if (!localStorage.getItem(pixelKey)) { fbq('trackSingle', '${p}', 'PageView'); localStorage.setItem(pixelKey, '1'); } } catch (_) { fbq('trackSingle', '${p}', 'PageView'); }
         </script>
         <noscript><img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id=${p}&ev=PageView&noscript=1"
@@ -81,7 +84,8 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
             metaPixelScript += '\n' + elem.pixelCode + '\n';
           } else if (elem.pixelId) {
             const pid = elem.pixelId.trim();
-            const pevent = elem.pixelEvent || 'PageView';
+            if (!/^\d+$/.test(pid)) continue;
+            const pevent = String(elem.pixelEvent || 'PageView').replace(/[^a-zA-Z0-9_]/g, '');
             metaPixelScript += `
               <!-- Meta Pixel Code -->
               <script>
@@ -93,8 +97,10 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${pid}');
-              fbq('track', '${pevent}');
+              window.__abPixels = window.__abPixels || {};
+              if (!window.__abPixels['${pid}']) { fbq('init', '${pid}'); window.__abPixels['${pid}'] = true; }
+              ${pevent === 'Lead' ? '' : `var pixelKey = 'ab_pixel_${trackingKey}_${pid}_${pevent}';
+              try { if (!localStorage.getItem(pixelKey)) { fbq('trackSingle', '${pid}', '${pevent}'); localStorage.setItem(pixelKey, '1'); } } catch (_) { fbq('trackSingle', '${pid}', '${pevent}'); }`}
               </script>
               <noscript><img height="1" width="1" style="display:none"
               src="https://www.facebook.com/tr?id=${pid}&ev=${pevent}&noscript=1"
@@ -344,13 +350,20 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
   ${isQuizMode ? `<script>
     (function(){
       var steps=Array.from(document.querySelectorAll('.quiz-step')),index=0,answers={};
-      function show(next){index=Math.max(0,Math.min(next,steps.length-1));steps.forEach(function(step,i){step.classList.toggle('active',i===index)});window.scrollTo({top:0,behavior:'smooth'});}
+      function show(next){index=Math.max(0,Math.min(next,steps.length-1));steps.forEach(function(step,i){step.classList.toggle('active',i===index)});window.scrollTo({top:0,behavior:'smooth'});document.dispatchEvent(new CustomEvent('quiz:step',{detail:{index:index}}));}
       document.addEventListener('click',function(event){
         var option=event.target.closest('.quiz-option');
         if(option){var group=option.closest('.quiz-options');group.classList.remove('quiz-required');group.removeAttribute('aria-invalid');if(group.dataset.multiple==='true')option.classList.toggle('selected');else{group.querySelectorAll('.quiz-option').forEach(function(item){item.classList.remove('selected')});option.classList.add('selected')}answers[index]=Array.from(group.querySelectorAll('.selected')).map(function(item){return item.dataset.value});}
-        var next=event.target.closest('a[href="#quiz-next"]');if(next){event.preventDefault();var active=steps[index],required=active&&active.querySelector('.quiz-options');if(required&&!required.querySelector('.selected')){required.classList.add('quiz-required');required.setAttribute('aria-invalid','true');var first=required.querySelector('.quiz-option');if(first)first.focus();return;}if(index<steps.length-1)show(index+1);else document.dispatchEvent(new CustomEvent('quiz:complete',{detail:{answers:answers}}));}
+        var next=event.target.closest('a[href="#quiz-next"]');if(next){event.preventDefault();var active=steps[index],required=active&&active.querySelector('.quiz-options');if(required&&!required.querySelector('.selected')){required.classList.add('quiz-required');required.setAttribute('aria-invalid','true');var first=required.querySelector('.quiz-option');if(first)first.focus();return;}document.dispatchEvent(new CustomEvent('quiz:answer',{detail:{index:index,answers:answers[index]||[]}}));if(index<steps.length-1)show(index+1);else document.dispatchEvent(new CustomEvent('quiz:complete',{detail:{answers:answers}}));}
       });
       show(0);window.quizAnswers=answers;
+      document.addEventListener('quiz:complete',function(){
+        var active=steps[index],button=active&&active.querySelector('a[href="#quiz-next"]');
+        if(button){button.setAttribute('aria-disabled','true');button.style.pointerEvents='none';button.textContent='Concluído';}
+        var destination=button&&button.getAttribute('data-complete-url');
+        if(destination){try{var url=new URL(destination,location.href);if(url.protocol==='https:'||url.protocol==='http:'){setTimeout(function(){location.assign(url.href)},250);return;}}catch(e){/* Destino inválido: mantém confirmação na página. */}}
+        var message=document.createElement('p');message.setAttribute('role','status');message.textContent='Respostas enviadas. Obrigado!';if(active)active.appendChild(message);
+      },{once:true});
     })();
   </script>` : ''}
 
@@ -470,9 +483,22 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
       var sessionKey = 'ab_session_' + pageKey;
       var sessionId = sessionStorage.getItem(sessionKey) || (Date.now().toString(36) + Math.random().toString(36).slice(2));
       var startedAt = Date.now();
+      var countingTime = !document.hidden;
+      function flushTime() {
+        var now = Date.now();
+        if (countingTime) {
+          var seconds = Math.floor((now - startedAt) / 1000);
+          if (seconds > 0) record('time_on_page', 'page', seconds);
+        }
+        startedAt = now;
+      }
+      document.addEventListener('visibilitychange', function(){ flushTime(); countingTime = !document.hidden; });
+      window.addEventListener('pagehide', function(){ flushTime(); countingTime = false; });
+      window.addEventListener('pageshow', function(){ startedAt = Date.now(); countingTime = !document.hidden; });
       var maxScroll = 0;
       sessionStorage.setItem(sessionKey, sessionId);
       function record(type, target, value, meta) {
+        if (document.hidden && type.indexOf('video_') === 0) return;
         var metric = { pageKey: pageKey, pageId: pageKey, pageName: pageName, type: type, target: target || '', value: Number(value) || 0, sessionId: sessionId, referrer: document.referrer || '', meta: meta || {}, createdAt: new Date().toISOString() };
         var payload = { source: 'visual-builder', type: 'metric', metric: metric };
         try {
@@ -503,17 +529,19 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
         var height = Math.max(1, doc.scrollHeight - window.innerHeight);
         maxScroll = Math.max(maxScroll, Math.round((window.scrollY / height) * 100));
       }, { passive: true });
-      setInterval(function(){ record('time_on_page', 'page', Math.round((Date.now() - startedAt) / 1000)); startedAt = Date.now(); }, 15000);
-      window.addEventListener('beforeunload', function(){ record('scroll_depth', 'page', maxScroll); record('time_on_page', 'page', Math.round((Date.now() - startedAt) / 1000)); });
+      setInterval(flushTime, 15000);
+      window.addEventListener('beforeunload', function(){ record('scroll_depth', 'page', maxScroll); flushTime(); countingTime = false; });
       function bindVideos() {
         document.querySelectorAll('video').forEach(function(video, index) {
           if (video.dataset.analyticsBound) return;
           video.dataset.analyticsBound = '1';
           var target = video.getAttribute('id') || video.getAttribute('src') || ('video-' + (index + 1));
           var last = 0;
+          document.addEventListener('visibilitychange', function(){ last = Math.round(video.currentTime || 0); });
           video.addEventListener('play', function(){ record('video_play', target, Math.round(video.currentTime || 0)); });
           video.addEventListener('timeupdate', function(){
             var now = Math.round(video.currentTime || 0);
+            if (document.hidden) { last = now; return; }
             if (now - last >= 5) { last = now; record('video_progress', target, 5, { currentTime: now, duration: Math.round(video.duration || 0) }); }
           });
           video.addEventListener('ended', function(){ record('video_complete', target, Math.round(video.duration || video.currentTime || 0)); });
@@ -525,6 +553,8 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
           var target = (smart && smart.getAttribute('id')) || player.getAttribute('data-video-id') || ('vturb-' + (index + 1));
           var played = false;
           var lastProgress = 0;
+          var resetProgress = false;
+          document.addEventListener('visibilitychange', function(){ resetProgress = true; });
           function markPlay(value) {
             if (!played) {
               played = true;
@@ -548,6 +578,7 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
                 if (!video || !(video.currentTime > 0)) return;
                 markPlay(video.currentTime);
                 var now = Math.round(video.currentTime || 0);
+                if (document.hidden || resetProgress) { lastProgress = now; resetProgress = false; return; }
                 if (now - lastProgress >= 5) {
                   lastProgress = now;
                   record('video_progress', target, 5, { provider: 'vturb', currentTime: now, duration: Math.round(video.duration || 0) });
@@ -634,6 +665,7 @@ function parseAtomitags(text, altColor = '#f1c232', bgColor = '#00ff0b', parseOp
 }
 
 function renderExportElement(elem, fontFamily = 'Poppins') {
+  if (elem.type === 'smart-popup') return renderSmartPopup(elem);
   const type = elem.type;
   const style = elem.style || {};
 
@@ -700,7 +732,7 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const subTextHTML = elem.subtext ? `<span style="font-size:12px; opacity:0.88; display:block; margin-top:4px; font-weight:500;">${parseAtomitags(elem.subtext, style.altColor, style.bgColor, parseOpts)}</span>` : '';
     
     innerHTML = `<div style="text-align:${style.align || 'center'}; width: 100%;">
-      <a href="${type === 'quiz-next' ? '#quiz-next' : (elem.url || '#')}"${targetAttr} class="${type === 'pitch-button' ? 'canvas-pitch-btn' : 'canvas-button'}" style="${btnStyle}">
+      <a href="${type === 'quiz-next' ? '#quiz-next' : escapeHtml(elem.url || '#')}"${type === 'quiz-next' ? ` data-complete-url="${escapeHtml(elem.url === '#quiz-next' ? '' : elem.url || '')}"` : ''}${targetAttr} class="${type === 'pitch-button' ? 'canvas-pitch-btn' : 'canvas-button'}" style="${btnStyle}">
         <span style="display:block;">${parseAtomitags(elem.content || (type === 'pitch-button' ? 'QUERO MEU ACESSO AGORA' : ''), style.altColor, style.bgColor, parseOpts)}</span>
         ${subTextHTML}
       </a>
@@ -839,9 +871,7 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const action = elem.submitUrl || '';
     innerHTML = `<form action="${action}" method="post" style="max-width:680px;margin:${getNum(style.marginTop, 12)}px auto ${getNum(style.marginBottom, 12)}px;padding:24px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 14)}px;background:#ffffff;color:#0f172a;display:flex;flex-direction:column;gap:11px;text-align:left"><h3 style="margin:0">${elem.formTitle || 'Receba as novidades'}</h3><p style="margin:0;color:#475569">${elem.description || ''}</p><input name="name" required placeholder="${elem.namePlaceholder || 'Seu nome'}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><input name="email" type="email" required placeholder="${elem.emailPlaceholder || 'Seu melhor e-mail'}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><button type="submit" style="padding:12px;border:0;border-radius:8px;background:${style.bgColor || '#0ea5e9'};color:${style.textColor || '#ffffff'};font:inherit;font-weight:800;cursor:pointer">${parseAtomitags(elem.content || 'Enviar', style.altColor, style.bgColor, parseOpts)}</button></form>`;
   } else if (type === 'meta-pixel') {
-    if (elem.pixelId) {
-      innerHTML = `<script>if(typeof fbq === 'function'){ fbq('track', '${elem.pixelEvent || 'PageView'}'); }</script>`;
-    }
+    innerHTML = '';
   } else {
     innerHTML = elem.content || '';
   }

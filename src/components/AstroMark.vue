@@ -18,7 +18,8 @@ defineProps({
   background-repeat: no-repeat;
   /* Monograma completo, sem a tipografia ou bordas da prancha de referência. */
   background-size: 365% 385%;
-  background-position: 19.3% 77.5%;
+  background-position: 19.3% 79%;
+  overflow: hidden;
 }
 
 .astro-mark.is-dark { background-position: 19.3% 10.2%; }

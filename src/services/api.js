@@ -77,6 +77,15 @@ async function apiRequest(path, options = {}) {
 export const login = (credentials) => apiRequest('/auth/login', { method: 'POST', body: credentials });
 export const register = (account) => apiRequest('/auth/register', { method: 'POST', body: account });
 export const getProfile = () => apiRequest('/auth/me');
+export const prepareEmailTracking = body => apiRequest('/analytics/email/prepare', { method: 'POST', body });
+export const saveAdminPage = (userId, pageId, body) => apiRequest(`/admin/users/${encodeURIComponent(userId)}/pages/${encodeURIComponent(pageId)}`, { method: 'POST', body });
+export async function updateProfile(profile) {
+  const user = await apiRequest('/auth/profile', { method: 'POST', body: profile });
+  const storage = localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage;
+  storage.setItem(USER_KEY, JSON.stringify(user));
+  window.dispatchEvent(new Event('profile-updated'));
+  return user;
+}
 export const getWorkspace = () => apiRequest('/workspace');
 export const saveWorkspace = (workspace) => apiRequest('/workspace', { method: 'PUT', body: workspace, timeout: 20000 });
 export const publishPage = (publication) => apiRequest('/publications', { method: 'POST', body: publication, timeout: 30000 });
@@ -89,8 +98,11 @@ export const markNotificationRead = (id) => apiRequest(`/notifications/${id}/rea
 export const markAllNotificationsRead = () => apiRequest('/notifications/read-all', { method: 'PATCH' });
 export const getPlatformTemplates = () => apiRequest('/workspace/platform-templates');
 export const getAnalyticsSummary = () => apiRequest('/analytics/summary');
+export const getPopupSubmissions = (pageId, page = 1) => apiRequest(`/analytics/popup-submissions?pageId=${encodeURIComponent(pageId)}&page=${page}`);
+export const exportPopupSubmissions = pageId => apiRequest(`/analytics/popup-submissions/export?pageId=${encodeURIComponent(pageId)}`, { timeout: 30000 });
 export const getAdminOverview = () => apiRequest('/admin/overview');
 export const getAdminUsers = () => apiRequest('/admin/users');
+export const getAdminPages = () => apiRequest('/admin/pages');
 export const getAdminHistory = () => apiRequest('/admin/history');
 export const createAdminAlert = (alert) => apiRequest('/admin/alerts', { method: 'POST', body: alert });
 export const getAdminUserWorkspace = (userId) => apiRequest(`/admin/users/${userId}/workspace`);

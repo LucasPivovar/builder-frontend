@@ -37,6 +37,7 @@
             Formato: {{ pageModeLabel }}
             <span v-if="currentPageId" style="margin-left: 8px; opacity: 0.7;">(Atualizando página existente)</span>
           </div>
+          <div v-if="builderMode !== 'email'" class="form-group"><label class="form-label">Endereço da página (slug)</label><input class="form-input" v-model="slug" placeholder="minha-oferta" pattern="[a-z0-9-]+" /><small>Use letras minúsculas, números e hífens. Exemplo: dominio.com/minha-oferta</small></div>
         </div>
 
         <div class="modal-footer">
@@ -62,6 +63,7 @@ const { state, foldersRegistry, savePage } = useBuilderStore();
 
 const pageName = ref('');
 const folderId = ref('');
+const slug = ref('');
 
 const builderMode = computed(() => state.builderMode);
 const currentPageId = computed(() => state.currentPageId);
@@ -73,11 +75,13 @@ watch(() => props.isOpen, (open) => {
   if (open) {
     pageName.value = state.currentPageName || '';
     folderId.value = state.currentPageFolderId || '';
+    slug.value = state.pageSettings.publicationSlug || '';
   }
 });
 
 function handleSave() {
   if (!pageName.value.trim()) return;
+  state.pageSettings.publicationSlug = slug.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
   const page = savePage(pageName.value.trim(), folderId.value || null);
   emit('saved', page);
   emit('close');

@@ -46,9 +46,9 @@
         <span class="badge-count">{{ foldersCount }}</span>
       </a>
 
-      <!-- Label de Categoria: CONTA & SISTEMA -->
+      <!-- Label de Categoria: SISTEMA -->
       <div class="menu-group-title" style="margin-top: 18px;">
-        <span>CONTA & SISTEMA</span>
+        <span>SISTEMA</span>
       </div>
 
       <a
@@ -81,6 +81,11 @@
       </a>
     </nav>
 
+    <div class="sidebar-logout">
+      <button class="btn-logout" type="button" @click="$emit('logout')">
+        <i class="bi bi-box-arrow-right"></i><span>Sair</span>
+      </button>
+    </div>
     <div class="sidebar-user" @click="$emit('select-tab', 'settings')" style="cursor: pointer;">
       <div class="user-avatar">{{ userInitial }}</div>
       <div class="user-details">
@@ -95,7 +100,7 @@
 import { computed } from 'vue';
 import AstroMark from '../AstroMark.vue';
 
-defineEmits(['select-tab']);
+defineEmits(['select-tab', 'logout']);
 
 const props = defineProps({
   activeTab: String,
@@ -115,6 +120,8 @@ const userInitial = computed(() => {
 </script>
 
 <style scoped>
+.sidebar-logout { padding: 12px 16px; }
+.sidebar-logout .btn-logout { width: 100%; justify-content: flex-start !important; }
 .sidebar {
   width: 260px;
   background: var(--color-surface);

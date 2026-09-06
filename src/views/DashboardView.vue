@@ -10,6 +10,7 @@
       :quizTemplatesCount="quizTemplatesCount"
       :currentUser="currentUser"
       @select-tab="setActiveTab"
+      @logout="handleAuthNavigate"
     />
 
     <div class="main-wrapper">
@@ -18,7 +19,6 @@
         :unreadCount="notificationUnread"
         @open-builder="handleOpenBuilder"
         @notify="openNotifications"
-        @open-auth="handleAuthNavigate"
         @start-tour="startTour"
       />
 
@@ -288,7 +288,12 @@ const notificationUnread = ref(0);
 const publications = ref([]);
 const analyticsSummary = ref({ totals: {}, pages: [], videos: [] });
 
+const profileRevision = ref(0);
+const refreshProfile = () => { profileRevision.value += 1; };
+onMounted(() => window.addEventListener('profile-updated', refreshProfile));
+onUnmounted(() => window.removeEventListener('profile-updated', refreshProfile));
 const currentUser = computed(() => {
+  void profileRevision.value;
   try {
     return JSON.parse(localStorage.getItem('vbs_current_user') || sessionStorage.getItem('vbs_current_user') || 'null');
   } catch (error) {
@@ -568,6 +573,7 @@ async function runConfirmAction() {
 }
 
 async function publishSavedPage(page, customDomain = '') {
+  await flushWorkspaceToBackend();
   const html = generateExportedHTML(page.rows || [], {
     ...(page.pageSettings || {}),
     builderMode: page.builderMode || page.type || 'funil',
@@ -577,7 +583,6 @@ async function publishSavedPage(page, customDomain = '') {
   const result = await publishPage({
     pageId: page.id,
     pageName: page.name || 'Página publicada',
-    slug: page.name || page.id,
     customDomain: customDomain || undefined,
     html
   });

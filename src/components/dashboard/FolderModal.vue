@@ -23,6 +23,11 @@
             />
           </div>
 
+          <div class="form-group">
+            <label class="form-label">Domínio da pasta (opcional)</label>
+            <input class="form-input" v-model.trim="customDomain" placeholder="ofertas.seudominio.com" />
+            <small>As páginas serão publicadas em domínio/slug-da-página. Configure o DNS e republique as páginas após alterar.</small>
+          </div>
           <div v-if="mode === 'create'" class="form-group">
             <label class="form-label">Cor da Pasta</label>
             <div class="color-picker-row">
@@ -74,6 +79,7 @@ const { foldersRegistry, createFolder, renameFolder } = useBuilderStore();
 const folderName = ref('');
 const selectedColor = ref('#612bf4');
 const parentId = ref('');
+const customDomain = ref('');
 
 const colorOptions = ['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433'];
 
@@ -82,16 +88,17 @@ watch(() => props.isOpen, (open) => {
     folderName.value = props.mode === 'rename' && props.folder ? props.folder.name : '';
     selectedColor.value = '#612bf4';
     parentId.value = '';
+    customDomain.value = props.folder?.customDomain || '';
   }
 });
 
 function handleConfirm() {
   if (!folderName.value.trim()) return;
   if (props.mode === 'create') {
-    const f = createFolder(folderName.value.trim(), parentId.value || null, selectedColor.value);
+    const f = createFolder(folderName.value.trim(), parentId.value || null, selectedColor.value, customDomain.value.toLowerCase());
     emit('done', f);
   } else if (props.mode === 'rename' && props.folder) {
-    renameFolder(props.folder.id, folderName.value.trim());
+    renameFolder(props.folder.id, folderName.value.trim(), customDomain.value.toLowerCase());
     emit('done');
   }
   emit('close');

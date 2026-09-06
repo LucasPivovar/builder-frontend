@@ -29,7 +29,7 @@ import { generateExportedHTML } from '../utils/htmlExporter';
 const { state, closePreviewModal, recordMetric } = useBuilderStore();
 const device = ref('desktop');
 const refreshKey = ref(0);
-const exportedHTML = computed(() => generateExportedHTML(state.rows, { ...state.pageSettings, builderMode: state.builderMode }));
+const exportedHTML = computed(() => generateExportedHTML(state.rows.map(row => ({ ...row, columns: row.columns.map(col => ({ ...col, elements: col.elements.filter(elem => elem.type !== 'smart-popup') })) })).filter(row => row.columns.some(col => col.elements.length)), { ...state.pageSettings, builderMode: state.builderMode }));
 function refresh() { refreshKey.value++; }
 function onMessage(event) {
   const data = event.data;

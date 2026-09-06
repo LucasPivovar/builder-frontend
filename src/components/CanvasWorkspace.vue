@@ -64,7 +64,7 @@
       </div>
 
       <div
-        v-for="row in state.rows"
+        v-for="row in state.rows.filter(row => row.columns.some(col => col.elements.some(elem => elem.type !== 'smart-popup')))"
         :key="row.id"
         class="builder-row"
         :class="{ 'has-top-banner': row.columns.some(c => c.elements.some(e => e.type === 'top-banner')), 'quiz-step-row': state.builderMode === 'quiz' }"
@@ -76,13 +76,14 @@
           :style="{ flex: col.flex || 1 }"
         >
           <div
-            v-for="elem in col.elements"
+            v-for="elem in col.elements.filter(elem => elem.type !== 'smart-popup')"
             :key="elem.id"
             class="canvas-element tour-canvas-element"
             :class="{ 'is-top-banner': elem.type === 'top-banner' }"
             @click.stop="openModalForElement(elem)"
           >
-            <TopBannerElement v-if="elem.type === 'top-banner'" :element="elem" />
+            <SmartPopupElement v-if="elem.type === 'smart-popup'" :element="elem" mode="canvas" />
+            <TopBannerElement v-else-if="elem.type === 'top-banner'" :element="elem" />
             <HeadingElement v-else-if="elem.type === 'heading'" :element="elem" />
             <ParagraphElement v-else-if="elem.type === 'paragraph'" :element="elem" />
             <ButtonElement v-else-if="elem.type === 'button'" :element="elem" />
@@ -336,6 +337,7 @@ import { computed, ref, watch } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
 import { getNum } from '../utils/astrotags';
 import TopBannerElement from './elements/TopBannerElement.vue';
+import SmartPopupElement from './elements/SmartPopupElement.vue';
 import HeadingElement from './elements/HeadingElement.vue';
 import ParagraphElement from './elements/ParagraphElement.vue';
 import ButtonElement from './elements/ButtonElement.vue';

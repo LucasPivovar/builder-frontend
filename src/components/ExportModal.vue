@@ -2,18 +2,17 @@
   <div v-if="state.isExportModalOpen" class="element-modal-overlay">
     <div class="element-modal-box export-modal-box tour-export-modal">
       <div class="element-modal-header">
-        <span class="em-editing-title"><i class="bi bi-check-circle-fill"></i> HTML pronto para exportar</span>
+        <span class="em-editing-title"><i class="bi bi-cloud-arrow-up-fill"></i> Exportar ou Publicar Página</span>
         <button class="modal-close" @click="state.isExportModalOpen = false"><i class="bi bi-x-lg"></i></button>
       </div>
 
       <div class="element-modal-body">
         <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.4;">
-          Seu código HTML foi gerado. Você pode baixar <strong>{{ exportFileName }}</strong>, abrir a prévia ou copiar o código abaixo.
+          Seu código HTML foi gerado. Você pode baixar <strong>{{ exportFileName }}</strong>, abrir a prévia, copiar o código ou publicar no servidor.
         </p>
 
         <textarea
-          class="em-input"
-          style="height: 280px; font-family: var(--font-mono); font-size: 12px; margin-top: 12px;"
+          v-if="!serverOnly"
           readonly
           v-model="state.exportedHTML"
         ></textarea>
@@ -22,7 +21,7 @@
           <strong><i class="bi bi-exclamation-circle"></i> Revisar antes de publicar</strong>
           <ul><li v-for="warning in warnings" :key="warning">{{ warning }}</li></ul>
         </div>
-        <div v-else class="export-ready"><i class="bi bi-check-circle-fill"></i> Página pronta para exportar.</div>
+        <div v-else class="export-ready"><i class="bi bi-check-circle-fill"></i> {{ serverOnly ? 'Página pronta para publicar.' : 'Página pronta para exportar.' }}</div>
 
         <div class="publish-panel">
           <label class="publish-label" for="publish-domain">Domínio próprio opcional</label>
@@ -46,16 +45,16 @@
       </div>
 
       <div class="element-modal-footer" style="justify-content: flex-end; gap: 10px;">
-        <button class="btn btn-secondary" @click="openPreviewModal">
+        <button v-if="!serverOnly" class="btn btn-secondary" @click="openPreviewModal">
           <i class="bi bi-eye"></i> Abrir prévia
         </button>
-        <button class="btn btn-secondary" @click="copyExportCode">
+        <button v-if="!serverOnly" class="btn btn-secondary" @click="copyExportCode">
           <i class="bi bi-clipboard"></i> {{ copied ? 'Código Copiado!' : 'Copiar Código HTML' }}
         </button>
-        <button class="btn btn-secondary" :disabled="publishing" @click="publishCurrentPage">
+        <button class="btn" :class="serverOnly ? 'btn-primary' : 'btn-secondary'" :disabled="publishing" @click="publishCurrentPage">
           <i class="bi bi-cloud-arrow-up"></i> {{ publishing ? 'Publicando...' : 'Publicar no servidor' }}
         </button>
-        <button class="btn btn-primary" @click="downloadExportCode">
+        <button v-if="!serverOnly" class="btn btn-primary" @click="downloadExportCode">
           <i class="bi bi-download"></i> Baixar HTML
         </button>
       </div>
@@ -66,11 +65,12 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
-import { publishPage } from '../services/api';
+import { publishPage, prepareEmailTracking } from '../services/api';
 import { generateExportedHTML } from '../utils/htmlExporter';
 import { validateExport } from '../utils/exportValidation';
 
-const { state, openPreviewModal, showToast } = useBuilderStore();
+const { state, openPreviewModal, showToast, flushWorkspaceToBackend } = useBuilderStore();
+const serverOnly = false;
 const copied = ref(false);
 const publishing = ref(false);
 const publishError = ref('');
@@ -79,15 +79,22 @@ const customDomain = ref('');
 const warnings = computed(() => validateExport(state.rows, state.pageSettings));
 const exportFileName = computed(() => state.builderMode === 'email' ? 'pagina-email.html' : state.builderMode === 'quiz' ? 'quiz-interativo.html' : 'pagina-vsl.html');
 
-function copyExportCode() {
+async function prepareExport() {
   state.exportedHTML = generateExportedHTML(state.rows, { ...state.pageSettings, builderMode: state.builderMode });
-  navigator.clipboard.writeText(state.exportedHTML);
+  if (state.builderMode === 'email') {
+    await flushWorkspaceToBackend();
+    const result = await prepareEmailTracking({ pageId: state.currentPageId || '', html: state.exportedHTML });
+    state.exportedHTML = result.html;
+  }
+}
+async function copyExportCode() {
+  try { await prepareExport(); await navigator.clipboard.writeText(state.exportedHTML); } catch (error) { publishError.value = error.message; return; }
   copied.value = true;
   setTimeout(() => { copied.value = false; }, 2000);
 }
 
-function downloadExportCode() {
-  state.exportedHTML = generateExportedHTML(state.rows, { ...state.pageSettings, builderMode: state.builderMode });
+async function downloadExportCode() {
+  try { await prepareExport(); } catch (error) { publishError.value = error.message; return; }
   const blob = new Blob([state.exportedHTML], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -111,6 +118,7 @@ async function publishCurrentPage() {
 
   publishing.value = true;
   try {
+    await flushWorkspaceToBackend();
     state.exportedHTML = generateExportedHTML(state.rows, {
       ...state.pageSettings,
       builderMode: state.builderMode,
@@ -120,7 +128,6 @@ async function publishCurrentPage() {
     publishResult.value = await publishPage({
       pageId: state.currentPageId,
       pageName: state.currentPageName || state.pageSettings.pageTitle || 'Página publicada',
-      slug: state.currentPageName || state.pageSettings.pageTitle || state.currentPageId,
       customDomain: customDomain.value || undefined,
       html: state.exportedHTML
     });

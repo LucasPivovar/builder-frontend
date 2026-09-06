@@ -1,11 +1,17 @@
 <template>
   <div class="auth-wrapper">
+    <!-- Brand Logo: Canto esquerdo superior no desktop, centro acima do conteúdo no mobile -->
+    <router-link to="/" class="auth-home" aria-label="Astro Builder">
+      <AstroMark class="auth-logo" />
+      <span class="auth-brand-name">Astro<span class="brand-light">Builder</span></span>
+    </router-link>
+
     <div class="auth-card">
       <!-- Brand -->
       <div class="auth-brand">
-        <AstroMark class="brand-logo" />
-        <h1>Astro Builder</h1>
-        <p>Crie páginas de funil e templates profissionais</p>
+        
+        <h1>{{ mode === 'login' ? 'Bom ter você de volta.' : 'Sua próxima ideia começa aqui.' }}</h1>
+        <p>{{ mode === 'login' ? 'Entre na sua conta e continue de onde parou.' : 'Crie sua conta e dê forma às suas ideias.' }}</p>
       </div>
 
       <!-- Login Form -->
@@ -13,7 +19,7 @@
         <div class="form-group">
           <label class="form-label">E-mail</label>
           <div class="input-wrapper">
-            <i class="bi bi-envelope-fill input-icon"></i>
+            <i class="bi bi-envelope input-icon" aria-hidden="true"></i>
             <input type="email" class="form-input" v-model="loginEmail" placeholder="seu@email.com" required autocomplete="email" />
           </div>
         </div>
@@ -21,7 +27,7 @@
         <div class="form-group">
           <label class="form-label">Senha</label>
           <div class="input-wrapper">
-            <i class="bi bi-lock-fill input-icon"></i>
+            <i class="bi bi-lock input-icon" aria-hidden="true"></i>
             <input
               :type="showPass ? 'text' : 'password'"
               class="form-input has-icon-right"
@@ -30,8 +36,8 @@
               required
               autocomplete="current-password"
             />
-            <button type="button" class="btn-toggle-pass" @click="showPass = !showPass">
-              <i :class="showPass ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            <button type="button" class="btn-toggle-pass" :aria-label="showPass ? 'Ocultar senha' : 'Mostrar senha'" :aria-pressed="showPass" @click="showPass = !showPass">
+              <i :class="showPass ? 'bi bi-eye-slash' : 'bi bi-eye'" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -43,13 +49,13 @@
           <a href="#" class="link-forgot" @click.prevent>Esqueceu a senha?</a>
         </div>
 
-        <div v-if="loginError" class="error-message">
+        <div v-if="loginError" class="error-message" role="alert">
           <i class="bi bi-exclamation-triangle-fill"></i> {{ loginError }}
         </div>
 
         <button type="submit" class="btn-auth" :disabled="loading">
-          <span v-if="!loading"><i class="bi bi-box-arrow-in-right"></i> Entrar na conta</span>
-          <span v-else><i class="bi bi-hourglass-split"></i> Aguarde...</span>
+          <span v-if="!loading"><i class="bi bi-arrow-right-circle" aria-hidden="true"></i> Entrar na conta</span>
+          <span v-else><i class="bi bi-hourglass-split" aria-hidden="true"></i> Aguarde...</span>
         </button>
 
         <!-- Switch to Register -->
@@ -65,17 +71,17 @@
       <form v-else @submit.prevent="handleRegister" class="auth-form">
         <div class="form-row-2">
           <div class="form-group">
-            <label class="form-label">Nome</label>
+            <label class="form-label">Primeiro nome</label>
             <div class="input-wrapper">
-              <i class="bi bi-person-fill input-icon"></i>
-              <input type="text" class="form-input" v-model="regName" placeholder="João" required />
+              <i class="bi bi-person input-icon" aria-hidden="true"></i>
+              <input type="text" class="form-input" v-model="regName" placeholder="João" required autocomplete="given-name" />
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Sobrenome</label>
+            <label class="form-label">Último nome</label>
             <div class="input-wrapper">
-              <i class="bi bi-person-fill input-icon"></i>
-              <input type="text" class="form-input" v-model="regLastName" placeholder="Silva" />
+              <i class="bi bi-person input-icon" aria-hidden="true"></i>
+              <input type="text" class="form-input" v-model="regLastName" placeholder="Silva" autocomplete="family-name" />
             </div>
           </div>
         </div>
@@ -83,24 +89,38 @@
         <div class="form-group">
           <label class="form-label">E-mail</label>
           <div class="input-wrapper">
-            <i class="bi bi-envelope-fill input-icon"></i>
+            <i class="bi bi-envelope input-icon" aria-hidden="true"></i>
             <input type="email" class="form-input" v-model="regEmail" placeholder="seu@email.com" required />
           </div>
         </div>
 
         <div class="form-group">
+          <label class="form-label">WhatsApp</label>
+          <div class="input-wrapper">
+            <i class="bi bi-whatsapp input-icon" aria-hidden="true"></i>
+            <input type="tel" class="form-input" v-model="regPhone" placeholder="(11) 99999-9999" required autocomplete="tel" />
+          </div>
+        </div>
+
+        <div class="form-group password-field-group">
           <label class="form-label">Senha</label>
           <div class="input-wrapper">
-            <i class="bi bi-lock-fill input-icon"></i>
+            <i class="bi bi-lock input-icon" aria-hidden="true"></i>
             <input
               :type="showPass ? 'text' : 'password'"
               class="form-input has-icon-right"
               v-model="regPassword"
               placeholder="Mínimo 8 caracteres"
               required
+              autocomplete="new-password"
+              aria-describedby="password-requirements"
+              :aria-expanded="passwordRequirementsOpen"
+              @focus="passwordRequirementsOpen = true"
+              @click="passwordRequirementsOpen = true"
+              @blur="passwordRequirementsOpen = false"
             />
-            <button type="button" class="btn-toggle-pass" @click="showPass = !showPass">
-              <i :class="showPass ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            <button type="button" class="btn-toggle-pass" :aria-label="showPass ? 'Ocultar senha' : 'Mostrar senha'" :aria-pressed="showPass" @click="showPass = !showPass">
+              <i :class="showPass ? 'bi bi-eye-slash' : 'bi bi-eye'" aria-hidden="true"></i>
             </button>
           </div>
           <div class="password-strength" v-if="regPassword.length > 0">
@@ -109,12 +129,21 @@
             </div>
             <span class="strength-label" :class="passwordStrengthClass">{{ passwordStrengthLabel }}</span>
           </div>
+          <Transition name="requirements-popover">
+            <div v-if="passwordRequirementsOpen" id="password-requirements" class="password-requirements" role="status">
+              <strong>Crie uma senha segura</strong>
+              <p v-for="requirement in passwordRequirements" :key="requirement.label" :class="{ valid: requirement.valid }">
+                <i :class="requirement.valid ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                {{ requirement.label }}
+              </p>
+            </div>
+          </Transition>
         </div>
 
         <div class="form-group">
           <label class="form-label">Confirmar Senha</label>
           <div class="input-wrapper">
-            <i class="bi bi-shield-lock-fill input-icon"></i>
+            <i class="bi bi-shield-lock input-icon" aria-hidden="true"></i>
             <input
               :type="showPass ? 'text' : 'password'"
               class="form-input"
@@ -135,16 +164,16 @@
           </label>
         </div>
 
-        <div v-if="registerError" class="error-message">
+        <div v-if="registerError" class="error-message" role="alert">
           <i class="bi bi-exclamation-triangle-fill"></i> {{ registerError }}
         </div>
-        <div v-if="registerSuccess" class="success-message">
+        <div v-if="registerSuccess" class="success-message" role="status">
           <i class="bi bi-check-circle-fill"></i> {{ registerSuccess }}
         </div>
 
-        <button type="submit" class="btn-auth" :disabled="loading || regPassword !== regConfirmPassword">
-          <span v-if="!loading"><i class="bi bi-person-plus-fill"></i> Criar minha conta</span>
-          <span v-else><i class="bi bi-hourglass-split"></i> Criando conta...</span>
+        <button type="submit" class="btn-auth" :disabled="loading || !passwordMeetsRequirements || regPassword !== regConfirmPassword">
+          <span v-if="!loading"><i class="bi bi-person-plus" aria-hidden="true"></i> Criar minha conta</span>
+          <span v-else><i class="bi bi-hourglass-split" aria-hidden="true"></i> Criando conta...</span>
         </button>
 
         <!-- Switch to Login -->
@@ -162,6 +191,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import AstroMark from '../AstroMark.vue';
+
 import { useRouter, useRoute } from 'vue-router';
 import { login, register, storeAuthSession } from '../../services/api';
 import { useBuilderStore } from '../../composables/useBuilderStore';
@@ -173,6 +203,7 @@ const { hydrateWorkspaceFromBackend } = useBuilderStore();
 const mode = ref(route.query.mode === 'register' ? 'register' : 'login');
 const loading = ref(false);
 const showPass = ref(false);
+const passwordRequirementsOpen = ref(false);
 
 // Login
 const loginEmail = ref('');
@@ -184,11 +215,23 @@ const loginError = ref('');
 const regName = ref('');
 const regLastName = ref('');
 const regEmail = ref('');
+const regPhone = ref('');
 const regPassword = ref('');
 const regConfirmPassword = ref('');
 const acceptTerms = ref(false);
 const registerError = ref('');
 const registerSuccess = ref('');
+
+const passwordRequirements = computed(() => [
+  { label: 'Pelo menos 8 caracteres', valid: regPassword.value.length >= 8 },
+  { label: 'Uma letra maiúscula', valid: /[A-Z]/.test(regPassword.value) },
+  { label: 'Uma letra minúscula', valid: /[a-z]/.test(regPassword.value) },
+  { label: 'Um número', valid: /\d/.test(regPassword.value) }
+]);
+
+const passwordMeetsRequirements = computed(() =>
+  passwordRequirements.value.every(requirement => requirement.valid)
+);
 
 const redirectTarget = computed(() => {
   const target = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard';
@@ -255,6 +298,7 @@ async function handleRegister() {
     const session = await register({
       name: regName.value.trim(),
       lastName: regLastName.value.trim(),
+      phone: regPhone.value.trim(),
       email: regEmail.value.trim().toLowerCase(),
       password: regPassword.value,
       remember: true
@@ -273,12 +317,75 @@ async function handleRegister() {
 
 <style scoped>
 .auth-wrapper {
+  position: relative;
   min-height: 100vh;
+  min-height: 100svh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--color-primary-subtle);
-  padding: 20px;
+  padding: 40px 24px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.auth-home {
+  position: absolute;
+  top: 32px;
+  left: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--color-text);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  font-family: var(--font-display, var(--font-sans));
+  z-index: 20;
+  transition: opacity 0.15s ease;
+}
+
+.auth-home:hover {
+  opacity: 0.85;
+}
+
+.auth-logo {
+  --mark-width: 44px;
+  --mark-height: 32px;
+}
+
+.auth-brand-name {
+  display: inline-block;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.brand-light {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+@media (max-width: 800px) {
+  .auth-wrapper {
+    padding: 32px 20px 24px;
+    justify-content: center;
+  }
+
+  .auth-home {
+    position: static;
+    margin: 0 auto 24px auto;
+    align-self: center;
+    justify-content: center;
+    display: inline-flex;
+  }
+
+  .auth-card {
+    padding: 28px 20px;
+    width: 100%;
+    max-width: 440px;
+  }
 }
 
 .auth-card {
@@ -338,6 +445,57 @@ async function handleRegister() {
 .strength-label.good { color: #3b82f6; }
 .strength-label.strong { color: #10b981; }
 
+.password-field-group { position: relative; z-index: 3; }
+.password-requirements {
+  position: absolute;
+  top: calc(100% - 10px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 38px rgba(40, 25, 96, 0.16);
+}
+.password-requirements::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 24px;
+  width: 11px;
+  height: 11px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
+  transform: rotate(45deg);
+}
+.password-requirements strong {
+  display: block;
+  margin-bottom: 11px;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+.password-requirements p {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 8px 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+  transition: color 0.18s ease;
+}
+.password-requirements p .bi { color: var(--color-border-strong); font-size: 13px; }
+.password-requirements p.valid { color: var(--color-success-strong); }
+.password-requirements p.valid .bi { color: var(--color-success); }
+.requirements-popover-enter-active,
+.requirements-popover-leave-active { transition: opacity 0.16s ease, transform 0.16s ease; }
+.requirements-popover-enter-from,
+.requirements-popover-leave-to { opacity: 0; transform: translateY(-5px); }
+
 .error-message, .error-inline {
   background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3);
   color: #f87171; padding: 8px 12px; border-radius: 8px; font-size: 13px;
@@ -392,4 +550,26 @@ async function handleRegister() {
 .btn-switch-link:hover {
   color: var(--color-primary-hover);
 }
+/* Layout editorial da autenticação */
+.auth-wrapper { min-height: 0; flex: 1; width: 100%; padding: 48px 0; background: transparent; }
+.auth-card { width: 100%; max-width: 400px; margin: 0 auto; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.auth-brand { text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 34px; }
+.auth-eyebrow { display: block; font-size: 10px; letter-spacing: 1.8px; font-weight: 700; color: var(--color-primary); margin-bottom: 16px; text-align: center; }
+.auth-brand h1 { font-family: var(--font-display); font-size: clamp(30px, 2.5vw, 38px); letter-spacing: -0.035em; font-weight: 600; line-height: 1.18; margin-bottom: 12px; text-align: center; }
+.auth-brand p { font-family: var(--font-sans); font-size: 14px; line-height: 1.65; font-weight: 400; text-align: center; }
+.form-label { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--color-text); margin-bottom: 8px; font-weight: 500; }
+.form-group { margin-bottom: 20px; }
+.form-input { padding-top: 14px; padding-bottom: 14px; background: var(--color-surface); border-radius: 8px; }
+.form-row-between { margin: 0 0 26px; gap: 12px; flex-wrap: wrap; }
+.btn-auth { background: var(--color-primary); border-radius: 8px; padding: 15px; font-family: var(--font-sans); font-weight: 600; box-shadow: none; }
+.btn-auth span { display: inline-flex; align-items: center; justify-content: center; gap: 9px; }
+.btn-auth .bi { font-size: 17px; }
+.auth-switch-box { margin-top: 27px; gap: 5px; }
+.btn-switch-link { text-decoration: none; }
+.error-message, .error-inline { color: var(--color-danger-strong); background: var(--color-danger-soft); border-color: var(--color-danger-border); }
+.btn-toggle-pass { min-width: 32px; min-height: 32px; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--color-primary-border); outline-offset: 3px; }
+@media (max-width: 380px) { .form-row-2 { grid-template-columns: 1fr; gap: 0; } }
 </style>
+
+

@@ -1,6 +1,12 @@
 <template>
   <div v-if="state.isElementModalOpen && elem" class="element-modal-overlay">
-    <div class="element-modal-box tour-element-modal" :class="{ 'is-global-settings': elem.isGlobalSettings }">
+    <div
+      class="element-modal-box tour-element-modal"
+      :class="{
+        'is-global-settings': elem.isGlobalSettings,
+        'is-popup-modal': elem.type === 'smart-popup'
+      }"
+    >
 
       <!-- HEADER -->
       <div class="em-header">
@@ -11,7 +17,7 @@
           </span>
           <span class="em-badge">Desktop</span>
         </div>
-        <button class="em-close" @click="saveAndClose"><i class="bi bi-x-lg"></i></button>
+        <button class="em-close" aria-label="Cancelar edição" @click="closeModal()"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="em-subinfo">
         <span v-if="!elem.isGlobalSettings">Classe: {{ elem.type }}-element &nbsp;·&nbsp; ID: division-{{ elem.id }}</span>
@@ -21,8 +27,21 @@
       <!-- BODY -->
       <div class="em-scroll-body">
 
+        <!-- ========== SMART POPUP ========== -->
+        <template v-if="elem.type === 'smart-popup'">
+          <div class="em-popup-container">
+            <SmartPopupEditor
+              ref="popupEditor"
+              :key="elem.id"
+              :element="elem"
+              :page-settings="state.pageSettings"
+              @update="Object.assign(elem, $event)"
+            />
+          </div>
+        </template>
+
         <!-- ========== GLOBAL SETTINGS ========== -->
-        <template v-if="elem.isGlobalSettings">
+        <template v-else-if="elem.isGlobalSettings">
           <div class="em-preview-top global-page-mini-preview">
             <div
               class="mini-site-scaler"
@@ -497,10 +516,10 @@
                     </div>
 
                     <div class="em-field" style="margin-top:6px;">
-                      <label class="em-lbl">Link de Redirecionamento</label>
+                      <label class="em-lbl">{{ elem.type === 'quiz-next' ? 'Destino ao concluir a última etapa (opcional)' : 'Link de Redirecionamento' }}</label>
                       <input v-model="elem.url" class="em-input" type="text" placeholder="https://..." />
                       <div style="display:flex; gap:14px; margin-top:6px; flex-wrap:wrap; align-items:center;">
-                        <label class="em-chk-lbl"><input type="checkbox" v-model="elem.openInNewTab" /> Abrir em nova aba (target="_blank")</label>
+                        <label v-if="elem.type !== 'quiz-next'" class="em-chk-lbl"><input type="checkbox" v-model="elem.openInNewTab" /> Abrir em nova aba</label>
                         <label class="em-chk-lbl"><input type="checkbox" v-model="elemStyle.isGlow" /> <i class="bi bi-stars"></i> Efeito Glow (Brilho Neon)</label>
                         <div v-if="elemStyle.isGlow" style="display:flex; align-items:center; gap:6px;">
                           <label class="em-lbl" style="margin:0;">Cor do Glow:</label>
@@ -783,6 +802,7 @@ import { ref, computed } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
 import { getNum } from '../utils/astrotags';
 import TopBannerElement from './elements/TopBannerElement.vue';
+import SmartPopupEditor from './SmartPopupEditor.vue';
 import HeadingElement from './elements/HeadingElement.vue';
 import ParagraphElement from './elements/ParagraphElement.vue';
 import ButtonElement from './elements/ButtonElement.vue';
@@ -804,6 +824,7 @@ const libraryElementTypes = ['image', 'divider', 'testimonial', 'faq', 'countdow
 const quizElementTypes = ['quiz-progress', 'quiz-single', 'quiz-multiple', 'quiz-yes-no', 'quiz-loading', 'quiz-metric', 'quiz-price', 'quiz-spacer'];
 
 const elem = computed(() => state.selectedElement);
+const popupEditor = ref(null);
 const elemStyle = computed(() => elem.value?.style || {});
 const metricItems = computed(() => parseMetricItems(elem.value?.metricsText));
 const quizOptions = computed(() => getQuizOptions(elem.value));
@@ -986,13 +1007,16 @@ function applyColorPreset(textColor, altColor, bgColor) {
 }
 
 function saveAndClose() {
-  closeModal();
+  if (elem.value?.type === 'smart-popup' && popupEditor.value) {
+    Object.assign(elem.value, popupEditor.value.getDraft());
+  }
+  closeModal(true);
 }
 
 function getTypeTitle(e) {
   if (!e) return '';
   const m = {
-    'top-banner': 'Banner Topo', 'heading': 'Headline', 'paragraph': 'Parágrafo',
+    'smart-popup': 'Popup inteligente', 'top-banner': 'Banner Topo', 'heading': 'Headline', 'paragraph': 'Parágrafo',
     'button': 'Botão Link', 'vturb-player': 'Player VTurb', 'pitch-button': 'Botão Pitch',
     'live-viewers': 'Espectadores', 'meta-pixel': 'Meta Pixel',
     'email-header': 'Cabeçalho E-mail', 'email-footer': 'Rodapé E-mail', 'email-tag': 'Pill / Label E-mail',
@@ -1027,7 +1051,7 @@ function hasVariableTags(e) {
 
 function hasStyleOptions(e) {
   if (!e || e.isGlobalSettings) return false;
-  return !['meta-pixel'].includes(e.type);
+  return !['meta-pixel', 'smart-popup'].includes(e.type);
 }
 
 function onPixelCodeInput() {
@@ -1104,6 +1128,17 @@ const filteredIcons = computed(() => {
   box-shadow: 0 24px 80px rgba(0,0,0,0.9);
   overflow: hidden;
   animation: emPop 0.18s cubic-bezier(0.16,1,0.3,1);
+}
+.element-modal-box.is-popup-modal {
+  width: min(1560px, 98vw);
+  height: calc(100vh - 24px);
+  max-height: calc(100vh - 24px);
+}
+.em-popup-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 @keyframes emPop {
   from { opacity:0; transform: scale(0.97) translateY(8px); }

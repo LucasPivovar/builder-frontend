@@ -177,9 +177,15 @@ const metricsRegistry = reactive(lsGet('builder_metrics_v1', []));
 const pagesRegistry = reactive(lsGet('pages_registry_v1', []));
 
 // ─── Folders Registry ────────────────────────────────────────────────────────
-const foldersRegistry = reactive(lsGet('folders_registry_v1', [
-  { id: 'folder-default', name: 'Funil Principal', parentId: null, color: '#0ea5e9', createdAt: new Date().toISOString() }
-]));
+const foldersRegistry = reactive(lsGet('folders_registry_v1', []));
+function removeDefaultFolder() {
+  const index = foldersRegistry.findIndex(folder => folder.id === 'folder-default' && folder.name === 'Funil Principal');
+  if (index < 0) return;
+  foldersRegistry.splice(index, 1);
+  pagesRegistry.forEach(page => { if (page.folderId === 'folder-default') page.folderId = null; });
+  foldersRegistry.forEach(folder => { if (folder.parentId === 'folder-default') folder.parentId = null; });
+}
+removeDefaultFolder();
 
 function workspaceSnapshot() {
   return {
@@ -202,6 +208,7 @@ function applyWorkspaceData(data = {}) {
   try {
     replaceRegistry(pagesRegistry, data.pages);
     replaceRegistry(foldersRegistry, data.folders);
+    removeDefaultFolder();
     replaceRegistry(customTemplatesRegistry, data.templates);
     replaceRegistry(versionsRegistry, data.versions);
     replaceRegistry(metricsRegistry, data.metrics);
@@ -480,6 +487,7 @@ export function useBuilderStore() {
   }
 
   function getElemLabel(type) {
+    if (type === 'smart-popup') return 'Popup inteligente (Modal)';
     const m = {
       heading: 'Título', paragraph: 'Parágrafo', button: 'Botão',
       'top-banner': 'Banner Topo', 'vturb-player': 'Player VTurb',
@@ -497,6 +505,30 @@ export function useBuilderStore() {
     const id = genUid('elem-');
     const base = { id, type, delayEnabled: false, delayMinutes: 0, delaySeconds: 0 };
     const baseStyle = { fontSize: '16px', fontWeight: '700', textColor: '#000', bgColor: '#fff', hasTransparentBg: false, marginTop: 6, marginBottom: 0, align: 'center', lineHeight: 1.2 };
+
+    if (type === 'smart-popup') {
+      return {
+        ...base,
+        trigger: 'exit',
+        openDelay: 5,
+        videoDelay: 60,
+        maxWidth: 500,
+        showBadge: true,
+        badgeText: '🔴 CONTEÚDO EXCLUSIVO',
+        icon: 'lock',
+        title: 'DESBLOQUEIE O VÍDEO',
+        subtitle: 'Preencha os dados abaixo para continuar assistindo o vídeo.',
+        submitText: 'LIBERAR ACESSO',
+        showFooter: true,
+        footerText: '🛡️ Seus dados estão protegidos',
+        fields: [
+          { id: genUid('f-'), inputType: 'text', placeholder: 'Seu Nome', required: true },
+          { id: genUid('f-'), inputType: 'tel', placeholder: 'Whatsapp', required: true }
+        ],
+        blocks: [],
+        style: {}
+      };
+    }
 
     if (type === 'heading') return { ...base, content: 'Novo Título em Destaque', style: { ...baseStyle, fontSize: '28px', fontWeight: '800', textColor: '#fff', hasTransparentBg: true, altColor: '#f1c232' } };
     if (type === 'paragraph') return { ...base, content: 'Texto do parágrafo...', style: { ...baseStyle, fontSize: '15px', fontWeight: '400', textColor: '#ccc', hasTransparentBg: true } };
@@ -536,7 +568,7 @@ export function useBuilderStore() {
     if (elem && !elem.isGlobalSettings && !elem.style) {
       elem.style = {};
     }
-    state.selectedElement = elem;
+    state.selectedElement = JSON.parse(JSON.stringify(elem));
     state.isElementModalOpen = true;
   }
   function openExportModal() {
@@ -552,11 +584,18 @@ export function useBuilderStore() {
   function closeMetricsModal() { state.isMetricsModalOpen = false; }
 
   function openGlobalSettings() { state.selectedElement = { isGlobalSettings: true, id: 'global-settings', type: 'global-settings' }; state.isElementModalOpen = true; }
-  function closeModal() {
-    pushSnapshot();
+  function closeModal(save = false) {
+    if (save && state.selectedElement && !state.selectedElement.isGlobalSettings) {
+      const draft = state.selectedElement;
+      for (const row of state.rows) for (const col of row.columns) {
+        const index = col.elements.findIndex(item => item.id === draft.id);
+        if (index !== -1) col.elements.splice(index, 1, JSON.parse(JSON.stringify(draft)));
+      }
+      pushSnapshot();
+    }
     state.isElementModalOpen = false;
     state.selectedElement = null;
-    showToast('Alterações salvas!', 'save');
+    if (save) showToast('Alterações salvas!', 'save');
   }
 
   function deleteSelectedElement() {
@@ -720,16 +759,17 @@ export function useBuilderStore() {
   }
 
   // ─── Folders Registry ──────────────────────────────────────────────────────
-  function createFolder(name, parentId = null, color = '#0ea5e9') {
-    const f = { id: 'folder-' + Date.now(), name, parentId, color, createdAt: new Date().toISOString() };
+  function createFolder(name, parentId = null, color = '#0ea5e9', customDomain = '') {
+    const f = { id: 'folder-' + Date.now(), name, parentId, color, customDomain, createdAt: new Date().toISOString() };
     foldersRegistry.unshift(f);
     lsSet('folders_registry_v1', foldersRegistry);
     showToast(`Pasta "${name}" criada!`, 'success');
     return f;
   }
 
-  function renameFolder(id, newName) {
+  function renameFolder(id, newName, customDomain) {
     const f = foldersRegistry.find(f => f.id === id);
+    if (f && customDomain !== undefined) f.customDomain = customDomain;
     if (f) { f.name = newName; lsSet('folders_registry_v1', foldersRegistry); showToast(`Pasta renomeada para "${newName}"!`); }
   }
 

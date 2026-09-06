@@ -143,6 +143,7 @@ const vslObjects = [
   { type: 'top-banner', title: 'Banner Topo', icon: 'bi bi-exclamation-triangle-fill' },
   { type: 'vturb-player', title: 'Player VTurb', icon: 'bi bi-play-circle-fill' },
   { type: 'pitch-button', title: 'Botão CTA Pitch', icon: 'bi bi-lightning-charge-fill' },
+  { type: 'smart-popup', title: 'Popup inteligente (Modal)', icon: 'bi bi-window-stack' },
   { type: 'upsell-buttons', title: 'Botões Upsell', icon: 'bi bi-bag-check-fill' },
   { type: 'live-viewers', title: 'Espectadores Ao Vivo', icon: 'bi bi-eye-fill' }
 ];
@@ -152,7 +153,7 @@ const emailObjects = [
   { type:'email-footer', title:'Rodapé E-mail', icon:'bi bi-postcard-fill' }
 ];
 const modeObjects = computed(() => state.builderMode === 'email' ? emailObjects : state.builderMode === 'quiz' ? quizObjects : vslObjects);
-const modeSectionTitle = computed(() => state.builderMode === 'email' ? 'OBJETOS DE E-MAIL' : state.builderMode === 'quiz' ? 'OBJETOS DO QUIZ' : 'OBJETOS DE VSL');
+const modeSectionTitle = computed(() => state.builderMode === 'email' ? 'OBJETOS DE E-MAIL' : state.builderMode === 'quiz' ? 'OBJETOS DO QUIZ' : 'COMPONENTES DE CONVERSÃO VSL');
 
 const gridPresets = [
   { preset: '1-col', title: '1 Coluna', sub: '100% Largura', cols: [1], total: 1 },

@@ -28,7 +28,46 @@
     </section>
 
     <template v-else>
-      <section class="metric-grid">
+      <PopupSubmissions v-if="pageType === 'Funil'" :page-id="pageId" />
+      <section v-if="pageType === 'Quiz'" class="metric-grid">
+        <article><strong>{{ metric('views') }}</strong><span>visitantes</span></article>
+        <article><strong>{{ metric('quizStarts') }}</strong><span>inícios do quiz</span></article>
+        <article><strong>{{ metric('quizCompletions') }}</strong><span>conclusões</span></article>
+        <article><strong>{{ metric('quizStarts') ? Math.round(metric('quizCompletions') / metric('quizStarts') * 100) : 0 }}%</strong><span>taxa de conclusão</span></article>
+        <article><strong>{{ formatDuration(metric('avgTimeSeconds')) }}</strong><span>tempo médio ativo</span></article>
+      </section>
+      <section v-if="pageType === 'Quiz'" class="panel">
+        <div class="panel-title">
+          <h2>Etapas e respostas do quiz</h2>
+          <button
+            class="export-csv-btn"
+            type="button"
+            :disabled="!quizSteps.length && !quizAnswers.length"
+            @click="exportQuizMetrics"
+          >
+            <i class="bi bi-download"></i> Exportar respostas (CSV)
+          </button>
+        </div>
+        <p v-if="!quizSteps.length">As etapas aparecerão após a primeira visita ao quiz publicado.</p>
+        <table v-else><thead><tr><th>Etapa</th><th>Visitantes</th></tr></thead><tbody><tr v-for="step in quizSteps" :key="step.label"><td>{{ step.label }}</td><td>{{ step.visitors }}</td></tr></tbody></table>
+        <table v-if="quizAnswers.length"><thead><tr><th>Pergunta</th><th>Resposta</th><th>Quantidade</th></tr></thead><tbody><tr v-for="(answer,index) in quizAnswers" :key="index"><td>{{ answer.question }}</td><td>{{ answer.answer || 'Sem resposta' }}</td><td>{{ answer.count }}</td></tr></tbody></table>
+      </section>
+      <section v-if="pageType === 'E-mail'" class="panel">
+        <div class="panel-title">
+          <h2>Cliques do e-mail</h2>
+          <button
+            class="export-csv-btn"
+            type="button"
+            :disabled="!pageButtons.length && !metric('clicks')"
+            @click="exportEmailMetrics"
+          >
+            <i class="bi bi-download"></i> Exportar cliques (CSV)
+          </button>
+        </div>
+        <p><strong>{{ metric('clicks') }}</strong> cliques registrados · <strong>{{ metric('sessions') }}</strong> navegadores identificados</p>
+        <p>Use o HTML copiado ou baixado pelo exportador para rastrear os links. Aberturas de e-mail não são medidas. Verificadores automáticos do provedor também podem acessar links.</p>
+      </section>
+      <section v-if="pageType === 'Funil'" class="metric-grid">
         <article>
           <i class="bi bi-eye"></i>
           <strong>{{ metric('views') }}</strong>
@@ -62,7 +101,7 @@
       </section>
 
       <section class="metrics-layout">
-        <article class="panel">
+        <article v-if="pageType === 'Funil'" class="panel">
           <div class="panel-title">
             <h2>Engajamento</h2>
             <span>Resumo da página publicada</span>
@@ -112,6 +151,16 @@
 
       <section class="panel">
         <div class="panel-title">
+          <h2>Cliques por botão</h2>
+        </div>
+        <p v-if="!pageButtons.length">Nenhum clique registrado.</p>
+        <table v-else><thead><tr><th>Botão</th><th>Destino</th><th>Cliques</th></tr></thead><tbody>
+          <tr v-for="(button, index) in pageButtons" :key="index"><td>Botão — {{ button.label }}</td><td>{{ button.target || '—' }}</td><td>{{ button.clicks }}</td></tr>
+        </tbody></table>
+      </section>
+
+      <section v-if="pageType === 'Funil'" class="panel">
+        <div class="panel-heading">
           <h2>Vídeos desta página</h2>
           <span>{{ pageVideos.length }} {{ pageVideos.length === 1 ? 'vídeo rastreado' : 'vídeos rastreados' }}</span>
         </div>
@@ -139,6 +188,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import PopupSubmissions from '../components/dashboard/PopupSubmissions.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useBuilderStore } from '../composables/useBuilderStore';
 import { getAnalyticsSummary, getPublications } from '../services/api';
@@ -154,6 +204,9 @@ const pageId = computed(() => String(route.params.pageId || ''));
 const page = computed(() => pagesRegistry.find(item => item.id === pageId.value));
 const pageMetrics = computed(() => analytics.value.pages?.find(item => item.pageId === pageId.value) || {});
 const pageVideos = computed(() => (analytics.value.videos || []).filter(video => video.pageId === pageId.value));
+const pageButtons = computed(() => (analytics.value.buttons || []).filter(button => button.pageId === pageId.value));
+const quizSteps = computed(() => (analytics.value.quizSteps || []).filter(item => item.pageId === pageId.value).sort((a,b) => a.label.localeCompare(b.label, 'pt-BR', { numeric: true })));
+const quizAnswers = computed(() => (analytics.value.quizAnswers || []).filter(item => item.pageId === pageId.value));
 const publication = computed(() => publications.value.find(item => item.pageId === pageId.value));
 const pageTitle = computed(() => page.value?.name || pageMetrics.value.pageName || 'Página');
 const folderName = computed(() => foldersRegistry.find(folder => folder.id === page.value?.folderId)?.name || 'Sem pasta');
@@ -209,6 +262,49 @@ function formatDuration(seconds) {
 function cleanUrl(url) {
   return String(url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
 }
+
+function escapeCsv(str) {
+  const text = String(str ?? '');
+  if (/^[=+\-@]/.test(text)) {
+    return `"'${text.replace(/"/g, '""')}"`;
+  }
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function exportQuizMetrics() {
+  const lines = ['Tipo;Pergunta / Etapa;Resposta;Quantidade / Visitantes'];
+  for (const step of quizSteps.value) {
+    lines.push(`Etapa;${escapeCsv(step.label)};;${step.visitors}`);
+  }
+  for (const ans of quizAnswers.value) {
+    lines.push(`Resposta;${escapeCsv(ans.question)};${escapeCsv(ans.answer || 'Sem resposta')};${ans.count}`);
+  }
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `metricas-quiz-${pageTitle.value || 'quiz'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportEmailMetrics() {
+  const lines = ['Botão / Link;Destino;Cliques'];
+  for (const btn of pageButtons.value) {
+    lines.push(`${escapeCsv(btn.label)};${escapeCsv(btn.target || '')};${btn.clicks}`);
+  }
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cliques-email-${pageTitle.value || 'email'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 </script>
 
 <style scoped>
@@ -222,6 +318,9 @@ h1 { margin:0; font-size:25px; line-height:1.1; }
 .metrics-header p { margin:5px 0 0; color:var(--color-text-muted); font-size:13px; font-weight:700; }
 .metric-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
 .metric-grid article { display:grid; grid-template-columns:38px 1fr; gap:4px 10px; align-items:center; padding:15px; border:1px solid var(--color-border); border-radius:14px; background:var(--color-surface); }
+.export-csv-btn { display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-primary); font:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:all .15s ease; }
+.export-csv-btn:hover:not(:disabled) { background:var(--color-primary-subtle); border-color:var(--color-primary); }
+.export-csv-btn:disabled { opacity:.45; cursor:not-allowed; }
 .metric-grid i { grid-row:1/3; width:38px; height:38px; display:grid; place-items:center; border-radius:10px; background:var(--color-primary-soft); color:var(--color-primary-strong); }
 .metric-grid strong { font-size:21px; line-height:1; }
 .metric-grid span { color:var(--color-text-muted); font-size:11px; font-weight:800; }

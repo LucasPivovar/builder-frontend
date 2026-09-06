@@ -4,6 +4,10 @@ export function validateExport(rows = [], settings = {}) {
   if (!settings.pageTitle?.trim()) warnings.push('Adicione um título à página para melhorar SEO e a identificação na aba do navegador.');
   if (!settings.metaDesc?.trim()) warnings.push('Inclua uma meta descrição para melhorar o compartilhamento e SEO.');
   elements.forEach((element, index) => {
+    if (element.type === 'smart-popup') {
+      const hasFields = (Array.isArray(element.fields) && element.fields.length > 0) || (element.blocks || []).some(block => block.type === 'field');
+      if (!hasFields) warnings.push('Popup inteligente: adicione ao menos um campo.');
+    }
     const label = `Bloco ${index + 1}`;
     if (['button', 'pitch-button'].includes(element.type) && (!element.url || element.url === '#')) warnings.push(`${label}: o botão “${element.content || 'sem texto'}” está sem link de destino.`);
     if (element.type === 'image' && !(element.imageUrl || element.content)) warnings.push(`${label}: inclua uma URL de imagem.`);

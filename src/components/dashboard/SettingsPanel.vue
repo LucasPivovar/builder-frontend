@@ -1,102 +1,41 @@
 <template>
-  <div class="settings-view-container">
-    <header class="page-header-title">
-      <div class="title-group">
-        <h1><i class="bi bi-gear-fill"></i> Configurações da Conta</h1>
-        <p>Perfil, segurança e preferências do painel.</p>
-      </div>
-      <button class="btn-save-settings" type="button" @click="saveSettings">
-        <i class="bi bi-check2-circle"></i> Salvar
-      </button>
-    </header>
-
-    <section class="settings-card-panel">
-      <div class="profile-header-card">
-        <div class="avatar-big">{{ initials }}</div>
-        <div>
-          <h2>{{ account.name || user.name || 'Usuário' }}</h2>
-          <p>{{ user.email || 'Sessão ativa' }}</p>
-        </div>
-      </div>
-
-      <div v-if="saved" class="save-feedback">
-        <i class="bi bi-check-circle-fill"></i>
-        Preferências salvas neste navegador.
-      </div>
-
-      <div class="settings-grid">
-        <section class="settings-block">
-          <h3><i class="bi bi-person-badge"></i> Perfil</h3>
-          <label>Nome de exibição<input v-model="account.name" type="text" placeholder="Seu nome" /></label>
-          <label>Empresa<input v-model="account.company" type="text" placeholder="Nome da empresa" /></label>
-          <label>Telefone / WhatsApp<input v-model="account.phone" type="text" placeholder="+55..." /></label>
-        </section>
-
-        <section class="settings-block">
-          <h3><i class="bi bi-sliders"></i> Preferências</h3>
-          <label>Idioma do painel<select v-model="account.language"><option value="pt-BR">Português Brasil</option><option value="en-US">English</option><option value="es">Español</option></select></label>
-          <label>Fuso horário<select v-model="account.timezone"><option value="America/Sao_Paulo">America/Sao_Paulo</option><option value="America/New_York">America/New_York</option><option value="Europe/Lisbon">Europe/Lisbon</option></select></label>
-          <label>Página inicial<select v-model="account.startPage"><option value="home">Página Inicial</option><option value="todas-paginas">Páginas</option><option value="pastas">Pastas</option><option value="support">Tickets</option></select></label>
-        </section>
-
-        <section class="settings-block">
-          <h3><i class="bi bi-shield-lock"></i> Segurança</h3>
-          <label class="toggle-row"><span><strong>Confirmar antes de publicar</strong><small>Evita publicar páginas por engano.</small></span><input v-model="account.confirmBeforePublish" type="checkbox" /></label>
-          <label class="toggle-row"><span><strong>Alertar DNS pendente</strong><small>Mostra aviso quando domínio ainda não foi validado.</small></span><input v-model="account.warnPendingDns" type="checkbox" /></label>
-          <label class="toggle-row"><span><strong>Modo compacto</strong><small>Reduz espaçamentos no dashboard.</small></span><input v-model="account.compactMode" type="checkbox" /></label>
-        </section>
-
-        <section class="settings-block">
-          <h3><i class="bi bi-database-check"></i> Conta</h3>
-          <div class="info-list">
-            <span><strong>E-mail</strong><small>{{ user.email || 'Não informado' }}</small></span>
-            <span><strong>Perfil</strong><small>{{ user.role || 'user' }}</small></span>
-            <span><strong>Sessão</strong><small>JWT ativo no navegador</small></span>
-          </div>
-        </section>
-      </div>
-    </section>
-  </div>
+  <section class="settings-view-container">
+    <header><div><h1>Meu perfil</h1><p>Atualize seus dados e o acesso à sua conta.</p></div><button class="btn-save-settings" :disabled="saving" @click="save">{{ saving ? 'Salvando…' : 'Salvar alterações' }}</button></header>
+    <p v-if="message" role="status">{{ message }}</p>
+    <div class="profile-grid">
+      <section class="profile-card"><h2>Dados pessoais</h2>
+        <label>Nome<input v-model.trim="form.name" autocomplete="name" maxlength="120" /></label>
+        <label>WhatsApp<input v-model="form.phone" type="tel" autocomplete="tel" placeholder="+55 (41) 99999-9999" maxlength="20" /></label>
+        <label>E-mail atual<input :value="user.email" disabled /></label>
+      </section>
+      <section class="profile-card"><h2>Acesso à conta</h2>
+        <button class="btn-secondary" @click="changeEmail = !changeEmail">Alterar e-mail</button>
+        <label v-if="changeEmail">Novo e-mail<input v-model.trim="form.email" type="email" autocomplete="email" /></label>
+        <button class="btn-secondary" @click="changePassword = !changePassword">Alterar senha</button>
+        <template v-if="changePassword"><label>Nova senha<input v-model="form.newPassword" type="password" autocomplete="new-password" maxlength="72" /></label><small>8 ou mais caracteres, com maiúscula, minúscula e número.</small><label>Confirmar nova senha<input v-model="confirmPassword" type="password" autocomplete="new-password" /></label></template>
+        <label v-if="changeEmail || changePassword">Senha atual<input v-model="form.currentPassword" type="password" autocomplete="current-password" /></label>
+      </section>
+    </div>
+  </section>
 </template>
-
 <script setup>
-import { computed, reactive, ref } from 'vue';
-import { getStoredUser } from '../../services/api';
-
-const SETTINGS_KEY = 'vbs_account_settings_v1';
-const user = getStoredUser() || {};
-const saved = ref(false);
-
-function loadSettings() {
-  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
-  catch { return {}; }
-}
-
-const account = reactive({
-  name: user.name || '',
-  company: '',
-  phone: '',
-  language: 'pt-BR',
-  timezone: 'America/Sao_Paulo',
-  startPage: 'home',
-  confirmBeforePublish: true,
-  warnPendingDns: true,
-  compactMode: false,
-  ...loadSettings()
-});
-
-const initials = computed(() => {
-  const name = account.name || user.name || user.email || 'U';
-  return String(name).split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
-});
-
-function saveSettings() {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...account }));
-  saved.value = true;
-  setTimeout(() => { saved.value = false; }, 2600);
+import { reactive, ref, onMounted } from 'vue';
+import { getStoredUser, getProfile, updateProfile } from '../../services/api';
+const user = ref(getStoredUser() || {});
+const form = reactive({ name: user.value.name || '', phone: user.value.phone || '', email: '', newPassword: '', currentPassword: '' });
+const changeEmail = ref(false), changePassword = ref(false), confirmPassword = ref(''), saving = ref(false), message = ref('');
+onMounted(async () => { try { user.value = await getProfile(); form.name = user.value.name; form.phone = user.value.phone || ''; } catch (error) { message.value = error.message; } });
+async function save() {
+  message.value = '';
+  if (changePassword.value && (!form.newPassword || form.newPassword !== confirmPassword.value)) { message.value = 'Confira a nova senha e sua confirmação.'; return; }
+  if (changeEmail.value && !form.email) { message.value = 'Informe o novo e-mail.'; return; }
+  saving.value = true;
+  try {
+    user.value = await updateProfile({ name: form.name, phone: form.phone, ...(changeEmail.value ? { email: form.email } : {}), ...(changePassword.value ? { newPassword: form.newPassword } : {}), ...((changeEmail.value || changePassword.value) ? { currentPassword: form.currentPassword } : {}) });
+    changeEmail.value = false; changePassword.value = false; form.newPassword = ''; form.currentPassword = ''; confirmPassword.value = ''; message.value = 'Perfil atualizado.';
+  } catch (error) { message.value = error.message; } finally { saving.value = false; }
 }
 </script>
-
 <style scoped>
-.settings-view-container{max-width:1040px;margin:0 auto}.page-header-title{margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px}.page-header-title h1{margin:0;color:var(--color-text);font-size:24px;font-weight:800;display:flex;align-items:center;gap:10px}.page-header-title p{margin:6px 0 0;color:var(--color-text-muted);font-size:14px}.btn-save-settings{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:10px 14px;background:var(--color-primary);color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer}.settings-card-panel{padding:28px;border:1px solid var(--color-border);border-radius:18px;background:var(--color-surface);box-shadow:var(--shadow-sm)}.profile-header-card{display:flex;align-items:center;gap:16px;padding-bottom:22px;margin-bottom:18px;border-bottom:1px solid var(--color-border)}.avatar-big{width:56px;height:56px;display:grid;place-items:center;border-radius:14px;background:var(--gradient-aurora);color:#fff;font-size:18px;font-weight:900;box-shadow:0 4px 14px rgba(97,43,244,.28)}.profile-header-card h2{font-size:18px;font-weight:800;color:var(--color-text);margin:0}.profile-header-card p{margin:4px 0 0;color:var(--color-text-muted);font-size:13px}.save-feedback{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding:11px 13px;border:1px solid rgba(16,185,129,.25);border-radius:11px;background:rgba(16,185,129,.1);color:#059669;font-size:13px;font-weight:800}.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.settings-block{padding:18px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface-soft)}.settings-block h3{display:flex;align-items:center;gap:8px;margin:0 0 14px;color:var(--color-text);font-size:15px}.settings-block label{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;color:var(--color-text-secondary);font-size:12px;font-weight:800}.settings-block input,.settings-block select{width:100%;min-height:38px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-surface);color:var(--color-text);padding:0 11px;font:inherit;font-size:13px;outline:0}.settings-block input:focus,.settings-block select:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-focus-ring)}.toggle-row{flex-direction:row!important;align-items:center;justify-content:space-between;gap:14px}.toggle-row span{display:flex;flex-direction:column;gap:3px}.toggle-row strong{font-size:13px;color:var(--color-text)}.toggle-row small,.info-list small{color:var(--color-text-muted);font-size:11px;font-weight:600}.toggle-row input{width:18px;height:18px;min-height:18px;accent-color:var(--color-primary)}.info-list{display:flex;flex-direction:column;gap:10px}.info-list span{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--color-border)}.info-list span:last-child{border-bottom:0}.info-list strong{color:var(--color-text);font-size:13px}@media(max-width:760px){.page-header-title{align-items:flex-start;flex-direction:column}.settings-grid{grid-template-columns:1fr}.settings-card-panel{padding:20px}}
+.settings-view-container{width:100%;min-width:0}header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}h1{font-size:26px;margin:0}p,small{color:var(--color-text-secondary)}.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.profile-card{padding:24px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:14px}h2{font-size:18px;margin:0 0 24px}label{display:flex;flex-direction:column;gap:8px;margin:18px 0;font-size:13px;font-weight:600}input{box-sizing:border-box;width:100%;min-height:42px;padding:10px 12px;border:1px solid var(--color-border);border-radius:9px;font:inherit;color:var(--color-text);background:var(--color-surface-soft)}input:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}button{margin:0 10px 12px 0}@media(max-width:760px){.profile-grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}
 </style>

@@ -18,9 +18,6 @@
         <i class="bi bi-bell"></i>
         <span v-if="unreadCount" class="notification-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
       </button>
-      <button class="btn-icon-top" @click="$emit('open-auth')" title="Sair">
-        <i class="bi bi-box-arrow-right"></i>
-      </button>
     </div>
   </header>
 </template>
@@ -134,6 +131,5 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth', 'start
   .btn-create-blank { width: 36px; height: 36px; padding: 0; justify-content: center; font-size: 0; }
   .btn-create-blank i { font-size: 17px; }
   .btn-icon-top { width: 36px; height: 36px; }
-  .btn-icon-top:last-child { display: none; }
 }
 </style>
