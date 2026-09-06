@@ -84,8 +84,8 @@ function renderVturb() {
     if (!containerRef.value) return;
     let bodyHTML = (props.element.vturbBody || '').trim();
     if (!bodyHTML) {
-      // eslint-disable-next-line no-useless-escape
-      bodyHTML = `<vturb-smartplayer id="vid-6a74fc57b559162d923537ff" style="display: block; margin: 0 auto; width: 100%; max-width: 320px;"><div class="vturb-player-placeholder" style="position: relative; width: 100%; padding: 177.77777777777777% 0 0; z-index: 0; background-color: black;"></div></vturb-smartplayer> <script type="text/javascript"> var s=document.createElement("script"); s.src="https://scripts.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a74fc57b559162d923537ff/v4/player.js", s.async=!0,document.head.appendChild(s); <\/script>`;
+      containerRef.value.innerHTML = '';
+      return;
     }
 
     const match = bodyHTML.match(/padding[^:]*:[^\d]*(\d+(?:\.\d+)?)%/);

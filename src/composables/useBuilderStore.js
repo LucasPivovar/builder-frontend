@@ -44,7 +44,7 @@ const defaultFunilRows = [
     id: 'row-2',
     columns: [{ id: 'col-2-1', flex: 1, elements: [{
       id: 'elem-2', type: 'heading',
-      content: 'RECADO ESPECIAL PARA VOCÊ\nAlgo Para >>Triplicar<< Seus Ganhos com a Dollar App',
+      content: 'RECADO ESPECIAL PARA VOCÊ\nAlgo Para >>Triplicar<< Seus Ganhos',
       style: { fontSize: '30px', fontWeight: '900', textColor: '#ffffff', altColor: '#f1c232', hasTransparentBg: true, marginTop: 10, marginBottom: 10, align: 'center', lineHeight: 1.3 }
     }]}]
   },
@@ -52,7 +52,7 @@ const defaultFunilRows = [
     id: 'row-3',
     columns: [{ id: 'col-3-1', flex: 1, elements: [{
       id: 'elem-3', type: 'vturb-player', content: '',
-      vturbBody: `<vturb-smartplayer id="vid-6a74fc57b559162d923537ff" style="display: block; margin: 0 auto; width: 100%; max-width: 320px;"><div class="vturb-player-placeholder" style="position: relative; width: 100%; padding: 177.77777777777777% 0 0; z-index: 0; background-color: black;"></div></vturb-smartplayer> <script type="text/javascript"> var s=document.createElement("script"); s.src="https://scripts.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a74fc57b559162d923537ff/v4/player.js", s.async=!0,document.head.appendChild(s); </script>`,
+      vturbBody: '',
       vturbHead: '',
       style: { maxWidth: '320px', marginTop: 6, marginBottom: 6 }
     }]}]
@@ -534,7 +534,7 @@ export function useBuilderStore() {
     if (type === 'paragraph') return { ...base, content: 'Texto do parágrafo...', style: { ...baseStyle, fontSize: '15px', fontWeight: '400', textColor: '#ccc', hasTransparentBg: true } };
     if (type === 'button') return { ...base, content: 'CLIQUE AQUI', url: '', openInNewTab: true, subtext: '', style: { ...baseStyle, bgColor: '#fff', textColor: '#000', paddingVertical: 14, paddingHorizontal: 28, borderRadius: 10 } };
     if (type === 'top-banner') return { ...base, content: 'ATENÇÃO: NÃO FECHE ESTA PÁGINA', style: { ...baseStyle, bgColor: '#dc2626', textColor: '#fff', fontSize: '15px' } };
-    if (type === 'vturb-player') return { ...base, content: '', vturbBody: `<vturb-smartplayer id="vid-6a74fc57b559162d923537ff" style="display: block; margin: 0 auto; width: 100%; max-width: 320px;"><div class="vturb-player-placeholder" style="position: relative; width: 100%; padding: 177.77777777777777% 0 0; z-index: 0; background-color: black;"></div></vturb-smartplayer> <script type="text/javascript"> var s=document.createElement("script"); s.src="https://scripts.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a74fc57b559162d923537ff/v4/player.js", s.async=!0,document.head.appendChild(s); </script>`, vturbHead: '', style: { ...baseStyle, maxWidth: '320px', marginTop: 6, marginBottom: 6 } };
+    if (type === 'vturb-player') return { ...base, content: '', vturbBody: '', vturbHead: '', style: { ...baseStyle, maxWidth: '320px', marginTop: 6, marginBottom: 6 } };
     if (type === 'pitch-button') return { ...base, content: 'QUERO MEU ACESSO AGORA', url: '', openInNewTab: true, subtext: 'Acesso imediato', style: { ...baseStyle, bgColor: '#fff', textColor: '#000', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, isGlow: false } };
     if (type === 'live-viewers') return { ...base, content: 'espectadores estão assistindo', minViewers: 100, maxViewers: 250, style: { ...baseStyle, textColor: '#fff', countColor: '#38bdf8', fontSize: '18px', marginTop: 4, marginBottom: 4 } };
     if (type === 'meta-pixel') return { ...base, pixelId: '', pixelEvent: 'PageView', content: 'Meta Pixel', style: baseStyle };

@@ -350,18 +350,29 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
   ${isQuizMode ? `<script>
     (function(){
       var steps=Array.from(document.querySelectorAll('.quiz-step')),index=0,answers={};
-      function show(next){index=Math.max(0,Math.min(next,steps.length-1));steps.forEach(function(step,i){step.classList.toggle('active',i===index)});window.scrollTo({top:0,behavior:'smooth'});document.dispatchEvent(new CustomEvent('quiz:step',{detail:{index:index}}));}
+      function show(next){index=Math.max(0,Math.min(next,steps.length-1));steps.forEach(function(step,i){step.classList.toggle('active',i===index);step.querySelectorAll('a[data-complete-url]').forEach(function(button){button.href='#quiz-next';if(i===steps.length-1){try{var destination=button.getAttribute('data-complete-url');if(destination){var url=new URL(destination,location.href);if(url.protocol==='https:'||url.protocol==='http:')button.href=url.href;}}catch(e){/* Destino inválido mantém a confirmação local. */}}});});window.scrollTo({top:0,behavior:'smooth'});document.dispatchEvent(new CustomEvent('quiz:step',{detail:{index:index}}));}
       document.addEventListener('click',function(event){
         var option=event.target.closest('.quiz-option');
         if(option){var group=option.closest('.quiz-options');group.classList.remove('quiz-required');group.removeAttribute('aria-invalid');if(group.dataset.multiple==='true')option.classList.toggle('selected');else{group.querySelectorAll('.quiz-option').forEach(function(item){item.classList.remove('selected')});option.classList.add('selected')}answers[index]=Array.from(group.querySelectorAll('.selected')).map(function(item){return item.dataset.value});}
-        var next=event.target.closest('a[href="#quiz-next"]');if(next){event.preventDefault();var active=steps[index],required=active&&active.querySelector('.quiz-options');if(required&&!required.querySelector('.selected')){required.classList.add('quiz-required');required.setAttribute('aria-invalid','true');var first=required.querySelector('.quiz-option');if(first)first.focus();return;}document.dispatchEvent(new CustomEvent('quiz:answer',{detail:{index:index,answers:answers[index]||[]}}));if(index<steps.length-1)show(index+1);else document.dispatchEvent(new CustomEvent('quiz:complete',{detail:{answers:answers}}));}
+        var next=event.target.closest('a[data-complete-url]');
+        if(next){
+          var active=steps[index],required=active&&active.querySelector('.quiz-options');
+          if(required&&!required.querySelector('.selected')){event.preventDefault();required.classList.add('quiz-required');required.setAttribute('aria-invalid','true');var first=required.querySelector('.quiz-option');if(first)first.focus();return;}
+          document.dispatchEvent(new CustomEvent('quiz:answer',{detail:{index:index,answers:answers[index]||[]}}));
+          if(index<steps.length-1){event.preventDefault();show(index+1);}
+          else {
+            var destination=next.getAttribute('data-complete-url'),redirect=null;
+            try{if(destination){var resolved=new URL(destination,location.href);if(resolved.protocol==='https:'||resolved.protocol==='http:')redirect=resolved.href;}}catch(e){/* Mantém confirmação quando o destino é inválido. */}
+            if(!redirect)event.preventDefault();
+            document.dispatchEvent(new CustomEvent('quiz:complete',{detail:{answers:answers,redirect:redirect}}));
+          }
+        }
       });
       show(0);window.quizAnswers=answers;
-      document.addEventListener('quiz:complete',function(){
+      document.addEventListener('quiz:complete',function(event){
+        if(event.detail.redirect)return;
         var active=steps[index],button=active&&active.querySelector('a[href="#quiz-next"]');
         if(button){button.setAttribute('aria-disabled','true');button.style.pointerEvents='none';button.textContent='Concluído';}
-        var destination=button&&button.getAttribute('data-complete-url');
-        if(destination){try{var url=new URL(destination,location.href);if(url.protocol==='https:'||url.protocol==='http:'){setTimeout(function(){location.assign(url.href)},250);return;}}catch(e){/* Destino inválido: mantém confirmação na página. */}}
         var message=document.createElement('p');message.setAttribute('role','status');message.textContent='Respostas enviadas. Obrigado!';if(active)active.appendChild(message);
       },{once:true});
     })();

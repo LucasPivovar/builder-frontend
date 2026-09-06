@@ -64,7 +64,7 @@
                 type="text"
                 class="form-input tour-page-name"
                 v-model="pageName"
-                :placeholder="selectedType === 'email' ? 'ex: E-mail Boas-vindas' : selectedType === 'quiz' ? 'ex: Quiz Diagnóstico do Cliente' : 'ex: VSL Funil Dollar App 2026'"
+                :placeholder="selectedType === 'email' ? 'ex: E-mail Boas-vindas' : selectedType === 'quiz' ? 'ex: Quiz Diagnóstico do Cliente' : 'ex: VSL Funil de Alta Conversão'"
                 autofocus
               />
             </div>

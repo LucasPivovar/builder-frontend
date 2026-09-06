@@ -98,7 +98,7 @@
           <label class="form-label">WhatsApp</label>
           <div class="input-wrapper">
             <i class="bi bi-whatsapp input-icon" aria-hidden="true"></i>
-            <input type="tel" class="form-input" v-model="regPhone" placeholder="(11) 99999-9999" required autocomplete="tel" />
+            <input type="tel" class="form-input" :value="regPhone" @input="maskRegPhone" placeholder="(11) 99999-9999" required autocomplete="tel" inputmode="tel" maxlength="19" />
           </div>
         </div>
 
@@ -216,6 +216,24 @@ const regName = ref('');
 const regLastName = ref('');
 const regEmail = ref('');
 const regPhone = ref('');
+function maskRegPhone(event) {
+  const raw = event.target.value;
+  let digits = raw.replace(/\D/g, '');
+  const international = raw.startsWith('+') || (digits.startsWith('55') && digits.length > 11);
+  let prefix = '';
+  if (international) {
+    digits = digits.slice(0, 13);
+    prefix = '+' + digits.slice(0, 2);
+    digits = digits.slice(2);
+    if (digits) prefix += ' ';
+  } else digits = digits.slice(0, 11);
+  let formatted = digits ? '(' + digits.slice(0, 2) : '';
+  if (digits.length > 2) formatted += ') ' + digits.slice(2, digits.length > 10 ? 7 : 6);
+  const split = digits.length > 10 ? 7 : 6;
+  if (digits.length > split) formatted += '-' + digits.slice(split);
+  regPhone.value = prefix + formatted;
+  event.target.value = regPhone.value;
+}
 const regPassword = ref('');
 const regConfirmPassword = ref('');
 const acceptTerms = ref(false);
@@ -298,7 +316,7 @@ async function handleRegister() {
     const session = await register({
       name: regName.value.trim(),
       lastName: regLastName.value.trim(),
-      phone: regPhone.value.trim(),
+      phone: regPhone.value.replace(/\D/g, ''),
       email: regEmail.value.trim().toLowerCase(),
       password: regPassword.value,
       remember: true
@@ -571,5 +589,4 @@ async function handleRegister() {
 button:focus-visible, a:focus-visible { outline: 3px solid var(--color-primary-border); outline-offset: 3px; }
 @media (max-width: 380px) { .form-row-2 { grid-template-columns: 1fr; gap: 0; } }
 </style>
-
 

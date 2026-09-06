@@ -66,8 +66,7 @@ function loadIframe() {
       const headCode = (props.element.vturbHead || '').trim();
       let bodyCode = (props.element.vturbBody || '').trim();
       if (!bodyCode) {
-        // eslint-disable-next-line no-useless-escape
-        bodyCode = `<vturb-smartplayer id="vid-6a74fc57b559162d923537ff" style="display: block; margin: 0 auto; width: 100%; max-width: 320px;"><div class="vturb-player-placeholder" style="position: relative; width: 100%; padding: 177.77777777777777% 0 0; z-index: 0; background-color: black;"></div></vturb-smartplayer> <script type="text/javascript"> var s=document.createElement("script"); s.src="https://scripts.converteai.net/93deedb3-3cfc-44e6-b93a-9684b498089c/players/6a74fc57b559162d923537ff/v4/player.js", s.async=!0,document.head.appendChild(s); <\/script>`;
+        bodyCode = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:220px;color:#94a3b8;background:#0f172a;font-family:sans-serif;text-align:center;padding:20px;box-sizing:border-box;"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;opacity:0.8;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span style="font-weight:700;font-size:14px;color:#f8fafc;">Player VTurb</span><span style="font-size:12px;margin-top:4px;opacity:0.7;">Insira o código do vídeo nas configurações</span></div>`;
       }
       const htmlContent = `<!DOCTYPE html>
 <html lang="pt-BR">
