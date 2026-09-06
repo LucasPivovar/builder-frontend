@@ -322,6 +322,7 @@ const state = reactive({
     bgColor: '#191919', fontFamily: 'Roboto', fontSize: 14, sectionGap: 0,
     pageTitle: 'Página de Vendas - VSL', metaDesc: 'Página oficial de vendas e conversão VSL.',
     metaPixel: '', gtmCode: '', faviconUrl: '', trackingKey: 'draft'
+    , quizCardBg:'#ffffff', quizOptionBg:'#ffffff', quizOptionBorder:'#bae6fd', quizAccent:'#0ea5e9'
   }
 });
 
@@ -398,6 +399,10 @@ export function useBuilderStore() {
       state.pageSettings.fontFamily = 'Plus Jakarta Sans';
       state.pageSettings.quizProgressColor = state.pageSettings.quizProgressColor || '#0ea5e9';
       state.pageSettings.quizProgressHeight = Number(state.pageSettings.quizProgressHeight) || 6;
+      state.pageSettings.quizCardBg = state.pageSettings.quizCardBg || '#ffffff';
+      state.pageSettings.quizOptionBg = state.pageSettings.quizOptionBg || '#ffffff';
+      state.pageSettings.quizOptionBorder = state.pageSettings.quizOptionBorder || '#bae6fd';
+      state.pageSettings.quizAccent = state.pageSettings.quizAccent || '#0ea5e9';
     } else {
       state.pageSettings.bgColor = '#191919';
       state.pageSettings.fontFamily = 'Roboto';

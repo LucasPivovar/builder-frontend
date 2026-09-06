@@ -343,4 +343,5 @@ async function removeTemplate(template){ if(!window.confirm(`Excluir o template 
 .btn-admin-visit { display: inline-grid; place-items: center; width: 31px; height: 31px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text-secondary); text-decoration: none; font-size: 12px; }
 .btn-admin-visit:hover { background: var(--color-surface-soft); color: var(--color-primary); }
 
+.admin-sidebar{background:#171126!important;border-right-color:#302442!important;color:#fff}.admin-brand strong{color:#fff}.admin-brand small{color:#978ca8}.admin-sidebar nav button{color:#d6cde2}.admin-sidebar nav button:hover,.admin-sidebar nav button.active{background:#6d32f5;color:#fff}.admin-sidebar nav em{background:#34234b;color:#dbcaff}.admin-sidebar .back-button{border-color:#49365f;background:#241832;color:#ddd3ec}.admin-sidebar .back-button:hover{background:#342245;color:#fff}
 </style>

@@ -14,7 +14,7 @@
         </div>
         <div>
           <h2>{{ folder.name }}</h2>
-          <p class="folder-meta">{{ pages.length }} páginas neste projeto</p>
+          <p class="folder-meta">{{ pages.length }} páginas neste projeto · {{ folder.customDomain || 'Sem domínio configurado' }}</p>
         </div>
 
         <div class="folder-actions">
@@ -25,6 +25,9 @@
           </select>
           <button class="btn-download-folder" type="button" :disabled="!pages.length" @click="$emit('download-folder')">
             <i class="bi bi-file-earmark-zip"></i> Baixar ZIP
+          </button>
+          <button class="btn-folder-domain" type="button" @click="$emit('edit-folder', folder)">
+            <i class="bi bi-globe2"></i> {{ folder.customDomain ? 'Editar domínio' : 'Adicionar domínio' }}
           </button>
           <button class="btn-add-page" type="button" @click="$emit('open-builder')">
             <i class="bi bi-plus-lg"></i> Adicionar página
@@ -124,7 +127,7 @@ const props = defineProps({
   pages: Array
 });
 
-defineEmits(['back', 'open-builder', 'edit-page', 'more-options', 'download-folder', 'publish-page', 'assign-dns', 'open-publication', 'open-metrics']);
+defineEmits(['back', 'open-builder', 'edit-page', 'edit-folder', 'more-options', 'download-folder', 'publish-page', 'assign-dns', 'open-publication', 'open-metrics']);
 
 const sortMode = ref('recent');
 const displayedPages = computed(() => [...(props.pages || [])].sort((a, b) => {
@@ -199,7 +202,7 @@ function displayUrl(page) {
 
 .btn-add-page {
   background: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-on-primary) !important;
   border: none;
   padding: 10px 20px;
   border-radius: 10px;
@@ -210,6 +213,13 @@ function displayUrl(page) {
   align-items: center;
   gap: 8px;
 }
+
+.btn-folder-domain, .btn-download-folder {
+  color: var(--color-primary-strong) !important;
+  background: var(--color-surface) !important;
+  border-color: var(--color-border-strong) !important;
+}
+.btn-folder-domain { display:inline-flex; align-items:center; gap:7px; min-height:38px; padding:9px 12px; border:1px solid; border-radius:9px; cursor:pointer; font:700 12px/1.35 var(--font-sans); }
 
 .folder-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .folder-sort { height: 38px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 9px; outline: none; background: var(--color-surface); color: var(--color-text-secondary); font: inherit; font-size: 11px; font-weight: 700; }

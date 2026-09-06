@@ -292,6 +292,7 @@ const vslObjects = [
 ];
 
 const emailObjects = [
+  { type: 'image', title: 'Imagem do e-mail', icon: 'bi bi-card-image' },
   { type: 'email-header', title: 'Cabeçalho E-mail', icon: 'bi bi-card-heading' },
   { type: 'email-tag', title: 'Pill / Label', icon: 'bi bi-tag-fill' },
   { type: 'email-footer', title: 'Rodapé E-mail', icon: 'bi bi-menu-down' }
@@ -309,9 +310,10 @@ const quizObjects = [
 ];
 
 const filteredContentObjects = computed(() => {
-  if (!searchQuery.value.trim()) return contentObjects;
+  const objects = state.builderMode === 'email' ? contentObjects.filter(object => object.type !== 'image') : contentObjects;
+  if (!searchQuery.value.trim()) return objects;
   const q = searchQuery.value.toLowerCase().trim();
-  return contentObjects.filter(o => o.title.toLowerCase().includes(q));
+  return objects.filter(o => o.title.toLowerCase().includes(q));
 });
 
 const modeObjects = computed(() => state.builderMode === 'email' ? emailObjects : state.builderMode === 'quiz' ? quizObjects : vslObjects);

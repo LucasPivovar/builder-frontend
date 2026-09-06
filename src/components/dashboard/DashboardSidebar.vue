@@ -16,36 +16,6 @@
         <span>Página Inicial</span>
       </a>
 
-      <!-- Label de Categoria: PÁGINAS -->
-      <div class="menu-group-title">
-        <span>PÁGINAS</span>
-      </div>
-      
-      <a
-        class="menu-item"
-        :class="{ active: activeTab === 'todas-paginas' }"
-        @click="$emit('select-tab', 'todas-paginas')"
-      >
-        <i class="bi bi-collection-fill"></i>
-        <span>Páginas</span>
-        <span class="badge-count">{{ pagesCount }}</span>
-      </a>
-
-      <!-- Label de Categoria: ORGANIZAÇÃO -->
-      <div class="menu-group-title" style="margin-top: 18px;">
-        <span>ORGANIZAÇÃO</span>
-      </div>
-
-      <a
-        class="menu-item"
-        :class="{ active: activeTab === 'pastas' }"
-        @click="$emit('select-tab', 'pastas')"
-      >
-        <i class="bi bi-folder-fill"></i>
-        <span>Pastas</span>
-        <span class="badge-count">{{ foldersCount }}</span>
-      </a>
-
       <!-- Label de Categoria: SISTEMA -->
       <div class="menu-group-title" style="margin-top: 18px;">
         <span>SISTEMA</span>
@@ -69,6 +39,11 @@
       >
         <i class="bi bi-gear-fill"></i>
         <span>Configurações</span>
+      </a>
+
+      <a class="menu-item" :class="{ active: activeTab === 'plans' }" @click="$emit('select-tab', 'plans')">
+        <i class="bi bi-credit-card-fill"></i>
+        <span>Planos</span>
       </a>
 
       <a
@@ -120,12 +95,13 @@ const userInitial = computed(() => {
 </script>
 
 <style scoped>
-.sidebar-logout { padding: 12px 16px; }
-.sidebar-logout .btn-logout { width: 100%; justify-content: flex-start !important; }
+.sidebar-logout { padding: 12px 16px; border-top:1px solid #302442; }
+.sidebar-logout .btn-logout { width:100%; min-height:40px; display:flex; align-items:center; justify-content:flex-start; gap:10px; padding:10px 13px; border:1px solid #3a3347 !important; border-radius:10px; background:#1d1729 !important; color:#d9d4e2 !important; font:700 13px/1.2 var(--font-sans); cursor:pointer; box-shadow:none !important; transition:background .16s,border-color .16s,color .16s; }
+.sidebar-logout .btn-logout:hover { background:#292234 !important; border-color:#5a5069 !important; color:#fff !important; }
 .sidebar {
   width: 260px;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background: #171126;
+  border-right: 1px solid #302442;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -137,7 +113,7 @@ const userInitial = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #302442;
 }
 
 .brand-icon {
@@ -149,7 +125,7 @@ const userInitial = computed(() => {
   font-size: 17px;
   font-weight: 800;
   font-family: var(--font-display);
-  color: var(--color-text);
+  color: #ffffff;
 }
 
 .sidebar-menu {
@@ -162,7 +138,7 @@ const userInitial = computed(() => {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.2px;
-  color: var(--color-text-muted);
+  color: #978ca8;
   margin: 18px 12px 6px 12px;
   text-transform: uppercase;
 }
@@ -172,7 +148,7 @@ const userInitial = computed(() => {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  color: var(--color-text-muted);
+  color: #d6cde2;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
@@ -182,14 +158,15 @@ const userInitial = computed(() => {
 }
 
 .menu-item:hover {
-  background: var(--color-primary-subtle);
-  color: var(--color-text);
+  background: #251a35;
+  color: #ffffff;
 }
 
 .menu-item.active {
-  background: var(--color-primary-soft);
-  color: var(--color-primary-strong);
-  border: 1px solid var(--color-border-strong);
+  background: #253650;
+  color: #ffffff;
+  border: 1px solid #3e6693;
+  box-shadow: inset 3px 0 0 #4fa3ff;
 }
 
 .menu-item.admin-item.active {
@@ -210,8 +187,8 @@ const userInitial = computed(() => {
 
 .badge-count {
   margin-left: auto;
-  background: var(--color-primary-soft);
-  color: var(--color-primary-strong);
+  background: #34234b;
+  color: #dbcaff;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
@@ -224,7 +201,8 @@ const userInitial = computed(() => {
 
 .sidebar-user {
   padding: 16px 20px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid #302442;
+  background:#120d1e;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -239,7 +217,7 @@ const userInitial = computed(() => {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: var(--color-surface);
+  color: #ffffff;
 }
 
 .user-details {
@@ -247,12 +225,12 @@ const userInitial = computed(() => {
   flex-direction: column;
 }
 
-.user-name { font-size: 13.5px; font-weight: 700; color:var(--color-text); }
-.user-plan { font-size: 11.5px; color: var(--color-primary-bright); }
+.user-name { font-size: 13.5px; font-weight: 700; color:#ffffff; }
+.user-plan { font-size: 11.5px; color: #a99dbc; }
 
 @media (max-width: 760px) {
   .sidebar { width: 100%; height: 56px; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--color-border); overflow: hidden; }
-  .sidebar-brand, .sidebar-user, .menu-group-title, .menu-item span:not(.badge-count) { display: none; }
+  .sidebar-brand, .sidebar-user, .sidebar-logout, .menu-group-title, .menu-item span:not(.badge-count) { display: none; }
   .sidebar-menu { display: flex; align-items: center; justify-content: space-between; gap: 5px; padding: 7px 10px; overflow: hidden; }
   .menu-item { flex: 0 0 38px; justify-content: center; padding: 9px; margin: 0; }
   .menu-item:nth-of-type(6), .menu-item:nth-of-type(7), .menu-item:nth-of-type(9), .menu-item .badge-count { display: none; }

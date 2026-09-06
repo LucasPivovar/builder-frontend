@@ -5,11 +5,32 @@ export const PRODUCT_TOUR_EVENT = 'vbs-product-tour';
 export const productTourSteps = [
   {
     route: '/dashboard',
+    selector: '.tour-create-folder',
+    actionSelector: '.tour-create-folder',
+    placement: 'bottom',
+    title: 'Crie a pasta do projeto',
+    body: 'Toda página começa dentro de uma pasta. A pasta reúne as páginas que pertencem ao mesmo projeto.',
+    action: 'open-folder-create',
+    readySelector: '.tour-folder-modal'
+  },
+  {
+    route: '/dashboard',
+    selector: '.tour-folder-modal',
+    actionSelector: '.tour-folder-submit',
+    placement: 'right',
+    title: 'Defina a pasta e o domínio',
+    body: 'Dê um nome à pasta e, se já tiver um domínio, informe-o aqui. As páginas dessa pasta serão publicadas nesse domínio.',
+    action: 'create-folder',
+    readySelector: '.tour-create-page',
+    hiddenSelector: '.tour-folder-modal'
+  },
+  {
+    route: '/dashboard',
     selector: '.tour-create-page',
     actionSelector: '.tour-create-page',
     placement: 'bottom',
-    title: 'Crie sua primeira página',
-    body: 'Abra o fluxo de criação para escolher o formato do projeto.',
+    title: 'Agora crie sua primeira página',
+    body: 'Com a pasta pronta, abra o fluxo de criação para escolher o formato da página.',
     action: 'open-create',
     readySelector: '.tour-create-modal-types'
   },
@@ -29,7 +50,7 @@ export const productTourSteps = [
     actionSelector: '.tour-create-submit',
     placement: 'right',
     title: 'Defina como começar',
-    body: 'Dê um nome à página e escolha entre canvas vazio ou template. Ao criar, você irá direto ao builder.',
+    body: 'Dê um nome à página, confirme a pasta e escolha entre canvas vazio ou template. Ao criar, você irá direto ao builder.',
     action: 'create-page',
     readyRoute: '/builder',
     readySelector: '.tour-object-heading'
@@ -123,7 +144,7 @@ export const productTourSteps = [
     actionSelector: '.tour-export',
     placement: 'bottom',
     title: 'Publique a página',
-    body: 'Publique sua página no servidor ou configure o domínio. Com isso, o fluxo principal está completo.',
+    body: 'Publique a página diretamente no servidor. Se a pasta tiver um domínio, ele será usado automaticamente.',
     action: 'open-export',
     readySelector: '.tour-export-modal',
     finishAfterAction: true

@@ -3,17 +3,16 @@
     <div class="section-header-row">
       <h2 class="section-h2"><i class="bi bi-folder-fill" style="color: var(--color-primary);"></i> Pastas</h2>
       <div class="section-header-actions">
-        <button class="btn-new-folder" @click="$emit('create-folder')">
+        <button class="btn-new-folder tour-create-folder" @click="$emit('create-folder')">
           <i class="bi bi-folder-plus"></i> Nova pasta
         </button>
-        <a href="#" class="see-all-link" @click.prevent="$emit('see-all')">Ver todas →</a>
       </div>
     </div>
 
     <div v-if="folders.length === 0" class="empty-folders">
       <i class="bi bi-folder-plus empty-icon"></i>
       <p>Nenhuma pasta criada. Organize suas páginas em pastas!</p>
-      <button class="btn-create-folder" @click="$emit('create-folder')">
+      <button class="btn-create-folder tour-create-folder" @click="$emit('create-folder')">
         <i class="bi bi-plus"></i> Criar Primeira Pasta
       </button>
     </div>
@@ -30,6 +29,7 @@
           <div>
             <div class="folder-name">{{ folder.name }}</div>
             <div class="folder-items-count">{{ getFolderPageCount(folder.id) }} {{ getFolderPageCount(folder.id) === 1 ? 'página' : 'páginas' }}</div>
+            <div class="folder-domain"><i class="bi bi-globe2"></i>{{ folder.customDomain || 'Domínio não configurado' }}</div>
           </div>
         </div>
         <div class="folder-actions" @click.stop>
@@ -52,7 +52,7 @@ defineProps({
   folders: Array
 });
 
-defineEmits(['see-all', 'open-folder', 'create-folder', 'rename-folder', 'delete-folder']);
+defineEmits(['open-folder', 'create-folder', 'rename-folder', 'delete-folder']);
 
 const { pagesRegistry } = useBuilderStore();
 const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433']);
@@ -72,7 +72,6 @@ function folderAccent(color) {
 .section-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .section-h2 { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--color-text); }
 .section-header-actions { display: flex; align-items: center; gap: 10px; }
-.see-all-link { font-size: 13px; color: var(--color-primary-bright); text-decoration: none; font-weight: 600; }
 
 .btn-new-folder {
   background: var(--color-primary-soft); border: 1px solid var(--color-border-strong);
@@ -89,7 +88,7 @@ function folderAccent(color) {
 .folder-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 14px; padding: 14px 16px;
+  border-radius: 14px; padding: 16px;
   display: flex; align-items: center; justify-content: space-between;
   cursor: pointer; transition: all 0.2s ease;
 }
@@ -104,13 +103,14 @@ function folderAccent(color) {
 .folder-icon { font-size: 24px; }
 .folder-name { font-size: 14px; font-weight: 700; color: var(--color-text); }
 .folder-items-count { font-size: 12px; color: var(--color-text-muted); }
+.folder-domain { display:flex; align-items:center; gap:6px; margin-top:7px; color:var(--color-text-secondary); font-size:11px; font-weight:600; }
+.folder-domain i { color:var(--color-primary-strong); }
 
-.folder-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
-.folder-card:hover .folder-actions { opacity: 1; }
+.folder-actions { display:flex; gap:6px; opacity:1; }
 
 .btn-folder-action {
-  width: 28px; height: 28px; border-radius: 7px; border: none;
-  background: var(--color-primary-subtle); color: var(--color-text-muted); cursor: pointer; font-size: 12px;
+  width:34px; height:34px; border-radius:9px; border:1px solid var(--color-border);
+  background:var(--color-surface); color:var(--color-text-secondary); cursor:pointer; font-size:13px;
 }
 
 .btn-folder-action:hover { background: var(--color-primary-soft); color: var(--color-primary-strong); }

@@ -224,6 +224,16 @@ async function completeStep(indexAtStart) {
 async function performCurrentAction() {
   const step = currentStep.value;
 
+  if (step.action === 'create-folder') {
+    const input = document.querySelector('.tour-folder-name');
+    if (input && !input.value.trim()) {
+      input.value = 'Meu primeiro projeto';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      await nextTick();
+    }
+    return click('.tour-folder-submit');
+  }
+
   if (step.action === 'create-page') {
     fillPageName();
     await nextTick();
@@ -261,18 +271,20 @@ async function handleNext() {
 
 async function preparePreviousStep(targetIndex) {
   if (targetIndex === 0) {
+    click('.tour-folder-modal .btn-close');
+  } else if (targetIndex === 2) {
     click('.create-modal .btn-close');
-  } else if (targetIndex === 1 && isVisible('.tour-page-name')) {
+  } else if (targetIndex === 3 && isVisible('.tour-page-name')) {
     click('.create-modal .btn-secondary');
-  } else if (targetIndex === 2 && isVisible('.tour-create-modal-types')) {
+  } else if (targetIndex === 4 && isVisible('.tour-create-modal-types')) {
     click('.tour-modal-next');
-  } else if (targetIndex === 5 && isVisible('.tour-element-modal')) {
+  } else if (targetIndex === 7 && isVisible('.tour-element-modal')) {
     click('.tour-element-modal .em-close');
-  } else if (targetIndex === 6 && !isVisible('.tour-element-modal')) {
+  } else if (targetIndex === 8 && !isVisible('.tour-element-modal')) {
     click('.tour-section-item');
-  } else if (targetIndex === 8 && !isVisible('.tour-save-modal')) {
+  } else if (targetIndex === 10 && !isVisible('.tour-save-modal')) {
     click('.tour-save');
-  } else if (targetIndex === 10 && !isVisible('.tour-version-modal')) {
+  } else if (targetIndex === 12 && !isVisible('.tour-version-modal')) {
     click('.tour-more-menu > .icon-button');
     await waitFor(() => isVisible('.tour-versions-action'), 1200);
     click('.tour-versions-action');

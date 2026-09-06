@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="modal-backdrop" @click.self="$emit('close')">
-      <div class="folder-modal">
+      <div class="folder-modal tour-folder-modal">
         <div class="modal-header">
           <h3>
             <i :class="mode === 'create' ? 'bi bi-folder-plus' : 'bi bi-pencil-square'"></i>
@@ -15,7 +15,7 @@
             <label class="form-label">Nome da Pasta *</label>
             <input
               type="text"
-              class="form-input"
+              class="form-input tour-folder-name"
               v-model="folderName"
               placeholder="Ex.: Funil principal ou Campanha de lançamento"
               autofocus
@@ -25,7 +25,7 @@
 
           <div class="form-group">
             <label class="form-label">Domínio da pasta (opcional)</label>
-            <input class="form-input" v-model.trim="customDomain" placeholder="ofertas.seudominio.com" />
+            <input class="form-input tour-folder-domain" v-model.trim="customDomain" placeholder="ofertas.seudominio.com" />
             <small>As páginas serão publicadas em domínio/slug-da-página. Configure o DNS e republique as páginas após alterar.</small>
           </div>
           <div v-if="mode === 'create'" class="form-group">
@@ -53,7 +53,7 @@
 
         <div class="modal-footer">
           <button class="btn-cancel" @click="$emit('close')">Cancelar</button>
-          <button class="btn-confirm" :disabled="!folderName.trim()" @click="handleConfirm">
+          <button class="btn-confirm tour-folder-submit" :disabled="!folderName.trim()" @click="handleConfirm">
             <i class="bi bi-folder-plus"></i>
             {{ mode === 'create' ? 'Criar Pasta' : 'Salvar' }}
           </button>

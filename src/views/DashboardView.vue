@@ -28,31 +28,40 @@
         <template v-if="activeTab === 'home'">
           <div class="page-header-title">
             <div class="title-group">
-              <h1>Página Inicial</h1>
-              <p>Visão geral dos seus projetos, pastas e templates</p>
+              <h1>Seus projetos</h1>
+              <p>Escolha uma pasta para acessar e organizar as páginas do projeto</p>
             </div>
+            <button class="btn-create-new" @click="showFolderModal = true"><i class="bi bi-folder-plus"></i> Nova pasta</button>
           </div>
-
-          <QuickActions
-            :pages-count="pagesRegistry.length"
-            :online-pages-count="onlinePagesCount"
-            :draft-pages-count="draftPagesCount"
-            :folders-count="foldersRegistry.length"
-          />
-          <RecentPagesSection
-            :pages="recentPages"
-            @create-new="openCreateModal()"
-            @see-all="setActiveTab('todas-paginas')"
-            @edit-page="handleEditPage"
-            @more-options="showPageOptions"
-          />
-          <FoldersGrid
-            :folders="foldersRegistry"
-            @see-all="setActiveTab('pastas')"
-            @open-folder="openFolder"
-            @create-folder="showFolderModal = true"
-          />
-          <TemplateFoldersGrid @open-template-folder="setActiveTab" />
+          <div class="home-overview-grid">
+            <FoldersGrid
+              :folders="foldersRegistry"
+              @open-folder="openFolder"
+              @create-folder="showFolderModal = true"
+              @rename-folder="handleRenameFolder"
+              @delete-folder="handleDeleteFolder"
+            />
+            <aside class="recent-activity" aria-label="Últimas atualizações">
+              <div class="activity-heading">
+                <div>
+                  <span class="activity-eyebrow">ATIVIDADE</span>
+                  <h2>Últimas atualizações</h2>
+                </div>
+                <button type="button" title="Ver notificações" @click="openNotifications"><i class="bi bi-arrow-up-right"></i></button>
+              </div>
+              <div v-if="homeActivity.length" class="activity-list">
+                <article v-for="item in homeActivity" :key="item.id" class="activity-item">
+                  <span class="activity-icon" :class="`is-${item.type}`"><i :class="activityIcon(item.type)"></i></span>
+                  <div><strong>{{ item.title }}</strong><p>{{ item.message }}</p><time>{{ formatDate(item.createdAt) }}</time></div>
+                </article>
+              </div>
+              <div v-else class="activity-empty">
+                <i class="bi bi-clock-history"></i>
+                <strong>Nenhuma atualização ainda</strong>
+                <p>Salvamentos, publicações e alterações de DNS aparecerão aqui.</p>
+              </div>
+            </aside>
+          </div>
         </template>
 
         <!-- ══ PÁGINAS ══ -->
@@ -101,7 +110,6 @@
             </div>
             <FoldersGrid
               :folders="foldersRegistry"
-              @see-all="setActiveTab('pastas')"
               @open-folder="openFolder"
               @create-folder="showFolderModal = true"
               @rename-folder="handleRenameFolder"
@@ -118,6 +126,7 @@
               @edit-page="handleEditPage"
               @more-options="showPageOptions"
               @download-folder="downloadSelectedFolder"
+              @edit-folder="handleRenameFolder"
               @publish-page="handlePublishPage"
               @assign-dns="handleAssignDns"
               @open-publication="openPublicationUrl"
@@ -168,7 +177,8 @@
         </template>
         <template v-else-if="activeTab === 'templates-quiz'"><div class="page-header-title"><div class="title-group"><h1>Biblioteca: Templates de Quiz</h1><p>Modelos interativos com perguntas, análise e resultado</p></div></div><TemplatesGrid templateType="quiz" @use-template="handleOpenBuilder" /></template>
 
-        <SettingsPanel v-else-if="activeTab === 'settings' || activeTab === 'profile' || activeTab === 'billing'" />
+        <SettingsPanel v-else-if="activeTab === 'settings' || activeTab === 'profile'" />
+        <PlansPanel v-else-if="activeTab === 'plans' || activeTab === 'billing'" @open-support="setActiveTab('support')" />
         <SupportPanel v-else-if="activeTab === 'support'" />
       </main>
     </div>
@@ -215,8 +225,8 @@
       :isOpen="showFolderModal"
       :mode="folderModalMode"
       :folder="folderBeingRenamed"
-      @close="showFolderModal = false"
-      @done="showFolderModal = false"
+      @close="closeFolderModal"
+      @done="handleFolderDone"
     />
 
     <NotificationsModal
@@ -240,12 +250,9 @@ import { useBuilderStore } from '../composables/useBuilderStore';
 
 import DashboardSidebar from '../components/dashboard/DashboardSidebar.vue';
 import DashboardHeader from '../components/dashboard/DashboardHeader.vue';
-import QuickActions from '../components/dashboard/QuickActions.vue';
-import RecentPagesSection from '../components/dashboard/RecentPagesSection.vue';
 import PagesByFolderSection from '../components/dashboard/PagesByFolderSection.vue';
 import AnalyticsOverview from '../components/dashboard/AnalyticsOverview.vue';
 import FoldersGrid from '../components/dashboard/FoldersGrid.vue';
-import TemplateFoldersGrid from '../components/dashboard/TemplateFoldersGrid.vue';
 import TemplatesGrid from '../components/dashboard/TemplatesGrid.vue';
 import FolderDetail from '../components/dashboard/FolderDetail.vue';
 import CreateNewModal from '../components/dashboard/CreateNewModal.vue';
@@ -255,6 +262,7 @@ import ConfirmModal from '../components/dashboard/ConfirmModal.vue';
 import FolderModal from '../components/dashboard/FolderModal.vue';
 import NotificationsModal from '../components/dashboard/NotificationsModal.vue';
 import SettingsPanel from '../components/dashboard/SettingsPanel.vue';
+import PlansPanel from '../components/dashboard/PlansPanel.vue';
 import SupportPanel from '../components/dashboard/SupportPanel.vue';
 import { PRODUCT_TOUR_EVENT, useProductTour } from '../composables/useProductTour';
 import { clearAuthSession, clearNotifications, deletePublication, getAnalyticsSummary, getNotifications, getPublications, markAllNotificationsRead, markNotificationRead, publishPage, verifyPublicationDomain } from '../services/api';
@@ -268,7 +276,9 @@ const {
   pagesRegistry, foldersRegistry, customTemplatesRegistry, flushWorkspaceToBackend, updatePageDetails, closeTemplateBuilder, deletePage
 } = useBuilderStore();
 
-const activeTab = ref('home');
+const requestedDashboardTab = sessionStorage.getItem('vbs_dashboard_tab');
+const activeTab = ref(requestedDashboardTab || 'home');
+if (requestedDashboardTab) sessionStorage.removeItem('vbs_dashboard_tab');
 const searchQuery = ref('');
 const selectedFolder = ref(null);
 const showCreateModal = ref(false);
@@ -280,6 +290,7 @@ const templateLibraryFilter = ref('all');
 const showFolderModal = ref(false);
 const folderModalMode = ref('create');
 const folderBeingRenamed = ref(null);
+const createPageAfterFolder = ref(false);
 const createModalRef = ref(null);
 const showNotifications = ref(false);
 const notificationsLoading = ref(false);
@@ -359,11 +370,37 @@ function setActiveTab(tab) {
 }
 
 function openCreateModal(folderId = null) {
+  if (!foldersRegistry.length) {
+    createPageAfterFolder.value = true;
+    folderModalMode.value = 'create';
+    folderBeingRenamed.value = null;
+    showFolderModal.value = true;
+    showToast('Crie uma pasta antes de criar a página.', 'info');
+    return;
+  }
   creationFolderId.value = folderId || '';
   showCreateModal.value = true;
 }
 
+function handleFolderDone(folder) {
+  showFolderModal.value = false;
+  if (createPageAfterFolder.value && folder?.id) {
+    createPageAfterFolder.value = false;
+    creationFolderId.value = folder.id;
+    showCreateModal.value = true;
+  }
+}
+
+function closeFolderModal() {
+  showFolderModal.value = false;
+  createPageAfterFolder.value = false;
+}
+
 function handleOpenBuilder(templateKey) {
+  if (!foldersRegistry.length) {
+    openCreateModal();
+    return;
+  }
   closeTemplateBuilder();
   if (templateKey && typeof templateKey === 'string') {
     loadTemplate(templateKey);
@@ -622,26 +659,14 @@ function normalizedPageType(pageOrType) {
   return 'funil';
 }
 
-const onlinePagesCount = computed(() => pagesRegistry.filter(page => Boolean(findPublication(page.id)) || page.statusClass === 'published' || page.status === 'published').length);
-const draftPagesCount = computed(() => pagesRegistry.length - onlinePagesCount.value);
 const emailTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => Boolean(template.emailMode) || String(template.category || '').toLowerCase().includes('mail')).length);
 const funilTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => { const category=String(template.category||'').toLowerCase(); return !template.emailMode && !template.quizMode && !category.includes('mail') && !category.includes('quiz'); }).length);
 const quizTemplatesCount = computed(() => 1 + customTemplatesRegistry.filter(template => template.quizMode || String(template.category || '').toLowerCase().includes('quiz')).length);
+const homeActivity = computed(() => notifications.value.slice(0, 6));
 
-const recentPages = computed(() => {
-  return [...pagesRegistry]
-    .sort((a, b) => new Date(b.lastEditedAt || b.updatedAt || 0) - new Date(a.lastEditedAt || a.updatedAt || 0))
-    .slice(0, 5)
-    .map(p => ({
-      id: p.id,
-      title: p.name,
-      category: pageCategory(p.type),
-      ...pagePublicationState(p),
-      date: formatDate(p.lastEditedAt || p.updatedAt),
-      rawUpdatedAt: p.lastEditedAt || p.updatedAt,
-      templateId: p.id
-    }));
-});
+function activityIcon(type) {
+  return ({ success:'bi bi-check-lg', pending:'bi bi-hourglass-split', warning:'bi bi-exclamation-lg', error:'bi bi-x-lg', security:'bi bi-shield-check', update:'bi bi-lightning-charge-fill' })[type] || 'bi bi-pencil-square';
+}
 
 const filteredPages = computed(() => {
   return pagesRegistry.filter(p => {
@@ -876,6 +901,27 @@ async function selectNotification(item) {
 }
 
 .btn-create-new:hover { background: var(--color-primary-hover); }
+.home-overview-grid { display:grid; grid-template-columns:minmax(0, 7fr) minmax(280px, 3fr); gap:22px; align-items:start; }
+.home-overview-grid > :deep(.dashboard-section) { width:100%; min-width:0; margin-bottom:0; }
+.home-overview-grid > :deep(.dashboard-section .folders-grid) { grid-template-columns:1fr; width:100%; }
+.home-overview-grid > :deep(.dashboard-section .folder-card) { width:100%; min-height:72px; box-sizing:border-box; }
+.home-overview-grid > :deep(.dashboard-section .empty-folders) { width:100%; min-height:210px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.recent-activity { min-width:0; overflow:hidden; border:1px solid var(--color-border); border-radius:16px; background:var(--color-surface); box-shadow:var(--shadow-card); }
+.activity-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px; border-bottom:1px solid var(--color-border); }
+.activity-heading h2 { margin:3px 0 0; color:var(--color-text); font:800 17px/1.2 var(--font-display); }
+.activity-eyebrow { color:var(--color-primary-strong); font-size:10px; font-weight:900; letter-spacing:.12em; }
+.activity-heading button { width:36px; height:36px; padding:0; border:0 !important; border-radius:10px; background:#edf6ff !important; color:#2563eb !important; box-shadow:none !important; }
+.activity-heading button:hover { background:#dbeafe !important; color:#1d4ed8 !important; }
+.activity-list { display:flex; flex-direction:column; padding:6px 14px; }
+.activity-item { display:grid; grid-template-columns:38px minmax(0,1fr); gap:11px; padding:13px 2px; border-bottom:1px solid var(--color-border); }
+.activity-item:last-child { border-bottom:0; }
+.activity-icon { width:36px; height:36px; display:grid; place-items:center; border-radius:10px; background:var(--color-primary-soft); color:var(--color-primary-strong); }
+.activity-icon.is-success { background:#dcfce7; color:#166534; }.activity-icon.is-pending,.activity-icon.is-warning { background:#fef3c7; color:#92400e; }.activity-icon.is-error { background:var(--color-danger-soft); color:var(--color-danger-strong); }
+.activity-item strong { display:block; overflow:hidden; color:var(--color-text); font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
+.activity-item p { display:-webkit-box; overflow:hidden; margin:4px 0; color:var(--color-text-secondary); font-size:11px; line-height:1.4; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.activity-item time { color:var(--color-text-muted); font-size:10px; font-weight:700; }
+.activity-empty { min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px; color:var(--color-text-muted); text-align:center; }
+.activity-empty > i { width:44px; height:44px; display:grid; place-items:center; margin-bottom:10px; border-radius:13px; background:var(--color-primary-soft); color:var(--color-primary-strong); font-size:19px; }.activity-empty strong { color:var(--color-text); font-size:13px; }.activity-empty p { max-width:240px; margin:6px 0 0; font-size:11px; line-height:1.45; }
 .dashboard-header-actions { display:flex; align-items:center; gap:8px; }
 .btn-tour-launch { display:flex; align-items:center; gap:7px; border:1px solid var(--color-border-strong); background:var(--color-surface); color:var(--color-primary-strong); padding:8px 13px; border-radius:10px; font:inherit; font-size:12.5px; font-weight:800; cursor:pointer; }
 .btn-tour-launch:hover { background:var(--color-primary-soft); }
@@ -898,7 +944,9 @@ async function selectNotification(item) {
   .dashboard-header-actions .btn-create-new, .dashboard-header-actions .btn-tour-launch { flex:1; justify-content:center; }
   .template-filter-tabs { width: 100%; }
   .template-filter-tabs button { flex: 1; }
+  .home-overview-grid { grid-template-columns:1fr; }
 }
+@media (min-width:761px) and (max-width:1100px) { .home-overview-grid { grid-template-columns:minmax(0, 3fr) minmax(260px, 2fr); } }
 
 /* Uma única paleta para todas as áreas do painel, inclusive componentes legados. */
 :deep(.folder-card), :deep(.template-folder-card), :deep(.page-item-card), :deep(.template-category-block), :deep(.folder-header), :deep(.empty-folder-box), :deep(.empty-folders), :deep(.empty-email-templates), :deep(.dashboard-filter-panel) { background:var(--color-surface) !important; border-color:var(--color-border) !important; }

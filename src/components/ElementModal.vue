@@ -156,6 +156,15 @@
                 <div :style="{ height: `${state.pageSettings.quizProgressHeight || 6}px` }"><i :style="{ width: '60%', backgroundColor: state.pageSettings.quizProgressColor || '#612bf4' }"></i></div>
               </div>
             </div>
+            <div v-if="state.builderMode === 'quiz'" class="em-field em-full">
+              <label class="em-lbl"><i class="bi bi-palette2"></i> Aparência das etapas e respostas</label>
+              <div class="em-gs-grid">
+                <div class="em-field"><label class="em-lbl">Fundo da etapa</label><div class="em-color-row"><input v-model="state.pageSettings.quizCardBg" class="em-color-dot" type="color"><input v-model="state.pageSettings.quizCardBg" class="em-input" type="text"></div></div>
+                <div class="em-field"><label class="em-lbl">Fundo das respostas</label><div class="em-color-row"><input v-model="state.pageSettings.quizOptionBg" class="em-color-dot" type="color"><input v-model="state.pageSettings.quizOptionBg" class="em-input" type="text"></div></div>
+                <div class="em-field"><label class="em-lbl">Borda das respostas</label><div class="em-color-row"><input v-model="state.pageSettings.quizOptionBorder" class="em-color-dot" type="color"><input v-model="state.pageSettings.quizOptionBorder" class="em-input" type="text"></div></div>
+                <div class="em-field"><label class="em-lbl">Cor de destaque</label><div class="em-color-row"><input v-model="state.pageSettings.quizAccent" class="em-color-dot" type="color"><input v-model="state.pageSettings.quizAccent" class="em-input" type="text"></div></div>
+              </div>
+            </div>
             <div class="em-field em-full">
               <label class="em-lbl">
                 <i class="bi bi-lightning-charge-fill"></i> Meta Pixel (ID ou Script Completo)
@@ -516,8 +525,9 @@
                     </div>
 
                     <div class="em-field" style="margin-top:6px;">
-                      <label class="em-lbl">{{ elem.type === 'quiz-next' ? 'Destino ao concluir a última etapa (opcional)' : 'Link de Redirecionamento' }}</label>
-                      <input v-model="elem.url" class="em-input" type="text" placeholder="https://..." />
+                      <label class="em-lbl">{{ elem.type === 'quiz-next' ? 'Redirecionamento ao concluir o quiz' : 'Link de Redirecionamento' }}</label>
+                      <input v-model="elem.url" class="em-input" type="url" :placeholder="elem.type === 'quiz-next' ? 'https://seudominio.com/oferta' : 'https://...'" />
+                      <small v-if="elem.type === 'quiz-next'">No botão da última etapa, informe a URL completa do resultado ou da oferta. Nos anteriores, o botão apenas avança.</small>
                       <div style="display:flex; gap:14px; margin-top:6px; flex-wrap:wrap; align-items:center;">
                         <label v-if="elem.type !== 'quiz-next'" class="em-chk-lbl"><input type="checkbox" v-model="elem.openInNewTab" /> Abrir em nova aba</label>
                         <label class="em-chk-lbl"><input type="checkbox" v-model="elemStyle.isGlow" /> <i class="bi bi-stars"></i> Efeito Glow (Brilho Neon)</label>

@@ -7,10 +7,7 @@
       </div>
 
       <div class="element-modal-body">
-        <div v-if="serverOnly" class="publish-steps" aria-label="Etapas da publicação">
-          <span :class="{ active: step === 1 }">1. Revisar página</span><i class="bi bi-chevron-right" aria-hidden="true"></i><span :class="{ active: step === 2 }">2. Configurar domínio</span>
-        </div>
-        <p v-if="serverOnly">{{ publishResult ? 'Sua página foi publicada. Acesse pelo endereço abaixo.' : step === 1 ? 'Confira os detalhes antes de continuar com a publicação.' : 'Informe o domínio da página ou deixe em branco para usar o endereço do servidor.' }}</p>
+        <p v-if="serverOnly">{{ publishResult ? 'Sua página foi publicada. Acesse pelo endereço abaixo.' : 'Publique sua página diretamente no servidor.' }}</p>
         <p v-else style="font-size: 13.5px; color: var(--text-muted); line-height: 1.4;">
           Seu código HTML foi gerado. Você pode baixar <strong>{{ exportFileName }}</strong>, abrir a prévia, copiar o código ou publicar no servidor.
         </p>
@@ -21,31 +18,19 @@
           v-model="state.exportedHTML"
         ></textarea>
 
-        <div v-if="step === 1 && warnings.length" class="export-warnings">
+        <div v-if="!publishResult && warnings.length" class="export-warnings">
           <strong><i class="bi bi-exclamation-circle"></i> Revisar antes de publicar</strong>
           <ul><li v-for="warning in warnings" :key="warning">{{ warning }}</li></ul>
         </div>
-        <div v-else-if="step === 1" class="export-ready"><i class="bi bi-check-circle-fill"></i> {{ serverOnly ? 'Página pronta para publicar.' : 'Página pronta para exportar.' }}</div>
+        <div v-else-if="!publishResult" class="export-ready"><i class="bi bi-check-circle-fill"></i> {{ serverOnly ? 'Página pronta para publicar.' : 'Página pronta para exportar.' }}</div>
 
-        <div v-if="serverOnly && step === 2" class="publish-panel">
-          <template v-if="!publishResult">
-          <label class="publish-label" for="publish-domain">Domínio próprio opcional</label>
-          <input
-            id="publish-domain"
-            class="em-input"
-            v-model.trim="customDomain"
-            :disabled="publishing"
-            placeholder="ex: oferta.seudominio.com"
-          >
-          </template>
+        <div v-if="publishResult || publishError" class="publish-panel">
           <div v-if="publishResult" class="publish-result">
             <strong><i class="bi bi-broadcast-pin"></i> Publicado no servidor</strong>
-            <a :href="publishResult.customDomainUrl || publishResult.publicUrl" target="_blank" rel="noopener">
-              {{ publishResult.customDomainUrl || publishResult.publicUrl }}
+            <a :href="publishResult.publicUrl" target="_blank" rel="noopener">
+              {{ publishResult.publicUrl }}
             </a>
-            <p v-if="publishResult.dns">
-              DNS: crie um {{ publishResult.dns.type }} de <b>{{ publishResult.dns.host }}</b> para <b>{{ publishResult.dns.value }}</b>.
-            </p>
+
           </div>
           <div v-if="publishError" class="publish-error">{{ publishError }}</div>
         </div>
@@ -59,10 +44,8 @@
           <i class="bi bi-clipboard"></i> {{ copied ? 'Código Copiado!' : 'Copiar Código HTML' }}
         </button>
         <template v-if="serverOnly">
-          <button v-if="step === 2 && !publishResult" class="btn btn-secondary" :disabled="publishing" @click="step = 1">Voltar</button>
           <button v-if="publishResult" class="btn btn-primary" @click="state.isExportModalOpen = false">Concluir</button>
-          <button v-else-if="step === 1" class="btn btn-primary" @click="step = 2"><i class="bi bi-cloud-arrow-up"></i> Publicar <i class="bi bi-arrow-right"></i></button>
-          <button v-else class="btn btn-primary" :disabled="publishing" @click="publishCurrentPage"><i class="bi bi-cloud-arrow-up"></i> {{ publishing ? 'Publicando...' : 'Confirmar publicação' }}</button>
+          <button v-else class="btn btn-primary" :disabled="publishing" @click="publishCurrentPage"><i class="bi bi-cloud-arrow-up"></i> {{ publishing ? 'Publicando...' : 'Publicar' }}</button>
         </template>
         <button v-if="!serverOnly" class="btn btn-primary" @click="downloadExportCode">
           <i class="bi bi-download"></i> Baixar HTML
@@ -81,14 +64,12 @@ import { validateExport } from '../utils/exportValidation';
 
 const { state, openPreviewModal, showToast, flushWorkspaceToBackend } = useBuilderStore();
 const serverOnly = computed(() => state.builderMode !== 'email');
-const step = ref(1);
 const copied = ref(false);
 const publishing = ref(false);
 const publishError = ref('');
 const publishResult = ref(null);
-const customDomain = ref('');
 watch(() => state.isExportModalOpen, (open) => {
-  if (open) { step.value = 1; publishResult.value = null; publishError.value = ''; customDomain.value = ''; }
+  if (open) { publishResult.value = null; publishError.value = ''; }
 });
 const warnings = computed(() => validateExport(state.rows, state.pageSettings));
 const exportFileName = computed(() => state.builderMode === 'email' ? 'pagina-email.html' : state.builderMode === 'quiz' ? 'quiz-interativo.html' : 'pagina-vsl.html');
@@ -123,7 +104,6 @@ async function downloadExportCode() {
 async function publishCurrentPage() {
   publishError.value = '';
   publishResult.value = null;
-
   if (!state.currentPageId) {
     publishError.value = 'Salve a página antes de publicar no servidor.';
     showToast('Salve a página antes de publicar.', 'error');
@@ -142,7 +122,6 @@ async function publishCurrentPage() {
     publishResult.value = await publishPage({
       pageId: state.currentPageId,
       pageName: state.currentPageName || state.pageSettings.pageTitle || 'Página publicada',
-      customDomain: customDomain.value || undefined,
       html: state.exportedHTML
     });
     showToast('Página publicada no servidor!', 'success');

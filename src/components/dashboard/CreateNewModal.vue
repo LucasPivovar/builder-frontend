@@ -70,17 +70,14 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Pasta Destino</label>
+              <label class="form-label">Pasta Destino *</label>
               <div class="folder-select-row">
               <select class="form-select" v-model="selectedFolderId">
-                  <option value="">Sem pasta (Raiz)</option>
+                  <option value="" disabled>Selecione uma pasta</option>
                   <option v-for="folder in flatFolders" :key="folder.id" :value="folder.id">
                     {{ '  '.repeat(folder.depth) }}{{ folder.name }}
                   </option>
                 </select>
-                <button class="btn-new-folder" @click="quickCreateFolder" title="Criar nova pasta">
-                  <i class="bi bi-folder-plus"></i>
-                </button>
               </div>
             </div>
 
@@ -163,7 +160,7 @@
           <button
             v-else-if="step === 2"
             class="btn-primary tour-create-submit"
-            :disabled="!pageName.trim()"
+            :disabled="!pageName.trim() || !selectedFolderId"
             @click="handleCreate"
           >
             <i class="bi" :class="templateKey ? 'bi-magic' : 'bi-plus-circle-fill'"></i> {{ templateKey ? 'Criar com template' : 'Criar página' }}
@@ -188,7 +185,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'created']);
 
-const { foldersRegistry, customTemplatesRegistry, createFolder } = useBuilderStore();
+const { foldersRegistry, customTemplatesRegistry } = useBuilderStore();
 
 const step = ref(1);
 const selectedType = ref('funil');
@@ -201,7 +198,7 @@ watch(() => props.isOpen, (open) => {
   step.value = 1;
   selectedType.value = 'funil';
   pageName.value = '';
-  selectedFolderId.value = props.initialFolderId ? String(props.initialFolderId) : '';
+  selectedFolderId.value = props.initialFolderId ? String(props.initialFolderId) : String(foldersRegistry[0]?.id || '');
   templateKey.value = '';
 });
 
@@ -247,20 +244,12 @@ const selectedTemplateName = computed(() => {
   return templateOptions.value.find(option => option.key === templateKey.value)?.name || 'Usar template';
 });
 
-function quickCreateFolder() {
-  const name = prompt('Nome da nova pasta:');
-  if (name && name.trim()) {
-    const f = createFolder(name.trim(), null);
-    selectedFolderId.value = f.id;
-  }
-}
-
 function handleCreate() {
-  if (!pageName.value.trim()) return;
+  if (!pageName.value.trim() || !selectedFolderId.value) return;
   emit('created', {
     name: pageName.value.trim(),
     type: selectedType.value,
-    folderId: selectedFolderId.value || null,
+    folderId: selectedFolderId.value,
     templateKey: templateKey.value
   });
   // Reset
