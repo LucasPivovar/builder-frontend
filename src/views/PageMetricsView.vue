@@ -77,6 +77,7 @@
               </div>
 
               <div class="hero-actions">
+                <select v-model="periodDays" class="metrics-period" @change="refreshMetrics"><option value="7">7 dias</option><option value="30">30 dias</option><option value="90">90 dias</option><option value="all">Todo período</option></select>
                 <a
                   v-if="publicationUrl"
                   class="btn-hero-action primary"
@@ -375,7 +376,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar.vue';
 import DashboardHeader from '../components/dashboard/DashboardHeader.vue';
@@ -400,6 +401,7 @@ const { start: startTour } = useProductTour();
 
 const loading = ref(true);
 const refreshing = ref(false);
+const periodDays = ref('30');
 const searchQuery = ref('');
 const analytics = ref({ totals: {}, pages: [], videos: [] });
 const publications = ref([]);
@@ -499,8 +501,9 @@ const lastSyncText = computed(() => {
 
 async function loadData() {
   try {
+    const from = periodDays.value === 'all' ? undefined : new Date(Date.now() - Number(periodDays.value) * 86400000).toISOString();
     const [summary, publicationList, notifs] = await Promise.all([
-      getAnalyticsSummary().catch(() => ({ totals: {}, pages: [], videos: [] })),
+      getAnalyticsSummary({ pageId: pageId.value, from }).catch(() => ({ totals: {}, pages: [], videos: [] })),
       getPublications().catch(() => []),
       getNotifications().catch(() => ({ items: [], unread: 0 }))
     ]);
@@ -516,7 +519,10 @@ async function loadData() {
 
 onMounted(async () => {
   await loadData();
+  metricsRefreshTimer = window.setInterval(loadData, 60000);
 });
+let metricsRefreshTimer;
+onBeforeUnmount(() => clearInterval(metricsRefreshTimer));
 
 async function refreshMetrics() {
   refreshing.value = true;
@@ -653,6 +659,7 @@ function exportEmailMetrics() {
 </script>
 
 <style scoped>
+.metrics-period{min-height:38px;padding:0 10px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-surface);color:var(--color-text);font:inherit;font-size:11px;font-weight:700}
 .app-layout {
   display: flex;
   height: 100vh;

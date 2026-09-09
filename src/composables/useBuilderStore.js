@@ -194,7 +194,10 @@ function workspaceSnapshot() {
     templates: JSON.parse(JSON.stringify(customTemplatesRegistry)),
     versions: JSON.parse(JSON.stringify(versionsRegistry)),
     metrics: JSON.parse(JSON.stringify(metricsRegistry)),
-    settings: {}
+    settings: {
+      activeThemeKey: state.activeThemeKey,
+      productTourSeen: localStorage.getItem('vbs_tour_seen') === 'true'
+    }
   };
 }
 
@@ -212,6 +215,8 @@ function applyWorkspaceData(data = {}) {
     replaceRegistry(customTemplatesRegistry, data.templates);
     replaceRegistry(versionsRegistry, data.versions);
     replaceRegistry(metricsRegistry, data.metrics);
+    if (data.settings?.activeThemeKey) state.activeThemeKey = data.settings.activeThemeKey;
+    if (data.settings?.productTourSeen) localStorage.setItem('vbs_tour_seen', 'true');
     lsSet('pages_registry_v1', pagesRegistry);
     lsSet('folders_registry_v1', foldersRegistry);
     lsSet('custom_templates_v1', customTemplatesRegistry);
@@ -257,8 +262,16 @@ function flushWorkspaceToBackend() {
     .then(() => persistWorkspaceNow())
     .catch(async (error) => {
       if (error.status === 409) {
-        await hydrateWorkspaceFromBackend();
-        showToast('Os dados mais recentes foram recarregados do servidor.', 'info');
+        const localSnapshot = workspaceSnapshot();
+        const keepLocal = window.confirm('Este workspace foi alterado em outra sessão. Pressione OK para manter suas alterações locais ou Cancelar para carregar a versão do servidor.');
+        if (keepLocal && Number.isInteger(error.payload?.currentRevision)) {
+          const response = await saveWorkspaceRequest({ revision:error.payload.currentRevision, ...localSnapshot });
+          backendRevision = response.revision;
+          showToast('Suas alterações locais foram mantidas sobre a versão mais recente.', 'success');
+        } else {
+          await hydrateWorkspaceFromBackend();
+          showToast('A versão mais recente do servidor foi carregada.', 'info');
+        }
       } else if (!syncErrorShown) {
         syncErrorShown = true;
         showToast('Não foi possível sincronizar com o backend.', 'error');
@@ -539,7 +552,7 @@ export function useBuilderStore() {
     if (type === 'paragraph') return { ...base, content: 'Texto do parágrafo...', style: { ...baseStyle, fontSize: '15px', fontWeight: '400', textColor: '#ccc', hasTransparentBg: true } };
     if (type === 'button') return { ...base, content: 'CLIQUE AQUI', url: '', openInNewTab: true, subtext: '', style: { ...baseStyle, bgColor: '#fff', textColor: '#000', paddingVertical: 14, paddingHorizontal: 28, borderRadius: 10 } };
     if (type === 'top-banner') return { ...base, content: 'ATENÇÃO: NÃO FECHE ESTA PÁGINA', style: { ...baseStyle, bgColor: '#dc2626', textColor: '#fff', fontSize: '15px' } };
-    if (type === 'vturb-player') return { ...base, content: '', vturbBody: '', vturbHead: '', style: { ...baseStyle, maxWidth: '320px', marginTop: 6, marginBottom: 6 } };
+    if (type === 'vturb-player') return { ...base, content: '', vturbBody: '', vturbHead: '', hostedVideoId: '', hostedVideoUrl: '', hostedVideoName: '', hostedVideoPoster: '', videoControls: true, videoAutoplay: false, videoMuted: false, videoLoop: false, style: { ...baseStyle, maxWidth: '640px', marginTop: 6, marginBottom: 6 } };
     if (type === 'pitch-button') return { ...base, content: 'QUERO MEU ACESSO AGORA', url: '', openInNewTab: true, subtext: 'Acesso imediato', style: { ...baseStyle, bgColor: '#fff', textColor: '#000', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, isGlow: false } };
     if (type === 'live-viewers') return { ...base, content: 'espectadores estão assistindo', minViewers: 100, maxViewers: 250, style: { ...baseStyle, textColor: '#fff', countColor: '#38bdf8', fontSize: '18px', marginTop: 4, marginBottom: 4 } };
     if (type === 'meta-pixel') return { ...base, pixelId: '', pixelEvent: 'PageView', content: 'Meta Pixel', style: baseStyle };
@@ -805,12 +818,15 @@ export function useBuilderStore() {
     }
   }
 
-  function updatePageDetails(pageId, { name, folderId } = {}) {
+  function updatePageDetails(pageId, { name, folderId, slug } = {}) {
     const page = pagesRegistry.find(item => item.id === pageId);
     if (!page) return false;
     const cleanName = String(name || '').trim();
     if (cleanName) page.name = cleanName;
     if (folderId !== undefined) page.folderId = folderId || null;
+    if (slug !== undefined) {
+      page.pageSettings = { ...(page.pageSettings || {}), publicationSlug: cleanSlug(slug || cleanName || page.name) };
+    }
     page.lastEditedAt = new Date().toISOString();
     page.updatedAt = page.lastEditedAt;
     if (state.currentPageId === page.id) {
@@ -820,6 +836,16 @@ export function useBuilderStore() {
     lsSet('pages_registry_v1', pagesRegistry);
     showToast('Projeto atualizado!', 'success');
     return true;
+  }
+
+  function cleanSlug(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80);
   }
 
   // ─── Custom Templates Registry ─────────────────────────────────────────────

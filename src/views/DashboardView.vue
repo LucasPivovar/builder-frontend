@@ -35,6 +35,7 @@
           <div class="home-overview-grid">
             <FoldersGrid
               :folders="foldersRegistry"
+              :publications="publications"
               @open-folder="openFolder"
               @create-folder="showFolderModal = true"
               @rename-folder="handleRenameFolder"
@@ -89,7 +90,7 @@
             @edit-page="handleEditPage"
             @more-options="showPageOptions"
             @publish-page="handlePublishPage"
-            @assign-dns="handleAssignDns"
+            @edit-folder-domain="handleFolderDomainById"
             @open-publication="openPublicationUrl"
             @open-metrics="openPageMetrics"
           />
@@ -109,6 +110,7 @@
             </div>
             <FoldersGrid
               :folders="foldersRegistry"
+              :publications="publications"
               @open-folder="openFolder"
               @create-folder="showFolderModal = true"
               @rename-folder="handleRenameFolder"
@@ -120,14 +122,15 @@
             <FolderDetail
               :folder="selectedFolder"
               :pages="selectedFolderPages"
+              :publications="publications"
               @back="selectedFolder = null"
               @open-builder="openCreateModal(selectedFolder.id)"
               @edit-page="handleEditPage"
               @more-options="showPageOptions"
               @download-folder="downloadSelectedFolder"
               @edit-folder="handleRenameFolder"
+              @edit-domain="handleFolderDomain"
               @publish-page="handlePublishPage"
-              @assign-dns="handleAssignDns"
               @open-publication="openPublicationUrl"
               @open-metrics="openPageMetrics"
             />
@@ -177,8 +180,10 @@
         <template v-else-if="activeTab === 'templates-quiz'"><div class="page-header-title"><div class="title-group"><h1>Biblioteca: Templates de Quiz</h1><p>Modelos interativos com perguntas, análise e resultado</p></div></div><TemplatesGrid templateType="quiz" @use-template="handleOpenBuilder" /></template>
 
         <SettingsPanel v-else-if="activeTab === 'settings' || activeTab === 'profile'" />
+        <BackupsPanel v-else-if="activeTab === 'backups'" />
         <PlansPanel v-else-if="activeTab === 'plans' || activeTab === 'billing'" @open-support="setActiveTab('support')" />
         <SupportPanel v-else-if="activeTab === 'support'" />
+        <EmailCampaignsPanel v-else-if="activeTab === 'email-campaigns'" />
       </main>
     </div>
 
@@ -262,6 +267,8 @@ import FolderModal from '../components/dashboard/FolderModal.vue';
 import NotificationsModal from '../components/dashboard/NotificationsModal.vue';
 import SettingsPanel from '../components/dashboard/SettingsPanel.vue';
 import PlansPanel from '../components/dashboard/PlansPanel.vue';
+import BackupsPanel from '../components/dashboard/BackupsPanel.vue';
+import EmailCampaignsPanel from '../components/dashboard/EmailCampaignsPanel.vue';
 import SupportPanel from '../components/dashboard/SupportPanel.vue';
 import { PRODUCT_TOUR_EVENT, useProductTour } from '../composables/useProductTour';
 import { clearAuthSession, clearNotifications, deletePublication, getAnalyticsSummary, getNotifications, getPublications, markAllNotificationsRead, markNotificationRead, publishPage, verifyPublicationDomain } from '../services/api';
@@ -283,11 +290,11 @@ const selectedFolder = ref(null);
 
 async function startTour() {
   activeTab.value = 'home';
-  selectedFolder.value = null;
+  selectedFolder.value = foldersRegistry[0] || null;
   showCreateModal.value = false;
   showFolderModal.value = false;
   await nextTick();
-  beginTour();
+  beginTour(foldersRegistry.length ? 2 : 0);
 }
 const showCreateModal = ref(false);
 const creationFolderId = ref('');
@@ -351,6 +358,7 @@ async function handleTourAction(event) {
 }
 
 let tourIntroTimer;
+let dashboardRefreshTimer;
 onMounted(() => {
   window.addEventListener(PRODUCT_TOUR_EVENT, handleTourAction);
   if (localStorage.getItem(tourSeenKey.value) !== 'true') {
@@ -360,10 +368,12 @@ onMounted(() => {
   loadNotifications();
   loadPublications();
   loadAnalyticsSummary();
+  dashboardRefreshTimer = window.setInterval(() => { loadNotifications(); loadPublications(); loadAnalyticsSummary(); }, 60000);
 });
 onUnmounted(() => {
   window.removeEventListener(PRODUCT_TOUR_EVENT, handleTourAction);
   clearTimeout(tourIntroTimer);
+  clearInterval(dashboardRefreshTimer);
 });
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
@@ -451,8 +461,19 @@ function showPageOptions(page) {
   if (!pageOptionsTarget.value) showToast('Página não encontrada', 'error');
 }
 
-function handleSavePageOptions(details) {
-  if (updatePageDetails(details.id, details)) pageOptionsTarget.value = null;
+async function handleSavePageOptions(details) {
+  const wasPublished = Boolean(findPublication(details.id));
+  if (!updatePageDetails(details.id, details)) return;
+  pageOptionsTarget.value = null;
+  if (!wasPublished) return;
+  const source = pagesRegistry.find(item => item.id === details.id);
+  if (!source) return;
+  try {
+    await publishSavedPage(source);
+    showToast('URL da página atualizada.', 'success');
+  } catch (error) {
+    showToast(error.message || 'Não foi possível republicar a página.', 'error');
+  }
 }
 
 function handleEditFromOptions(pageId) {
@@ -558,42 +579,63 @@ function openPageMetrics(page) {
   router.push(`/dashboard/metricas/${pageId}`);
 }
 
-async function handleAssignDns(page) {
-  const source = pagesRegistry.find(item => item.id === (page?.id || page?.templateId));
-  if (!source) {
-    showToast('Página não encontrada.', 'error');
+function handleFolderDomainById(folderId) {
+  const folder = foldersRegistry.find(item => item.id === folderId);
+  if (!folder) {
+    showToast('Pasta não encontrada.', 'error');
     return;
   }
+  handleFolderDomain(folder);
+}
 
-  if (!findPublication(source.id)) {
-    showToast('Publique a página antes de atribuir DNS.', 'info');
+function handleFolderDomain(folder) {
+  if (!folder?.id) {
+    showToast('Pasta não encontrada.', 'error');
     return;
   }
-
+  const folderPages = pagesRegistry.filter(page => page.folderId === folder.id);
+  const firstPublishedPage = folderPages.find(page => findPublication(page.id));
+  const firstPage = firstPublishedPage || folderPages[0] || null;
+  const publication = firstPage ? findPublication(firstPage.id) : null;
   dnsTargetPage.value = {
-    ...page,
-    title: page.title || source.name,
-    customDomain: page.customDomain || findPublication(source.id)?.customDomain || '',
-    publication: findPublication(source.id)
+    id: firstPage?.id || `folder-${folder.id}`,
+    templateId: firstPage?.id || `folder-${folder.id}`,
+    title: firstPage?.name || folder.name,
+    folderId: folder.id,
+    folderName: folder.name,
+    customDomain: folder.customDomain || publication?.customDomain || '',
+    publication,
+    isFolderDomainTarget: true
   };
 }
 
 async function handleSaveDns({ page, domain }) {
   const source = pagesRegistry.find(item => item.id === (page?.id || page?.templateId));
-  if (!source) {
-    showToast('Página não encontrada.', 'error');
-    return;
-  }
   try {
-    const result = await publishSavedPage(source, domain);
+    const folder = foldersRegistry.find(item => item.id === (page?.folderId || source?.folderId));
+    if (!folder) {
+      showToast('Escolha uma pasta antes de configurar domínio.', 'info');
+      return;
+    }
+    updateFolderDomain(folder.id, domain);
+    await flushWorkspaceToBackend();
+    const results = await publishFolderPages(folder.id);
+    const result = source ? results.find(item => item.pageId === source.id) || results[0] : results[0];
     const dnsText = result.domainStatus === 'active'
       ? `DNS ativo: ${result.dns?.host || domain}`
-      : `DNS pendente: crie CNAME ${result.dns?.host || domain} -> ${result.dns?.value || 'pages.seudominio.com'}`;
+      : pendingDnsText(result, domain);
     dnsTargetPage.value = null;
     showToast(dnsText, 'success', 6000);
   } catch (error) {
     showToast(error.message || 'Não foi possível atribuir DNS.', 'error');
   }
+}
+
+function pendingDnsText(result, domain) {
+  const host = result.dns?.host || domain;
+  const isRootDomain = String(host).split('.').filter(Boolean).length === 2;
+  if (isRootDomain) return `DNS pendente: crie A @ -> ${result.dns?.ips?.[0] || '193.203.182.228'}`;
+  return `DNS pendente: crie CNAME ${host} -> ${result.dns?.cname || result.dns?.value || 'astrobuilder.com.br'}`;
 }
 
 async function handleVerifyDns(publicationId) {
@@ -606,8 +648,11 @@ async function handleVerifyDns(publicationId) {
         id: source.id,
         templateId: source.id,
         title: source.name,
+        folderId: source.folderId,
+        folderName: foldersRegistry.find(folder => folder.id === source.folderId)?.name || '',
         customDomain: result.customDomain || '',
-        publication: result
+        publication: result,
+        isFolderDomainTarget: true
       };
     }
     showToast(result.domainStatus === 'active' ? 'DNS ativo.' : 'DNS ainda pendente.', result.domainStatus === 'active' ? 'success' : 'info');
@@ -622,7 +667,7 @@ async function runConfirmAction() {
   if (action) await action();
 }
 
-async function publishSavedPage(page, customDomain = '') {
+async function publishSavedPage(page) {
   await flushWorkspaceToBackend();
   const html = generateExportedHTML(page.rows || [], {
     ...(page.pageSettings || {}),
@@ -633,11 +678,32 @@ async function publishSavedPage(page, customDomain = '') {
   const result = await publishPage({
     pageId: page.id,
     pageName: page.name || 'Página publicada',
-    customDomain: customDomain || undefined,
+    slug: page.pageSettings?.publicationSlug || page.name || 'pagina',
     html
   });
   await loadPublications();
   return result;
+}
+
+async function publishFolderPages(folderId) {
+  const publishedIds = new Set(publications.value.map(item => item.pageId));
+  const pages = pagesRegistry.filter(page => page.folderId === folderId && publishedIds.has(page.id));
+  const targets = pages.length ? pages : pagesRegistry.filter(page => page.folderId === folderId).slice(0, 1);
+  const results = [];
+  for (const page of targets) results.push(await publishSavedPage(page));
+  await loadPublications();
+  return results;
+}
+
+function folderDomainForPage(page) {
+  return foldersRegistry.find(folder => folder.id === page?.folderId)?.customDomain || '';
+}
+
+function updateFolderDomain(folderId, domain) {
+  const folder = foldersRegistry.find(item => item.id === folderId);
+  if (!folder) return;
+  folder.customDomain = String(domain || '').trim().toLowerCase();
+  localStorage.setItem('folders_registry_v1', JSON.stringify(foldersRegistry));
 }
 
 // ─── Folders ─────────────────────────────────────────────────────────────────
@@ -722,6 +788,7 @@ const pagesFolderGroups = computed(() => {
     groups.push({
       folderId: folder.id,
       folderName: folder.name,
+      customDomain: folder.customDomain || '',
       color: folder.color,
       pages: folderPages
     });
@@ -877,6 +944,7 @@ async function selectNotification(item) {
   if (item.action === 'create') openCreateModal();
   else if (item.action === 'templates') setActiveTab('templates');
   else if (item.action === 'projects') setActiveTab('todas-paginas');
+  else if (item.action === 'support') setActiveTab('support');
 }
 
 </script>

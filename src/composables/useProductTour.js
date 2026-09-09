@@ -8,8 +8,8 @@ export const productTourSteps = [
     selector: '.tour-create-folder',
     actionSelector: '.tour-create-folder',
     placement: 'bottom',
-    title: 'Crie a pasta do projeto',
-    body: 'Toda página começa dentro de uma pasta. A pasta reúne as páginas que pertencem ao mesmo projeto.',
+    title: 'Organize por projeto',
+    body: 'As páginas ficam dentro de pastas. Se você já tiver uma pasta, o tour abre ela automaticamente; se não tiver, crie a primeira agora.',
     action: 'open-folder-create',
     readySelector: '.tour-folder-modal'
   },
@@ -18,8 +18,8 @@ export const productTourSteps = [
     selector: '.tour-folder-modal',
     actionSelector: '.tour-folder-submit',
     placement: 'right',
-    title: 'Defina a pasta e o domínio',
-    body: 'Dê um nome à pasta e, se já tiver um domínio, informe-o aqui. As páginas dessa pasta serão publicadas nesse domínio.',
+    title: 'Nome e domínio da pasta',
+    body: 'Dê um nome ao projeto. O domínio é opcional e pode ser configurado depois, direto na página publicada.',
     action: 'create-folder',
     readySelector: '.tour-create-page',
     hiddenSelector: '.tour-folder-modal'
@@ -29,8 +29,8 @@ export const productTourSteps = [
     selector: '.tour-create-page',
     actionSelector: '.tour-create-page',
     placement: 'bottom',
-    title: 'Agora crie sua primeira página',
-    body: 'Com a pasta pronta, abra o fluxo de criação para escolher o formato da página.',
+    title: 'Crie a página',
+    body: 'Abra o fluxo de criação para escolher o formato e enviar a página ao builder.',
     action: 'open-create',
     readySelector: '.tour-create-modal-types'
   },
@@ -40,7 +40,7 @@ export const productTourSteps = [
     actionSelector: '.tour-modal-next',
     placement: 'right',
     title: 'Escolha o formato',
-    body: 'Selecione VSL ou E-mail. Cada formato já aplica a largura e a base visual corretas.',
+    body: 'Selecione VSL, e-mail ou quiz. Cada formato ajusta automaticamente a base visual do editor.',
     action: 'continue-create',
     readySelector: '.tour-page-name'
   },
@@ -49,8 +49,8 @@ export const productTourSteps = [
     selector: '.tour-create-details',
     actionSelector: '.tour-create-submit',
     placement: 'right',
-    title: 'Defina como começar',
-    body: 'Dê um nome à página, confirme a pasta e escolha entre canvas vazio ou template. Ao criar, você irá direto ao builder.',
+    title: 'Defina o ponto de partida',
+    body: 'Informe o nome, confirme a pasta e escolha canvas vazio ou template. Ao criar, você vai direto ao builder.',
     action: 'create-page',
     readyRoute: '/builder',
     readySelector: '.tour-object-heading'
@@ -60,8 +60,8 @@ export const productTourSteps = [
     selector: '.tour-object-heading',
     actionSelector: '.tour-object-heading',
     placement: 'left',
-    title: 'Adicione um objeto',
-    body: 'Clique no título para inserir o primeiro elemento no canvas.',
+    title: 'Adicione um elemento',
+    body: 'Clique em um elemento da biblioteca para inserir no canvas.',
     action: 'add-heading',
     readySelector: '.tour-canvas-element'
   },
@@ -70,8 +70,8 @@ export const productTourSteps = [
     selector: '.tour-sections-tab',
     actionSelector: '.tour-sections-tab',
     placement: 'left',
-    title: 'Abra a aba Seções',
-    body: 'O objeto já está no canvas. Agora entre em Seções para acessar a estrutura e editar cada bloco.',
+    title: 'Veja a estrutura',
+    body: 'A aba Seções mostra tudo o que existe na página e facilita encontrar cada elemento.',
     action: 'open-sections',
     readySelector: '.tour-section-item'
   },
@@ -80,8 +80,8 @@ export const productTourSteps = [
     selector: '.tour-section-item',
     actionSelector: '.tour-section-item',
     placement: 'left',
-    title: 'Selecione o objeto na estrutura',
-    body: 'Clique no item da seção para abrir a edição do objeto escolhido.',
+    title: 'Abra a edição',
+    body: 'Clique no item da estrutura para editar conteúdo, estilo, espaçamento e comportamento.',
     action: 'open-element-from-sections',
     readySelector: '.tour-element-modal'
   },
@@ -90,8 +90,8 @@ export const productTourSteps = [
     selector: '.tour-element-modal',
     actionSelector: '.tour-element-modal .em-close',
     placement: 'left',
-    title: 'Edite as propriedades',
-    body: 'Aqui você altera conteúdo, cores, tipografia, alinhamento, margens e dimensões.',
+    title: 'Ajuste o elemento',
+    body: 'Aqui ficam textos, cores, tipografia, alinhamento, margens, dimensões e configurações específicas.',
     action: 'close-element',
     readySelector: '.tour-save',
     hiddenSelector: '.tour-element-modal'
@@ -101,8 +101,8 @@ export const productTourSteps = [
     selector: '.tour-save',
     actionSelector: '.tour-save',
     placement: 'bottom',
-    title: 'Salve sua página',
-    body: 'O salvamento mantém o projeto disponível no dashboard para continuar depois.',
+    title: 'Salve a página',
+    body: 'Salve para manter a página disponível no dashboard e continuar editando depois.',
     action: 'open-save',
     readySelector: '.tour-save-modal-submit'
   },
@@ -111,32 +111,11 @@ export const productTourSteps = [
     selector: '.tour-save-modal',
     actionSelector: '.tour-save-modal-submit',
     placement: 'left',
-    title: 'Confirme o salvamento',
-    body: 'Revise o nome e a pasta. Depois, confirme para registrar a página no navegador.',
+    title: 'Confirme os dados',
+    body: 'Revise nome, pasta e slug. Depois confirme para registrar a página.',
     action: 'save-page',
-    readySelector: '.tour-history',
-    hiddenSelector: '.tour-save-modal'
-  },
-  {
-    route: '/builder',
-    selector: '.tour-history',
-    actionSelector: '.tour-versions-action',
-    placement: 'bottom',
-    title: 'Abra o histórico',
-    body: 'No menu de ações ficam as versões locais e os backups da página.',
-    action: 'open-history',
-    readySelector: '.tour-version-modal'
-  },
-  {
-    route: '/builder',
-    selector: '.tour-version-modal',
-    actionSelector: '.tour-version-modal .icon-btn',
-    placement: 'left',
-    title: 'Proteja suas alterações',
-    body: 'Crie versões antes de mudanças importantes e restaure um ponto anterior quando precisar.',
-    action: 'close-history',
     readySelector: '.tour-export',
-    hiddenSelector: '.tour-version-modal'
+    hiddenSelector: '.tour-save-modal'
   },
   {
     route: '/builder',
@@ -144,7 +123,7 @@ export const productTourSteps = [
     actionSelector: '.tour-export',
     placement: 'bottom',
     title: 'Publique a página',
-    body: 'Publique a página diretamente no servidor. Se a pasta tiver um domínio, ele será usado automaticamente.',
+    body: 'Publique no servidor. Depois você pode configurar domínio próprio e a plataforma prepara DNS, Nginx e SSL automaticamente.',
     action: 'open-export',
     readySelector: '.tour-export-modal',
     finishAfterAction: true

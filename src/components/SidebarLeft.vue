@@ -144,7 +144,6 @@ const vslObjects = [
   { type: 'vturb-player', title: 'Player VTurb', icon: 'bi bi-play-circle-fill' },
   { type: 'pitch-button', title: 'Botão CTA Pitch', icon: 'bi bi-lightning-charge-fill' },
   { type: 'smart-popup', title: 'Popup inteligente (Modal)', icon: 'bi bi-window-stack' },
-  { type: 'upsell-buttons', title: 'Botões Upsell', icon: 'bi bi-bag-check-fill' },
   { type: 'live-viewers', title: 'Espectadores Ao Vivo', icon: 'bi bi-eye-fill' }
 ];
 const emailObjects = [

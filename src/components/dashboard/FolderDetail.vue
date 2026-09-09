@@ -14,7 +14,7 @@
         </div>
         <div>
           <h2>{{ folder.name }}</h2>
-          <p class="folder-meta">{{ pages.length }} páginas neste projeto · {{ folder.customDomain || 'Sem domínio configurado' }}</p>
+          <p class="folder-meta">{{ pages.length }} páginas neste projeto · {{ folderDomainLabel }}</p>
         </div>
 
         <div class="folder-actions">
@@ -26,10 +26,10 @@
           <button class="btn-download-folder" type="button" :disabled="!pages.length" @click="$emit('download-folder')">
             <i class="bi bi-file-earmark-zip"></i> Baixar ZIP
           </button>
-          <button class="btn-folder-domain" type="button" @click="$emit('edit-folder', folder)">
-            <i class="bi bi-globe2"></i> {{ folder.customDomain ? 'Editar domínio' : 'Adicionar domínio' }}
+          <button class="btn-folder-domain" type="button" @click="$emit('edit-domain', folder)">
+            <i class="bi bi-globe2"></i> {{ hasConfiguredDomain ? 'Editar domínio' : 'Adicionar domínio' }}
           </button>
-          <button class="btn-add-page" type="button" @click="$emit('open-builder')">
+          <button class="btn-add-page tour-create-page" type="button" @click="$emit('open-builder')">
             <i class="bi bi-plus-lg"></i> Adicionar página
           </button>
         </div>
@@ -41,7 +41,7 @@
       <div v-if="displayedPages.length === 0" class="empty-folder-box">
         <i class="bi bi-folder2-open empty-icon"></i>
         <p>Nenhuma página criada nesta pasta ainda.</p>
-        <button class="btn-primary-sm" @click="$emit('open-builder')">Criar Primeira Página</button>
+        <button class="btn-primary-sm tour-create-page" @click="$emit('open-builder')">Criar Primeira Página</button>
       </div>
 
       <template v-else>
@@ -98,10 +98,10 @@
             <button
               v-if="page.isPublished"
               class="btn-edit-builder"
-              title="Atribuir DNS"
-              @click="$emit('assign-dns', page)"
+              title="Configurar slug"
+              @click="$emit('more-options', page)"
             >
-              <i class="bi bi-globe2"></i><span>Atribuir DNS</span>
+              <i class="bi bi-link-45deg"></i><span>Slug</span>
             </button>
             <button
               v-else
@@ -124,10 +124,11 @@ import { computed, ref } from 'vue';
 
 const props = defineProps({
   folder: Object,
-  pages: Array
+  pages: Array,
+  publications: { type: Array, default: () => [] }
 });
 
-defineEmits(['back', 'open-builder', 'edit-page', 'edit-folder', 'more-options', 'download-folder', 'publish-page', 'assign-dns', 'open-publication', 'open-metrics']);
+defineEmits(['back', 'open-builder', 'edit-page', 'edit-domain', 'more-options', 'download-folder', 'publish-page', 'open-publication', 'open-metrics']);
 
 const sortMode = ref('recent');
 const displayedPages = computed(() => [...(props.pages || [])].sort((a, b) => {
@@ -138,6 +139,16 @@ const displayedPages = computed(() => [...(props.pages || [])].sort((a, b) => {
 }));
 
 const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433']);
+const firstPageDomainPublication = computed(() => props.pages
+  ?.map(page => props.publications.find(item => item.pageId === (page.id || page.templateId) && item.customDomain))
+  .find(Boolean));
+const folderDomainLabel = computed(() => {
+  if (props.folder?.customDomain) return props.folder.customDomain;
+  const publication = firstPageDomainPublication.value;
+  if (!publication?.customDomain) return 'Sem domínio configurado';
+  return publication.domainStatus === 'active' ? publication.customDomain : `${publication.customDomain} · DNS pendente`;
+});
+const hasConfiguredDomain = computed(() => Boolean(props.folder?.customDomain || firstPageDomainPublication.value?.customDomain));
 
 function folderAccent(color) {
   return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#612bf4';
@@ -231,7 +242,8 @@ function displayUrl(page) {
 .btn-download-folder:disabled { opacity: .45; cursor: not-allowed; }
 
 .folder-pages-table {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 16px;
@@ -239,11 +251,11 @@ function displayUrl(page) {
 
 .folder-table-head,
 .folder-page-row {
-  min-width: 1040px;
+  min-width: 960px;
   display: grid;
-  grid-template-columns: 120px minmax(190px, 1.25fr) minmax(210px, 1.2fr) 82px 112px 318px;
+  grid-template-columns: 112px minmax(170px, 1.1fr) minmax(180px, 1fr) 76px 104px minmax(230px, 250px);
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .folder-table-head {
@@ -279,7 +291,31 @@ function displayUrl(page) {
 .row-public-url > span { color:var(--color-text-muted); font-size:11px; font-weight:700; }
 .row-category { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 11px; font-weight: 800; }
 .row-date { color: var(--color-text-muted); font-size: 12px; }
-.row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
+.row-actions { min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.row-actions button span { display: inline; }
+.row-actions .btn-open-page,
+.row-actions .btn-edit-builder { flex: 0 0 auto; }
+.row-actions .btn-open-page:first-child,
+.row-actions .btn-open-page:nth-child(2) { min-width: 76px; }
+.row-actions .btn-edit-builder { min-width: 62px; }
+.row-actions .btn-item-more { flex: 0 0 30px; }
+
+@media (max-width: 1180px) {
+  .folder-table-head,
+  .folder-page-row {
+    min-width: 900px;
+    grid-template-columns: 104px minmax(150px, 1fr) minmax(150px, .9fr) 68px 96px 218px;
+    gap: 10px;
+  }
+  .row-actions .btn-open-page,
+  .row-actions .btn-edit-builder {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+  }
+  .row-actions button span { display: none; }
+}
 
 .empty-folder-box {
   grid-column: 1 / -1;

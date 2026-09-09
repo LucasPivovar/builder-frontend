@@ -1,8 +1,8 @@
 <template>
-  <div v-if="state.isExportModalOpen" class="element-modal-overlay">
-    <div class="element-modal-box export-modal-box tour-export-modal">
+  <div v-if="state.isExportModalOpen" class="element-modal-overlay" @mousedown.self="!publishing && (state.isExportModalOpen = false)">
+    <section class="element-modal-box export-modal-box tour-export-modal" role="dialog" aria-modal="true" aria-labelledby="export-modal-title" @keydown.esc="!publishing && (state.isExportModalOpen = false)">
       <div class="element-modal-header">
-        <span class="em-editing-title"><i class="bi bi-cloud-arrow-up-fill"></i> {{ serverOnly ? 'Publicar página' : 'Exportar e-mail' }}</span>
+        <span id="export-modal-title" class="em-editing-title"><i class="bi bi-cloud-arrow-up-fill"></i> {{ serverOnly ? 'Publicar página' : 'Exportar e-mail' }}</span>
         <button class="modal-close" :disabled="publishing" aria-label="Fechar" @click="state.isExportModalOpen = false"><i class="bi bi-x-lg"></i></button>
       </div>
 
@@ -51,7 +51,7 @@
           <i class="bi bi-download"></i> Baixar HTML
         </button>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 

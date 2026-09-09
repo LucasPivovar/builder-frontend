@@ -1,22 +1,24 @@
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="modal-backdrop" @click.self="$emit('close')">
-      <div class="create-modal">
+      <section class="create-modal" role="dialog" aria-modal="true" aria-labelledby="create-page-title" @keydown.esc="$emit('close')">
         <!-- Header -->
         <div class="modal-header">
           <div class="modal-title-area">
-            <h2><i class="bi" :class="step === 3 ? 'bi-grid-1x2-fill' : 'bi-file-earmark-plus'"></i> {{ step === 3 ? 'Escolha um template' : 'Criar nova página' }}</h2>
+            <h2 id="create-page-title"><i class="bi" :class="step === 3 ? 'bi-grid-1x2-fill' : 'bi-file-earmark-plus'"></i> {{ step === 3 ? 'Escolha um template' : 'Criar nova página' }}</h2>
             <p>{{ step === 3 ? 'Veja o preview e selecione o melhor ponto de partida' : 'Defina o formato, a pasta e como deseja começar' }}</p>
           </div>
-          <button class="btn-close" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
+          <button class="btn-close" type="button" aria-label="Fechar criação de página" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
         </div>
 
         <!-- Step 1: Skeleton Selection -->
         <div v-if="step === 1" class="modal-body">
           <div class="type-cards tour-create-modal-types">
-            <div
+            <button
+              type="button"
                 class="type-card tour-type-card-funil"
               :class="{ active: selectedType === 'funil' }"
+              :aria-pressed="selectedType === 'funil'"
               @click="selectType('funil')"
             >
               <div class="type-icon" style="background: var(--color-primary-soft); color: var(--color-primary);">
@@ -29,11 +31,13 @@
               <div class="type-check" :class="{ visible: selectedType === 'funil' }">
                 <i class="bi bi-check-circle-fill"></i>
               </div>
-            </div>
+            </button>
 
-            <div
+            <button
+              type="button"
                 class="type-card tour-type-card-email"
               :class="{ active: selectedType === 'email' }"
+              :aria-pressed="selectedType === 'email'"
               @click="selectType('email')"
             >
               <div class="type-icon" style="background: var(--color-primary-soft); color: var(--color-primary-strong);">
@@ -46,12 +50,12 @@
               <div class="type-check" :class="{ visible: selectedType === 'email' }">
                 <i class="bi bi-check-circle-fill"></i>
               </div>
-            </div>
-            <div class="type-card tour-type-card-quiz" :class="{ active: selectedType === 'quiz' }" @click="selectType('quiz')">
+            </button>
+            <button type="button" class="type-card tour-type-card-quiz" :class="{ active: selectedType === 'quiz' }" :aria-pressed="selectedType === 'quiz'" @click="selectType('quiz')">
               <div class="type-icon"><i class="bi bi-ui-checks-grid"></i></div>
               <div class="type-info"><h3>Quiz interativo</h3><p>Perguntas em etapas, progresso, loading, métricas e resultado personalizado.</p></div>
               <div class="type-check" :class="{ visible: selectedType === 'quiz' }"><i class="bi bi-check-circle-fill"></i></div>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -59,8 +63,9 @@
         <div v-else-if="step === 2" class="modal-body tour-create-details">
           <div class="form-section">
             <div class="form-group">
-              <label class="form-label">Nome da Página *</label>
+              <label class="form-label" for="create-page-name">Nome da Página *</label>
               <input
+                id="create-page-name"
                 type="text"
                 class="form-input tour-page-name"
                 v-model="pageName"
@@ -70,9 +75,9 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Pasta Destino *</label>
+              <label class="form-label" for="create-page-folder">Pasta Destino *</label>
               <div class="folder-select-row">
-              <select class="form-select" v-model="selectedFolderId">
+              <select id="create-page-folder" class="form-select" v-model="selectedFolderId">
                   <option value="" disabled>Selecione uma pasta</option>
                   <option v-for="folder in flatFolders" :key="folder.id" :value="folder.id">
                     {{ '  '.repeat(folder.depth) }}{{ folder.name }}
@@ -166,7 +171,7 @@
             <i class="bi" :class="templateKey ? 'bi-magic' : 'bi-plus-circle-fill'"></i> {{ templateKey ? 'Criar com template' : 'Criar página' }}
           </button>
         </div>
-      </div>
+      </section>
     </div>
   </Teleport>
 </template>
@@ -346,6 +351,7 @@ defineExpose({ goToDetailsFromTour, createFromTour, selectType });
 .type-cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
 
 .type-card {
+  width: 100%; font: inherit; text-align: left; color: var(--color-text);
   display: flex; align-items: center; gap: 16px;
   background: var(--color-surface-soft);
   border: 2px solid var(--color-primary-soft);

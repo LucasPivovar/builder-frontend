@@ -179,6 +179,7 @@
             <div class="em-field em-full">
               <label class="em-lbl">Favicon URL</label>
               <input v-model="state.pageSettings.faviconUrl" class="em-input" type="text" placeholder="https://..." />
+              <input class="em-input" type="file" accept="image/png,image/jpeg,image/gif,image/webp" @change="handleFaviconUpload" />
             </div>
             <div class="em-field em-full">
               <label class="em-lbl">Código Google Tag Manager (GTM)</label>
@@ -279,6 +280,44 @@
 
                   <!-- VTURB -->
                   <div v-if="elem.type === 'vturb-player'" class="em-field-stack">
+                    <div class="em-field hosted-video-panel">
+                      <label class="em-lbl"><i class="bi bi-cloud-arrow-up-fill"></i> VSL auto-hospedada</label>
+                      <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="em-input" :disabled="videoUploading" @change="handleVideoUpload" />
+                      <div v-if="videoUploading" class="video-upload-progress"><i :style="{ width: `${videoUploadProgress}%` }"></i></div>
+                      <small v-if="videoUploading">Enviando vídeo… {{ videoUploadProgress }}%. Não feche esta janela.</small>
+                      <small v-else-if="videoError" class="video-error">{{ videoError }}</small>
+                      <small v-else>MP4, WebM, OGV ou MOV. Limite por arquivo: 1 GB.</small>
+                      <small v-if="videoUsage">Armazenamento: {{ formatFileSize(videoUsage.bytes) }} de {{ formatFileSize(videoUsage.maxBytes) }} · {{ videoUsage.count }}/{{ videoUsage.maxCount }} vídeos</small>
+                    </div>
+                    <div v-if="hostedVideos.length" class="em-field">
+                      <label class="em-lbl">Biblioteca de vídeos</label>
+                      <div class="hosted-video-list">
+                        <div v-for="video in hostedVideos" :key="video.id" class="hosted-video-row">
+                          <button type="button" class="hosted-video-select" :class="{ active: elem.hostedVideoId === video.id }" @click="selectHostedVideo(video)">
+                            <span><strong>{{ video.name }}</strong><small>{{ formatFileSize(video.size) }}</small></span>
+                            <i class="bi" :class="elem.hostedVideoId === video.id ? 'bi-check-circle-fill' : 'bi-play-circle'"></i>
+                          </button>
+                          <button type="button" class="hosted-video-delete" title="Excluir vídeo" @click="removeHostedVideo(video)"><i class="bi bi-trash3"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="elem.hostedVideoUrl" class="em-field">
+                      <label class="em-lbl">URL pública do vídeo</label>
+                      <input v-model="elem.hostedVideoUrl" class="em-input" type="url" readonly />
+                      <button type="button" class="em-remove-hosted-video" @click="clearHostedVideo">Desvincular e usar VTurb</button>
+                    </div>
+                    <div v-if="elem.hostedVideoUrl" class="em-field">
+                      <label class="em-lbl">Capa do vídeo (URL opcional)</label>
+                      <input v-model="elem.hostedVideoPoster" class="em-input" type="url" placeholder="https://.../capa.webp" />
+                    </div>
+                    <div v-if="elem.hostedVideoUrl" class="em-field video-options-row">
+                      <label class="em-chk-lbl"><input v-model="elem.videoControls" type="checkbox" /> Exibir controles</label>
+                      <label class="em-chk-lbl"><input v-model="elem.videoAutoplay" type="checkbox" /> Reprodução automática</label>
+                      <label class="em-chk-lbl"><input v-model="elem.videoMuted" type="checkbox" :disabled="elem.videoAutoplay" /> Sem áudio</label>
+                      <label class="em-chk-lbl"><input v-model="elem.videoLoop" type="checkbox" /> Repetir</label>
+                      <small v-if="elem.videoAutoplay">Navegadores exigem vídeo sem áudio para reprodução automática.</small>
+                    </div>
+                    <div class="em-field hosted-or-divider"><span>ou use VTurb</span></div>
                     <div class="em-field">
                       <label class="em-lbl"><i class="bi bi-play-btn-fill"></i> Link 1: Código Embed do Player (Tag &lt;vturb-smartplayer&gt;)</label>
                       <textarea v-model="elem.vturbBody" class="em-input em-ta-main" placeholder="Cole aqui a tag <vturb-smartplayer id='...'>...</vturb-smartplayer> e o script do player..."></textarea>
@@ -415,7 +454,7 @@
                       <template v-if="elem.type === 'form'">
                         <div class="em-field"><label class="em-lbl">Título do formulário</label><input v-model="elem.formTitle" class="em-input" type="text" /></div>
                         <div class="em-field"><label class="em-lbl">Descrição</label><input v-model="elem.description" class="em-input" type="text" /></div>
-                        <div class="em-field"><label class="em-lbl">URL de envio (será ativada com o backend)</label><input v-model="elem.submitUrl" class="em-input" type="url" placeholder="https://..." /></div>
+                        <div class="em-field"><label class="em-lbl">URL externa de envio (opcional)</label><input v-model="elem.submitUrl" class="em-input" type="url" placeholder="https://..." /><small>Sem URL, os leads ficam salvos no Astro Builder e podem ser exportados no dashboard.</small></div>
                       </template>
                       <div v-if="elem.type === 'countdown'" class="em-field">
                         <label class="em-lbl">Data final (formato ISO)</label>
@@ -808,9 +847,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
 import { getNum } from '../utils/astrotags';
+import { deleteHostedVideo, getHostedVideos, getHostedVideoUsage, uploadHostedAsset, uploadHostedVideo } from '../services/api';
 import TopBannerElement from './elements/TopBannerElement.vue';
 import SmartPopupEditor from './SmartPopupEditor.vue';
 import HeadingElement from './elements/HeadingElement.vue';
@@ -824,7 +864,7 @@ import LiveViewersElement from './elements/LiveViewersElement.vue';
 import LibraryElement from './elements/LibraryElement.vue';
 import QuizElement from './elements/QuizElement.vue';
 
-const { state, closeModal, deleteSelectedElement, applyGlobalColorTheme, colorThemesList } = useBuilderStore();
+const { state, closeModal, deleteSelectedElement, applyGlobalColorTheme, colorThemesList, showToast } = useBuilderStore();
 
 const iconPickerOpen = ref(false);
 const iconSearch = ref('');
@@ -839,6 +879,69 @@ const elemStyle = computed(() => elem.value?.style || {});
 const metricItems = computed(() => parseMetricItems(elem.value?.metricsText));
 const quizOptions = computed(() => getQuizOptions(elem.value));
 const minQuizOptions = computed(() => elem.value?.type === 'quiz-yes-no' ? 2 : 1);
+const hostedVideos = ref([]);
+const videoUploading = ref(false);
+const videoError = ref('');
+const videoUploadProgress = ref(0);
+const videoUsage = ref(null);
+
+onMounted(async () => {
+  if (elem.value?.type !== 'vturb-player') return;
+  try {
+    [hostedVideos.value, videoUsage.value] = await Promise.all([getHostedVideos(), getHostedVideoUsage()]);
+  } catch (error) { videoError.value = error.message; }
+});
+
+function formatFileSize(bytes) {
+  if (!Number(bytes)) return '0 MB';
+  return `${(Number(bytes) / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function selectHostedVideo(video) {
+  if (!elem.value) return;
+  elem.value.hostedVideoId = video.id;
+  elem.value.hostedVideoUrl = video.url;
+  elem.value.hostedVideoName = video.name;
+}
+
+function clearHostedVideo() {
+  if (!elem.value) return;
+  elem.value.hostedVideoId = '';
+  elem.value.hostedVideoUrl = '';
+  elem.value.hostedVideoName = '';
+}
+
+async function handleVideoUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  videoUploading.value = true;
+  videoUploadProgress.value = 0;
+  videoError.value = '';
+  try {
+    const video = await uploadHostedVideo(file, progress => { videoUploadProgress.value = progress; });
+    hostedVideos.value.unshift(video);
+    selectHostedVideo(video);
+    videoUsage.value = await getHostedVideoUsage();
+  } catch (error) {
+    videoError.value = error.message;
+  } finally {
+    videoUploading.value = false;
+    event.target.value = '';
+  }
+}
+
+async function removeHostedVideo(video) {
+  if (!confirm(`Excluir definitivamente o vídeo “${video.name}”? Páginas que ainda usam esta URL deixarão de reproduzi-lo.`)) return;
+  videoError.value = '';
+  try {
+    await deleteHostedVideo(video.id);
+    hostedVideos.value = hostedVideos.value.filter(item => item.id !== video.id);
+    if (elem.value?.hostedVideoId === video.id) clearHostedVideo();
+    videoUsage.value = await getHostedVideoUsage();
+  } catch (error) {
+    videoError.value = error.message;
+  }
+}
 
 function formatDelay(element) {
   const minutes = Math.max(0, Math.min(180, Number(element?.delayMinutes) || 0));
@@ -952,24 +1055,27 @@ function onMarginVerticalInput(val) {
   }
 }
 
-function handleLogoFileUpload(e) {
+async function handleLogoFileUpload(e) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    if (elem.value) {
-      elem.value.logoImageUrl = event.target.result;
-    }
-  };
-  reader.readAsDataURL(file);
+  try { const asset=await uploadHostedAsset(file); if(elem.value){elem.value.logoImageUrl=asset.url;elem.value.hostedAssetId=asset.id;} }
+  catch(error){ showToast(error.message,'error'); }
+  finally { e.target.value=''; }
 }
 
-function handleLibraryImageUpload(e) {
+async function handleLibraryImageUpload(e) {
   const file = e.target.files && e.target.files[0];
   if (!file || !elem.value) return;
-  const reader = new FileReader();
-  reader.onload = event => { elem.value.imageUrl = event.target.result; };
-  reader.readAsDataURL(file);
+  try { const asset=await uploadHostedAsset(file); elem.value.imageUrl=asset.url;elem.value.hostedAssetId=asset.id; }
+  catch(error){ showToast(error.message,'error'); }
+  finally { e.target.value=''; }
+}
+
+async function handleFaviconUpload(e) {
+  const file=e.target.files?.[0]; if(!file)return;
+  try { const asset=await uploadHostedAsset(file); state.pageSettings.faviconUrl=asset.url;state.pageSettings.faviconAssetId=asset.id; }
+  catch(error){ showToast(error.message,'error'); }
+  finally { e.target.value=''; }
 }
 
 // Override manual de orientação: null = auto, 'vertical' = forçar lateral, 'horizontal' = forçar topo
@@ -1736,6 +1842,23 @@ const filteredIcons = computed(() => {
 .is-global-settings .em-footer { background: var(--color-surface) !important; }
 
 .quiz-progress-settings { display:flex; flex-direction:column; gap:14px; }
+.hosted-video-panel small { color:var(--color-text-muted); font-size:11px; }
+.hosted-video-panel .video-error { color:var(--color-danger-strong); }
+.video-upload-progress { width:100%; height:7px; overflow:hidden; border-radius:999px; background:var(--color-primary-soft); }
+.video-upload-progress i { display:block; height:100%; border-radius:inherit; background:var(--color-primary); transition:width .15s ease; }
+.hosted-video-list { display:flex; flex-direction:column; gap:7px; max-height:180px; overflow:auto; }
+.hosted-video-row { display:flex; align-items:stretch; gap:6px; }
+.hosted-video-select { min-width:0; flex:1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid var(--color-border); border-radius:9px; background:var(--color-surface); color:var(--color-text); text-align:left; cursor:pointer; }
+.hosted-video-select.active { border-color:var(--color-primary); background:var(--color-primary-soft); color:var(--color-primary-strong); }
+.hosted-video-delete { width:36px; flex:0 0 36px; border:1px solid var(--color-border); border-radius:9px; background:var(--color-surface); color:var(--color-danger-strong); cursor:pointer; }
+.hosted-video-list span { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.hosted-video-list strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.hosted-video-list small { color:var(--color-text-muted); font-size:10px; }
+.em-remove-hosted-video { align-self:flex-start; border:0; background:transparent; color:var(--color-danger-strong); font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
+.hosted-or-divider { display:flex; align-items:center; gap:10px; color:var(--color-text-muted); font-size:10px; font-weight:800; text-transform:uppercase; }
+.hosted-or-divider::before,.hosted-or-divider::after { content:''; flex:1; height:1px; background:var(--color-border); }
+.video-options-row { display:flex; flex-wrap:wrap; gap:8px; }
+.video-options-row small { flex:1 0 100%; color:var(--color-text-muted); font-size:10px; }
 .quiz-progress-settings-copy { display:flex; align-items:center; gap:11px; }
 .quiz-progress-settings-icon { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; border-radius:10px; background:var(--color-primary-soft); color:var(--color-primary-strong); font-size:17px; }
 .quiz-progress-settings-copy>div { display:flex; flex-direction:column; gap:3px; }

@@ -614,6 +614,25 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
       });
     })();
   </script>
+  <script data-builder-forms>
+    document.addEventListener('submit', async function(event) {
+      var form = event.target;
+      if (!form.matches || !form.matches('[data-builder-native-form]')) return;
+      event.preventDefault();
+      var button = form.querySelector('button[type="submit"]');
+      var status = form.querySelector('[data-form-status]');
+      if (button) button.disabled = true;
+      try {
+        var fields = Array.from(form.elements).filter(function(field){ return field.name; }).map(function(field){ return { id:field.name, label:field.getAttribute('data-label') || field.name, value:String(field.value || '') }; });
+        var response = await fetch('/api/analytics/popup-submissions', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ pageId:window.__builderPopupPageId || '${trackingKey}', signature:window.__builderAnalyticsSignature || '', popupId:form.getAttribute('data-form-id') || 'form', fields:fields }) });
+        if (!response.ok) throw new Error();
+        form.reset();
+        if (status) { status.textContent='Dados enviados com sucesso.'; status.style.display='block'; status.style.color='#166534'; }
+      } catch (_) {
+        if (status) { status.textContent='Não foi possível enviar. Tente novamente.'; status.style.display='block'; status.style.color='#b91c1c'; }
+      } finally { if (button) button.disabled = false; }
+    });
+  </script>
 </body>
 </html>`;
 
@@ -795,7 +814,15 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const vturbH = mh ? `max-height: ${mh.endsWith('px') || mh.endsWith('%') || mh.endsWith('vh') ? mh : mh + 'px'}; overflow: hidden;` : '';
     const vturbStyle = `margin: ${mt}px auto ${mb}px auto; padding: ${py}px ${px}px; width: 100%; ${vturbW} ${vturbH} ${br}`;
 
-    if (elem.vturbBody && elem.vturbBody.trim().length > 0) {
+    if (elem.hostedVideoUrl) {
+      const poster = elem.hostedVideoPoster ? ` poster="${escapeHtml(elem.hostedVideoPoster)}"` : '';
+      const controls = elem.videoControls !== false ? ' controls' : '';
+      const autoplay = elem.videoAutoplay ? ' autoplay muted' : (elem.videoMuted ? ' muted' : '');
+      const loop = elem.videoLoop ? ' loop' : '';
+      innerHTML = `<div class="canvas-vturb-wrapper" style="${vturbStyle}">
+        <video src="${escapeHtml(elem.hostedVideoUrl)}"${poster}${controls}${autoplay}${loop} playsinline preload="metadata" style="display:block;width:100%;height:auto;background:#000;"></video>
+      </div>`;
+    } else if (elem.vturbBody && elem.vturbBody.trim().length > 0) {
       let vturbBodyContent = elem.vturbBody;
       if (isVertical) {
         vturbBodyContent = vturbBodyContent.replace(/max-width:\s*\d+px/gi, 'max-width: 100%');
@@ -884,7 +911,8 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     innerHTML = `<section class="builder-countdown" data-target="${target}" style="max-width:680px;margin:${getNum(style.marginTop, 12)}px auto ${getNum(style.marginBottom, 12)}px;padding:22px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 14)}px;background:${style.bgColor || '#ffffff'};color:${style.textColor || '#0f172a'};text-align:center"><strong style="display:block;margin-bottom:16px;font-size:${style.fontSize || '16px'}">${parseAtomitags(elem.content || '', style.altColor, style.bgColor, parseOpts)}</strong><div class="builder-countdown-numbers" style="display:flex;justify-content:center;gap:10px"></div></section>`;
   } else if (type === 'form') {
     const action = elem.submitUrl || '';
-    innerHTML = `<form action="${action}" method="post" style="max-width:680px;margin:${getNum(style.marginTop, 12)}px auto ${getNum(style.marginBottom, 12)}px;padding:24px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 14)}px;background:#ffffff;color:#0f172a;display:flex;flex-direction:column;gap:11px;text-align:left"><h3 style="margin:0">${elem.formTitle || 'Receba as novidades'}</h3><p style="margin:0;color:#475569">${elem.description || ''}</p><input name="name" required placeholder="${elem.namePlaceholder || 'Seu nome'}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><input name="email" type="email" required placeholder="${elem.emailPlaceholder || 'Seu melhor e-mail'}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><button type="submit" style="padding:12px;border:0;border-radius:8px;background:${style.bgColor || '#0ea5e9'};color:${style.textColor || '#ffffff'};font:inherit;font-weight:800;cursor:pointer">${parseAtomitags(elem.content || 'Enviar', style.altColor, style.bgColor, parseOpts)}</button></form>`;
+    const native = action ? '' : ' data-builder-native-form="1"';
+    innerHTML = `<form action="${escapeHtml(action)}" method="post" data-form-id="${escapeHtml(elem.id || 'form')}"${native} style="max-width:680px;margin:${getNum(style.marginTop, 12)}px auto ${getNum(style.marginBottom, 12)}px;padding:24px;border:1px solid ${style.borderColor || '#bae6fd'};border-radius:${getNum(style.borderRadius, 14)}px;background:#ffffff;color:#0f172a;display:flex;flex-direction:column;gap:11px;text-align:left"><h3 style="margin:0">${escapeHtml(elem.formTitle || 'Receba as novidades')}</h3><p style="margin:0;color:#475569">${escapeHtml(elem.description || '')}</p><input name="name" data-label="Nome" required placeholder="${escapeHtml(elem.namePlaceholder || 'Seu nome')}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><input name="email" data-label="E-mail" type="email" required placeholder="${escapeHtml(elem.emailPlaceholder || 'Seu melhor e-mail')}" style="padding:12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit"><button type="submit" style="padding:12px;border:0;border-radius:8px;background:${style.bgColor || '#0ea5e9'};color:${style.textColor || '#ffffff'};font:inherit;font-weight:800;cursor:pointer">${parseAtomitags(elem.content || 'Enviar', style.altColor, style.bgColor, parseOpts)}</button><small data-form-status style="display:none;color:#166534;font-weight:700">Dados enviados com sucesso.</small></form>`;
   } else if (type === 'meta-pixel') {
     innerHTML = '';
   } else {

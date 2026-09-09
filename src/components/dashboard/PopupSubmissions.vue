@@ -1,9 +1,9 @@
 <template>
   <section class="submissions">
-    <header><div><h2>Respostas dos popups</h2><p>{{ total }} envios · 5 por página</p></div><button :disabled="exporting || !total" @click="exportAll"><i class="bi bi-download"></i> {{ exporting ? 'Exportando...' : 'Exportar todos (CSV)' }}</button></header>
+    <header><div><h2>Respostas de formulários</h2><p>{{ total }} envios de popups e formulários · 5 por página</p></div><button :disabled="exporting || !total" @click="exportAll"><i class="bi bi-download"></i> {{ exporting ? 'Exportando...' : 'Exportar todos (CSV)' }}</button></header>
     <p v-if="error" role="alert">{{ error }} <button @click="load">Tentar novamente</button></p>
     <p v-if="loading">Carregando respostas...</p>
-    <p v-else-if="!items.length && !error">Os envios dos popups publicados aparecerão aqui.</p>
+    <p v-else-if="!items.length && !error">Os envios de popups e formulários publicados aparecerão aqui.</p>
     <div v-else class="table-scroll"><table><thead><tr><th>Data</th><th>Popup</th><th>Respostas</th></tr></thead><tbody><tr v-for="item in items" :key="item.id"><td>{{ new Date(item.createdAt).toLocaleString('pt-BR') }}</td><td>{{ item.popupId }}</td><td><dl><template v-for="field in item.fields" :key="field.id"><dt>{{ field.label }}</dt><dd>{{ formatPopupResponse(field) }}</dd></template></dl></td></tr></tbody></table></div>
     <p v-for="item in items.filter(item => item.webhookStatus && item.webhookStatus !== 'none')" :key="'webhook-' + item.id" :role="item.webhookStatus === 'failed' ? 'alert' : undefined">
       Sellflux · {{ new Date(item.createdAt).toLocaleString('pt-BR') }}: {{ item.webhookStatus === 'sent' ? 'Enviado' : 'Falha na integração. A resposta está salva; confira a URL e o mapeamento no popup.' }}

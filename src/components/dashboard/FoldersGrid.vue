@@ -29,7 +29,7 @@
           <div>
             <div class="folder-name">{{ folder.name }}</div>
             <div class="folder-items-count">{{ getFolderPageCount(folder.id) }} {{ getFolderPageCount(folder.id) === 1 ? 'página' : 'páginas' }}</div>
-            <div class="folder-domain"><i class="bi bi-globe2"></i>{{ folder.customDomain || 'Domínio não configurado' }}</div>
+            <div class="folder-domain"><i class="bi bi-globe2"></i>{{ folderDomainLabel(folder) }}</div>
           </div>
         </div>
         <div class="folder-actions" @click.stop>
@@ -46,16 +46,24 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useBuilderStore } from '../../composables/useBuilderStore';
 
-defineProps({
-  folders: Array
+const props = defineProps({
+  folders: Array,
+  publications: { type: Array, default: () => [] }
 });
 
 defineEmits(['open-folder', 'create-folder', 'rename-folder', 'delete-folder']);
 
 const { pagesRegistry } = useBuilderStore();
 const allowedFolderColors = new Set(['#612bf4', '#a854fa', '#395cf9', '#2296fc', '#17b5fc', '#1a1433']);
+const pagesByFolder = computed(() => pagesRegistry.reduce((map, page) => {
+  const list = map.get(page.folderId) || [];
+  list.push(page.id);
+  map.set(page.folderId, list);
+  return map;
+}, new Map()));
 
 function getFolderPageCount(folderId) {
   return pagesRegistry.filter(p => p.folderId === folderId).length;
@@ -63,6 +71,14 @@ function getFolderPageCount(folderId) {
 
 function folderAccent(color) {
   return allowedFolderColors.has(String(color || '').toLowerCase()) ? color : '#612bf4';
+}
+
+function folderDomainLabel(folder) {
+  if (folder.customDomain) return folder.customDomain;
+  const pageIds = new Set(pagesByFolder.value.get(folder.id) || []);
+  const publication = props.publications.find(item => pageIds.has(item.pageId) && item.customDomain);
+  if (!publication?.customDomain) return 'Domínio não configurado';
+  return publication.domainStatus === 'active' ? publication.customDomain : `${publication.customDomain} · DNS pendente`;
 }
 </script>
 

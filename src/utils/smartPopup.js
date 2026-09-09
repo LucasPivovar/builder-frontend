@@ -147,6 +147,7 @@ function popupRuntime() {
         signal: controller.signal,
         body: JSON.stringify({
           pageId: window.__builderPopupPageId,
+          signature: window.__builderAnalyticsSignature || '',
           popupId: root.dataset.popupId,
           visitorId,
           fields

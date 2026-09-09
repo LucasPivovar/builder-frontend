@@ -1,19 +1,20 @@
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="modal-backdrop" @click.self="$emit('close')">
-      <div class="save-modal tour-save-modal">
+      <section class="save-modal tour-save-modal" role="dialog" aria-modal="true" aria-labelledby="save-page-title" @keydown.esc="$emit('close')">
         <div class="modal-header">
           <div>
-            <h3><i class="bi bi-floppy-fill"></i> Salvar Página</h3>
+            <h3 id="save-page-title"><i class="bi bi-floppy-fill"></i> Salvar Página</h3>
             <p>Salve sua página para acessar e editar depois</p>
           </div>
-          <button class="btn-close" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
+          <button class="btn-close" type="button" aria-label="Fechar salvamento da página" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
         </div>
 
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nome da Página *</label>
+            <label class="form-label" for="save-page-name">Nome da Página *</label>
             <input
+              id="save-page-name"
               type="text"
               class="form-input"
               v-model="pageName"
@@ -23,9 +24,9 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Pasta Destino</label>
+            <label class="form-label" for="save-page-folder">Pasta Destino</label>
             <div class="folder-row">
-              <select class="form-select" v-model="folderId">
+              <select id="save-page-folder" class="form-select" v-model="folderId">
                 <option value="">Sem pasta (Raiz)</option>
                 <option v-for="f in foldersRegistry" :key="f.id" :value="f.id">{{ f.name }}</option>
               </select>
@@ -37,7 +38,7 @@
             Formato: {{ pageModeLabel }}
             <span v-if="currentPageId" style="margin-left: 8px; opacity: 0.7;">(Atualizando página existente)</span>
           </div>
-          <div v-if="builderMode !== 'email'" class="form-group"><label class="form-label">Endereço da página (slug)</label><input class="form-input" v-model="slug" placeholder="minha-oferta" pattern="[a-z0-9-]+" /><small>Use letras minúsculas, números e hífens. Exemplo: dominio.com/minha-oferta</small></div>
+          <div v-if="builderMode !== 'email'" class="form-group"><label class="form-label" for="save-page-slug">Caminho da página</label><input id="save-page-slug" class="form-input" v-model="slug" placeholder="minha-oferta" pattern="[a-z0-9-]+" /><small>Use letras minúsculas, números e hífens. URL final: {{ urlPreview }}</small></div>
         </div>
 
         <div class="modal-footer">
@@ -47,7 +48,7 @@
             {{ currentPageId ? 'Atualizar Página' : 'Salvar Página' }}
           </button>
         </div>
-      </div>
+      </section>
     </div>
   </Teleport>
 </template>
@@ -70,6 +71,9 @@ const currentPageId = computed(() => state.currentPageId);
 const pageModeLabel = computed(() => builderMode.value === 'email' ? 'Página de e-mail' : builderMode.value === 'quiz' ? 'Quiz interativo' : 'Página de funil');
 const pageModeIcon = computed(() => builderMode.value === 'email' ? 'bi bi-envelope-paper-fill' : builderMode.value === 'quiz' ? 'bi bi-ui-checks-grid' : 'bi bi-play-btn-fill');
 const pagePlaceholder = computed(() => builderMode.value === 'email' ? 'Ex.: E-mail de boas-vindas' : builderMode.value === 'quiz' ? 'Ex.: Quiz de diagnóstico' : 'Ex.: VSL do produto principal');
+const selectedFolder = computed(() => foldersRegistry.find(folder => folder.id === folderId.value));
+const cleanSlugPreview = computed(() => cleanSlug(slug.value || pageName.value || 'pagina'));
+const urlPreview = computed(() => `${selectedFolder.value?.customDomain || 'dominio-da-pasta.com'}/${cleanSlugPreview.value}`);
 
 watch(() => props.isOpen, (open) => {
   if (open) {
@@ -81,10 +85,20 @@ watch(() => props.isOpen, (open) => {
 
 function handleSave() {
   if (!pageName.value.trim()) return;
-  state.pageSettings.publicationSlug = slug.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+  state.pageSettings.publicationSlug = cleanSlug(slug.value || pageName.value);
   const page = savePage(pageName.value.trim(), folderId.value || null);
   emit('saved', page);
   emit('close');
+}
+
+function cleanSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
 }
 </script>
 

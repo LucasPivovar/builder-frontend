@@ -24,6 +24,12 @@
             </select>
           </label>
 
+          <label>
+            <span>Caminho da página</span>
+            <input v-model="draftSlug" type="text" maxlength="80" placeholder="minha-oferta" @keyup.enter="save" />
+            <small>Com domínio na pasta, esta página abre em dominio.com/caminho-da-pagina.</small>
+          </label>
+
           <button class="edit-now" type="button" @click="$emit('edit', page.id)">
             <i class="bi bi-pencil-square"></i>
             <span><strong>Editar no Builder</strong><small>Abrir esta página para continuar a edição.</small></span>
@@ -62,11 +68,13 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save', 'edit', 'delete', 'unpublish']);
 const draftName = ref('');
 const draftFolderId = ref('');
+const draftSlug = ref('');
 
 watch(() => [props.isOpen, props.page], () => {
   if (!props.isOpen || !props.page) return;
   draftName.value = props.page.name || '';
   draftFolderId.value = props.page.folderId || '';
+  draftSlug.value = props.page.pageSettings?.publicationSlug || slugFromName(props.page.name || '');
 }, { immediate: true });
 
 function save() {
@@ -74,8 +82,23 @@ function save() {
   emit('save', {
     id: props.page.id,
     name: draftName.value.trim(),
-    folderId: draftFolderId.value || null
+    folderId: draftFolderId.value || null,
+    slug: cleanSlug(draftSlug.value || draftName.value)
   });
+}
+
+function cleanSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function slugFromName(name) {
+  return cleanSlug(name) || 'pagina';
 }
 </script>
 

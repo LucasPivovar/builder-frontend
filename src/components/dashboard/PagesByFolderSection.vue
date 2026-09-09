@@ -21,14 +21,19 @@
           <span class="folder-count-badge">{{ group.pages.length }} páginas</span>
         </div>
 
-        <a
-          v-if="group.folderId"
-          href="#"
-          class="see-all-folder-btn"
-          @click.prevent="$emit('see-all-folder', group.folderId)"
-        >
-          Ver todos <i class="bi bi-arrow-right"></i>
-        </a>
+        <div v-if="group.folderId" class="folder-header-actions">
+          <button type="button" class="folder-domain-btn" @click="$emit('edit-folder-domain', group.folderId)">
+            <i class="bi bi-globe2"></i>
+            {{ group.customDomain ? 'Editar domínio' : 'Linkar domínio' }}
+          </button>
+          <a
+            href="#"
+            class="see-all-folder-btn"
+            @click.prevent="$emit('see-all-folder', group.folderId)"
+          >
+            Ver todos <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
       </div>
 
       <div class="folder-pages-table">
@@ -86,14 +91,6 @@
               <i class="bi bi-graph-up-arrow"></i><span>Métricas</span>
             </button>
             <button
-              v-if="page.isPublished"
-              class="btn-edit-builder"
-              @click="$emit('assign-dns', page)"
-            >
-              <i class="bi bi-globe2"></i><span>Atribuir DNS</span>
-            </button>
-            <button
-              v-else
               class="btn-edit-builder"
               @click="$emit('publish-page', page)"
             >
@@ -113,7 +110,7 @@ defineProps({
   folderGroups: { type: Array, default: () => [] }
 });
 
-defineEmits(['create-new', 'see-all-folder', 'edit-page', 'more-options', 'publish-page', 'assign-dns', 'open-publication', 'open-metrics']);
+defineEmits(['create-new', 'see-all-folder', 'edit-folder-domain', 'edit-page', 'more-options', 'publish-page', 'open-publication', 'open-metrics']);
 
 function displayUrl(page) {
   const publication = page?.publication || {};
@@ -173,6 +170,33 @@ function displayUrl(page) {
   border-radius: 999px;
 }
 
+.folder-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.folder-domain-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  padding: 8px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.folder-domain-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
 .see-all-folder-btn {
   color: var(--color-primary-bright);
   font-size: 13.5px;
@@ -190,7 +214,8 @@ function displayUrl(page) {
 }
 
 .folder-pages-table {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 14px;
@@ -198,11 +223,11 @@ function displayUrl(page) {
 
 .folder-table-head,
 .folder-page-row {
-  min-width: 1040px;
+  min-width: 960px;
   display: grid;
-  grid-template-columns: 120px minmax(190px, 1.25fr) minmax(210px, 1.2fr) 82px 112px 318px;
+  grid-template-columns: 112px minmax(170px, 1.1fr) minmax(180px, 1fr) 76px 104px minmax(230px, 250px);
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .folder-table-head {
@@ -238,7 +263,39 @@ function displayUrl(page) {
 .row-public-url > span { color:var(--color-text-muted); font-size:11px; font-weight:700; }
 .row-category { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 11px; font-weight: 800; }
 .row-date { color: var(--color-text-muted); font-size: 12px; }
-.row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
+.row-actions { min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.row-actions button span { display: inline; }
+.row-actions .btn-open-page,
+.row-actions .btn-edit-builder { flex: 0 0 auto; }
+.row-actions .btn-open-page:first-child,
+.row-actions .btn-open-page:nth-child(2) { min-width: 76px; }
+.row-actions .btn-edit-builder { min-width: 76px; }
+.row-actions .btn-item-more { flex: 0 0 30px; }
+
+@media (max-width: 1180px) {
+  .folder-block-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .folder-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .folder-table-head,
+  .folder-page-row {
+    min-width: 900px;
+    grid-template-columns: 104px minmax(150px, 1fr) minmax(150px, .9fr) 68px 96px 218px;
+    gap: 10px;
+  }
+  .row-actions .btn-open-page,
+  .row-actions .btn-edit-builder {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+  }
+  .row-actions button span { display: none; }
+}
 
 .btn-edit-builder {
   display: inline-flex;

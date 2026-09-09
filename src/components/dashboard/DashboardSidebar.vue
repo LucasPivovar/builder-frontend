@@ -45,6 +45,9 @@
         <span>Planos</span>
       </a>
 
+      <a class="menu-item" :class="{ active: activeTab === 'backups' }" @click="$emit('select-tab', 'backups')"><i class="bi bi-clock-history"></i><span>Backups</span></a>
+      <a class="menu-item" :class="{ active: activeTab === 'email-campaigns' }" @click="$emit('select-tab', 'email-campaigns')"><i class="bi bi-send"></i><span>Campanhas</span></a>
+
       <a
         class="menu-item"
         :class="{ active: activeTab === 'support' }"

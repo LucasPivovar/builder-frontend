@@ -1,0 +1,31 @@
+<template>
+  <section class="backups-view">
+    <header><div><span>RECUPERAÇÃO</span><h1>Backups do workspace</h1><p>Compare e restaure uma das últimas 20 versões salvas.</p></div><button @click="load"><i class="bi bi-arrow-clockwise"></i> Atualizar</button></header>
+    <p v-if="message" role="status" class="backup-message">{{ message }}</p>
+    <div v-if="loading" class="backup-state"><span class="spinner"></span> Carregando backups…</div>
+    <div v-else-if="!backups.length" class="backup-state"><i class="bi bi-clock-history"></i><strong>Nenhum backup disponível</strong><span>Um backup é criado antes de cada novo salvamento.</span></div>
+    <div v-else class="backup-list">
+      <article v-for="backup in backups" :key="backup.id">
+        <div class="backup-icon"><i class="bi bi-clock-history"></i></div>
+        <div><strong>Revisão {{ backup.revision }}</strong><small>{{ backup.reason }} · {{ formatDate(backup.createdAt) }}</small><span>{{ backup.pagesCount }} páginas · {{ backup.foldersCount }} pastas</span></div>
+        <button class="secondary" :disabled="busy" @click="compare(backup)">Comparar</button><button class="primary" :disabled="busy" @click="restore(backup)">Restaurar</button>
+      </article>
+    </div>
+    <div v-if="diff" class="diff-card"><header><div><strong>Comparação com a revisão {{ diff.backup.revision }}</strong><small>Alterações entre o backup e o estado atual</small></div><button aria-label="Fechar" @click="diff=null"><i class="bi bi-x-lg"></i></button></header><section v-for="kind in ['pages','folders','templates']" :key="kind"><h3>{{ labels[kind] }}</h3><p v-if="!diff[kind].added.length&&!diff[kind].removed.length&&!diff[kind].changed.length">Sem diferenças</p><ul><li v-for="item in diff[kind].added" :key="`a-${item}`" class="added">+ {{ item }}</li><li v-for="item in diff[kind].removed" :key="`r-${item}`" class="removed">− {{ item }}</li><li v-for="item in diff[kind].changed" :key="`c-${item}`" class="changed">~ {{ item }}</li></ul></section></div>
+  </section>
+</template>
+<script setup>
+import { onMounted, ref } from 'vue';
+import { getWorkspaceBackupDiff, getWorkspaceBackups, restoreWorkspaceBackup } from '../../services/api';
+import { useBuilderStore } from '../../composables/useBuilderStore';
+const { hydrateWorkspaceFromBackend } = useBuilderStore();
+const backups=ref([]),loading=ref(true),busy=ref(false),message=ref(''),diff=ref(null); const labels={pages:'Páginas',folders:'Pastas',templates:'Templates'};
+onMounted(load);
+async function load(){ loading.value=true; message.value=''; try{backups.value=await getWorkspaceBackups();}catch(e){message.value=e.message;}finally{loading.value=false;} }
+async function compare(backup){busy.value=true;try{diff.value=await getWorkspaceBackupDiff(backup.id);}catch(e){message.value=e.message;}finally{busy.value=false;}}
+async function restore(backup){if(!window.confirm(`Restaurar a revisão ${backup.revision}? O estado atual será preservado em um novo backup.`))return;busy.value=true;try{await restoreWorkspaceBackup(backup.id);await hydrateWorkspaceFromBackend();message.value='Backup restaurado com sucesso.';diff.value=null;await load();}catch(e){message.value=e.message;}finally{busy.value=false;}}
+function formatDate(value){return new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(value));}
+</script>
+<style scoped>
+.backups-view{width:100%}.backups-view>header{display:flex;align-items:flex-end;justify-content:space-between;gap:15px;margin-bottom:22px}.backups-view>header span{color:var(--color-primary-strong);font-size:10px;font-weight:900;letter-spacing:.12em}.backups-view h1{margin:5px 0;font-size:27px}.backups-view header p{margin:0;color:var(--color-text-muted)}.backups-view>header button,.diff-card header button{padding:9px 11px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-surface);color:var(--color-text-secondary);cursor:pointer}.backup-list{display:flex;flex-direction:column;gap:9px}.backup-list article{display:grid;grid-template-columns:40px 1fr auto auto;align-items:center;gap:12px;padding:15px;border:1px solid var(--color-border);border-radius:13px;background:var(--color-surface)}.backup-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:var(--color-primary-soft);color:var(--color-primary-strong)}.backup-list article>div:nth-child(2){display:flex;flex-direction:column;gap:3px}.backup-list strong{font-size:13px}.backup-list small,.backup-list span{color:var(--color-text-muted);font-size:10px}.backup-list button{padding:8px 11px;border-radius:8px;font:inherit;font-size:10px;font-weight:900;cursor:pointer}.backup-list .secondary{border:1px solid var(--color-border);background:var(--color-surface-soft);color:var(--color-text-secondary)}.backup-list .primary{border:0;background:var(--color-primary);color:#fff}.backup-state{min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--color-text-muted)}.backup-state>i{font-size:30px;color:var(--color-primary)}.backup-message{padding:10px;border-radius:8px;background:var(--color-primary-soft);color:var(--color-primary-strong)}.spinner{width:24px;height:24px;border:3px solid var(--color-primary-soft);border-top-color:var(--color-primary);border-radius:50%;animation:spin .7s linear infinite}.diff-card{margin-top:18px;padding:18px;border:1px solid var(--color-primary-border);border-radius:14px;background:var(--color-surface)}.diff-card>header{display:flex;justify-content:space-between}.diff-card header div{display:flex;flex-direction:column}.diff-card section{margin-top:14px}.diff-card h3{margin:0 0 5px;font-size:12px}.diff-card p,.diff-card li{font-size:10px}.diff-card ul{display:flex;flex-wrap:wrap;gap:5px;margin:0;padding:0;list-style:none}.diff-card li{padding:4px 7px;border-radius:6px}.diff-card .added{background:#dcfce7;color:#166534}.diff-card .removed{background:#fee2e2;color:#991b1b}.diff-card .changed{background:#fef3c7;color:#92400e}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:700px){.backup-list article{grid-template-columns:40px 1fr}.backup-list button{grid-column:auto}.backups-view>header{align-items:flex-start;flex-direction:column}}
+</style>

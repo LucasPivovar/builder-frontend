@@ -8,6 +8,8 @@
         <button :class="{ active: tab === 'projects' }" @click="tab = 'projects'"><i class="bi bi-collection"></i> Todas as páginas <em>{{ allPages.length }}</em></button>
         <button :class="{ active: tab === 'templates' }" @click="tab = 'templates'"><i class="bi bi-layout-text-window"></i> Templates <em>{{ customTemplatesRegistry.length + 3 }}</em></button>
         <button :class="{ active: tab === 'alerts' }" @click="tab = 'alerts'"><i class="bi bi-megaphone"></i> Alertas</button>
+        <button :class="{ active: tab === 'billing' }" @click="tab = 'billing'"><i class="bi bi-credit-card"></i> Planos <em>{{ pendingBillingCount }}</em></button>
+        <button :class="{ active: tab === 'support' }" @click="tab = 'support'"><i class="bi bi-life-preserver"></i> Suporte <em>{{ openSupportCount }}</em></button>
         <button :class="{ active: tab === 'history' }" @click="tab = 'history'"><i class="bi bi-clock-history"></i> Histórico</button>
       </nav>
       <button class="back-button" @click="$emit('navigate', 'dashboard')"><i class="bi bi-arrow-left"></i> Voltar ao painel</button>
@@ -30,7 +32,7 @@
           </section>
           <section class="overview-grid">
             <article class="panel-card"><div class="panel-header"><div><h3>Usuários recentes</h3><p>Últimos cadastros na plataforma</p></div><button @click="tab='users'">Ver todos</button></div><div class="recent-list"><button v-for="user in overview.recentUsers || []" :key="user.id" @click="openUser(user)"><span class="avatar">{{ initials(user.name) }}</span><span><strong>{{ user.name }}</strong><small>{{ user.email }}</small></span><em>{{ projectCount(user.projects) }}</em><i class="bi bi-chevron-right"></i></button></div></article>
-            <article class="panel-card system-card"><div class="panel-header"><div><h3>Saúde do sistema</h3><p>Resumo dos serviços locais</p></div></div><ul><li><i class="bi bi-check-circle-fill"></i><span><strong>Banco SQLite</strong><small>Dados persistidos localmente</small></span><em>Operacional</em></li><li><i class="bi bi-check-circle-fill"></i><span><strong>Backups automáticos</strong><small>Até 20 versões por usuário</small></span><em>Ativo</em></li><li><i class="bi bi-check-circle-fill"></i><span><strong>Autenticação JWT</strong><small>Sessões protegidas e limitadas</small></span><em>Protegido</em></li></ul></article>
+            <article class="panel-card system-card"><div class="panel-header"><div><h3>Saúde do sistema</h3><p>Resumo dos serviços configurados</p></div></div><ul><li><i class="bi bi-check-circle-fill"></i><span><strong>Banco persistente</strong><small>SQL.js local ou PostgreSQL em produção</small></span><em>Operacional</em></li><li><i class="bi bi-check-circle-fill"></i><span><strong>Backups automáticos</strong><small>Até 20 versões por usuário</small></span><em>Ativo</em></li><li><i class="bi bi-check-circle-fill"></i><span><strong>Autenticação JWT</strong><small>Sessões protegidas e limitadas</small></span><em>Protegido</em></li></ul></article>
           </section>
         </template>
 
@@ -189,6 +191,42 @@
             <div v-if="!historyItems.length" class="empty-table"><i class="bi bi-clock-history"></i><strong>Nenhum evento registrado</strong></div>
           </section>
         </template>
+
+        <template v-else-if="tab === 'billing'">
+          <section class="section-heading"><div><h2>Solicitações de plano</h2><p>Aprove ou rejeite mudanças quando não houver checkout externo configurado.</p></div></section>
+          <section class="billing-request-list">
+            <article v-for="request in billingRequests" :key="request.id" class="billing-request-card">
+              <div><strong>{{ request.userName }}</strong><small>{{ request.userEmail }}</small></div>
+              <span>Plano <b>{{ planLabel(request.requestedPlan) }}</b></span>
+              <time>{{ formatDate(request.createdAt) }}</time>
+              <em :class="request.status">{{ requestStatus(request.status) }}</em>
+              <div v-if="request.status === 'pending'" class="billing-actions"><button class="secondary-button" :disabled="updatingBilling === request.id" @click="decideBilling(request,'rejected')">Rejeitar</button><button class="primary-button" :disabled="updatingBilling === request.id" @click="decideBilling(request,'approved')">Aprovar</button></div>
+            </article>
+            <div v-if="!billingRequests.length" class="empty-table"><i class="bi bi-credit-card"></i><strong>Nenhuma solicitação de plano</strong></div>
+          </section>
+        </template>
+
+        <template v-else-if="tab === 'support'">
+          <section class="section-heading">
+            <div><h2>Fila de suporte</h2><p>Responda e acompanhe os chamados abertos pelos usuários.</p></div>
+            <select v-model="supportFilter" class="support-filter"><option value="open">Abertos</option><option value="resolved">Resolvidos</option><option value="all">Todos</option></select>
+          </section>
+          <section class="admin-support-list">
+            <article v-for="ticket in filteredSupportTickets" :key="ticket.id" class="admin-support-ticket">
+              <header><div><span :class="['support-priority', ticket.priority.toLowerCase()]">{{ ticket.priority }}</span><strong>{{ ticket.subject }}</strong><small>{{ ticket.userName }} · {{ ticket.userEmail }}</small></div><time>{{ formatDate(ticket.createdAt) }}</time></header>
+              <p>{{ ticket.message }}</p>
+              <div class="support-ticket-meta"><span><i class="bi bi-tag"></i> {{ ticket.category }}</span><span v-if="ticket.pageUrl"><i class="bi bi-link-45deg"></i> {{ ticket.pageUrl }}</span></div>
+              <div v-if="ticket.messages?.length" class="admin-ticket-thread"><div v-for="(entry,index) in ticket.messages" :key="index" :class="entry.author"><strong>{{ entry.author === 'admin' ? 'Suporte' : 'Usuário' }}</strong><p>{{ entry.message }}</p><small>{{ formatDate(entry.createdAt) }}</small></div></div>
+              <div v-if="ticket.attachments?.length" class="admin-ticket-attachments"><button v-for="attachment in ticket.attachments" :key="attachment.id" @click="downloadTicketAttachment(ticket,attachment)"><i class="bi bi-paperclip"></i> {{ attachment.name }}</button></div>
+              <textarea v-model="supportReplies[ticket.id]" rows="3" maxlength="5000" placeholder="Escreva uma resposta para o usuário…"></textarea>
+              <footer>
+                <button v-if="ticket.status === 'resolved'" class="secondary-button" :disabled="updatingTicket === ticket.id" @click="updateTicket(ticket, 'open')"><i class="bi bi-arrow-counterclockwise"></i> Reabrir</button>
+                <button class="primary-button" :disabled="updatingTicket === ticket.id || (!supportReplies[ticket.id]?.trim() && ticket.status === 'resolved')" @click="updateTicket(ticket, 'resolved')"><i class="bi bi-send-check"></i> {{ updatingTicket === ticket.id ? 'Salvando…' : 'Responder e resolver' }}</button>
+              </footer>
+            </article>
+            <div v-if="!filteredSupportTickets.length" class="empty-table"><i class="bi bi-inbox"></i><strong>Nenhum ticket neste filtro</strong></div>
+          </section>
+        </template>
       </div>
     </main>
 
@@ -200,7 +238,12 @@
             <div v-if="detailsLoading" class="drawer-loading"><span class="spinner"></span> Carregando espaço...</div>
             <template v-else-if="userDetails">
               <div class="drawer-summary"><div><strong>{{ workspacePages.length }}</strong><small>Projetos</small></div><div><strong>{{ workspaceFolders.length }}</strong><small>Pastas</small></div><div><strong>{{ userDetails.backups.length }}</strong><small>Backups</small></div></div>
+              <div class="drawer-access-actions">
+                <button :disabled="updatingAccess" @click="changeUserAccess({ active: !selectedUser.active })"><i :class="selectedUser.active ? 'bi bi-person-x' : 'bi bi-person-check'"></i> {{ selectedUser.active ? 'Desativar conta' : 'Reativar conta' }}</button>
+                <button :disabled="updatingAccess" @click="changeUserAccess({ role: selectedUser.role === 'admin' ? 'user' : 'admin' })"><i class="bi bi-shield-check"></i> {{ selectedUser.role === 'admin' ? 'Remover admin' : 'Tornar admin' }}</button>
+              </div>
               <div class="drawer-actions"><button @click="downloadWorkspace"><i class="bi bi-download"></i> Baixar backup completo</button></div>
+              <section class="drawer-section"><div class="drawer-section-title"><h3>Sessões ativas</h3><span>{{ userDetails.sessions?.length || 0 }}</span></div><div v-if="userDetails.sessions?.length" class="admin-session-list"><article v-for="session in userDetails.sessions" :key="session.id"><i class="bi bi-display"></i><div><strong>{{ deviceLabel(session.userAgent) }}</strong><small>{{ formatDate(session.updatedAt) }}<template v-if="session.ipAddress"> · {{ session.ipAddress }}</template></small></div><button :disabled="revokingSession" aria-label="Encerrar esta sessão" @click="revokeUserSession(session.id)"><i class="bi bi-x-lg"></i></button></article><button class="revoke-all-sessions" :disabled="revokingSession" @click="revokeAllUserSessions"><i class="bi bi-shield-x"></i> {{ revokingSession ? 'Encerrando…' : 'Encerrar todas as sessões' }}</button></div><div v-else class="drawer-empty">Não há sessões ativas para esta conta.</div></section>
               <div class="drawer-actions"><button v-for="page in workspacePages" :key="page.id" @click="router.push({ path: '/builder', query: { adminUser: selectedUser.id, page: page.id } })"><i class="bi bi-pencil-square"></i> Abrir {{ page.name }} no builder</button></div>
               <section class="drawer-section"><div class="drawer-section-title"><h3>Projetos salvos</h3><span>{{ workspacePages.length }}</span></div><div v-if="workspacePages.length" class="project-list"><article v-for="page in workspacePages" :key="page.id"><span class="project-icon"><i :class="projectIcon(page)"></i></span><div><strong>{{ page.name }}</strong><small>{{ folderName(page.folderId) }} · {{ formatDate(page.updatedAt || page.createdAt) }}</small></div><em>{{ projectLabel(page) }}</em></article></div><div v-else class="drawer-empty">Nenhum projeto salvo neste espaço.</div></section>
               <section class="drawer-section"><div class="drawer-section-title"><h3>Histórico de recuperação</h3><span>{{ userDetails.backups.length }}</span></div><div v-if="userDetails.backups.length" class="backup-list"><article v-for="backup in userDetails.backups" :key="backup.id"><div><strong>Revisão {{ backup.revision }}</strong><small>{{ backup.reason }} · {{ formatDate(backup.createdAt) }}</small></div><span>{{ projectCount(backup.pagesCount) }}</span><button :disabled="restoring === backup.id" @click="restoreBackup(backup)">{{ restoring === backup.id ? 'Restaurando...' : 'Restaurar' }}</button></article></div><div v-else class="drawer-empty">Os backups aparecerão após novos salvamentos.</div></section>
@@ -237,7 +280,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useBuilderStore } from '../composables/useBuilderStore';
-import { createAdminAlert, getAdminHistory, getAdminOverview, getAdminPages, getAdminUsers, getAdminUserWorkspace, restoreAdminBackup } from '../services/api';
+import { createAdminAlert, decideAdminBillingRequest, downloadSupportAttachment, getAdminBillingRequests, getAdminHistory, getAdminOverview, getAdminPages, getAdminSupportTickets, getAdminUsers, getAdminUserWorkspace, restoreAdminBackup, revokeAdminUserSession, revokeAdminUserSessions, updateAdminSupportTicket, updateAdminUserAccess } from '../services/api';
 
 defineEmits(['navigate', 'open-builder']);
 const router = useRouter();
@@ -247,6 +290,14 @@ const tab = ref(route.query.tab === 'templates' ? 'templates' : 'overview'); con
 const selectedUser = ref(null); const userDetails = ref(null); const detailsLoading = ref(false); const restoring = ref('');
 const historyItems = ref([]);
 const sendingAlert = ref(false);
+const supportTickets = ref([]);
+const supportFilter = ref('open');
+const supportReplies = reactive({});
+const updatingTicket = ref('');
+const updatingAccess = ref(false);
+const revokingSession = ref(false);
+const billingRequests = ref([]);
+const updatingBilling = ref('');
 const alertForm = reactive({ title:'', message:'', type:'info', target:'all', userId:'' });
 const templateCreatorOpen = ref(false);
 const templateForm = reactive({ type:'funil', name:'', description:'' });
@@ -255,7 +306,10 @@ const templateTypes = [
   { value:'email', label:'E-mail', size:'600px', icon:'bi bi-envelope-paper' },
   { value:'quiz', label:'Quiz', size:'460px', icon:'bi bi-ui-checks-grid' }
 ];
-const pageTitle = computed(() => ({ overview:'Visão geral', users:'Usuários', projects:'Projetos e recuperação', templates:'Templates', alerts:'Alertas', history:'Histórico' }[tab.value]));
+const pageTitle = computed(() => ({ overview:'Visão geral', users:'Usuários', projects:'Projetos e recuperação', templates:'Templates', alerts:'Alertas', billing:'Planos e cobrança', support:'Suporte', history:'Histórico' }[tab.value]));
+const openSupportCount = computed(() => supportTickets.value.filter(ticket => ticket.status === 'open').length);
+const pendingBillingCount = computed(() => billingRequests.value.filter(request => request.status === 'pending').length);
+const filteredSupportTickets = computed(() => supportTickets.value.filter(ticket => supportFilter.value === 'all' || ticket.status === supportFilter.value));
 const stats = computed(() => [
   { label:'Usuários cadastrados', value:overview.value.users || 0, note:`${overview.value.activeThisWeek || 0} ativos nesta semana`, icon:'bi bi-people' },
   { label:'Projetos salvos', value:overview.value.pages || 0, note:`${overview.value.workspaces || 0} espaços sincronizados`, icon:'bi bi-window-stack' },
@@ -279,10 +333,19 @@ const workspacePages = computed(() => userDetails.value?.workspace?.data?.pages 
 const canCreateTemplate = computed(() => Boolean(templateForm.name.trim()));
 const canSendAlert = computed(() => Boolean(alertForm.title.trim() && alertForm.message.trim() && (alertForm.target !== 'user' || alertForm.userId)));
 onMounted(loadAdminData);
-async function loadAdminData(){ loading.value=true; error.value=''; try { [overview.value,users.value,historyItems.value,allPages.value]=await Promise.all([getAdminOverview(),getAdminUsers(),getAdminHistory().catch(()=>[]),getAdminPages().catch(()=>[])]); } catch(e){ error.value=e.status===403?'Sua conta não possui permissão administrativa.':e.message; } finally { loading.value=false; } }
+async function loadAdminData(){ loading.value=true; error.value=''; try { [overview.value,users.value,historyItems.value,allPages.value,supportTickets.value,billingRequests.value]=await Promise.all([getAdminOverview(),getAdminUsers(),getAdminHistory().catch(()=>[]),getAdminPages().catch(()=>[]),getAdminSupportTickets().catch(()=>[]),getAdminBillingRequests().catch(()=>[])]); supportTickets.value.forEach(ticket=>{ supportReplies[ticket.id]=ticket.adminReply||''; }); } catch(e){ error.value=e.status===403?'Sua conta não possui permissão administrativa.':e.message; } finally { loading.value=false; } }
+async function decideBilling(request,status){ updatingBilling.value=request.id; try { const updated=await decideAdminBillingRequest(request.id,status); const index=billingRequests.value.findIndex(item=>item.id===request.id); if(index>=0)billingRequests.value[index]={...billingRequests.value[index],...updated}; showToast(status==='approved'?'Plano aprovado e ativado.':'Solicitação rejeitada.','success'); } catch(e){ showToast(e.message,'error'); } finally { updatingBilling.value=''; } }
+function planLabel(plan){ return ({essential:'Essencial',pro:'Pro',agency:'Agência'}[plan]||plan); }
+function requestStatus(status){ return ({pending:'Pendente',approved:'Aprovada',rejected:'Rejeitada'}[status]||status); }
+async function updateTicket(ticket,status){ updatingTicket.value=ticket.id; try { const updated=await updateAdminSupportTicket(ticket.id,{status,reply:supportReplies[ticket.id]||''}); const index=supportTickets.value.findIndex(item=>item.id===ticket.id); if(index>=0)supportTickets.value[index]={...ticket,...updated}; showToast(status==='resolved'?'Resposta enviada e ticket resolvido.':'Ticket reaberto.','success'); await loadHistory(); } catch(e){ showToast(e.message,'error'); } finally { updatingTicket.value=''; } }
+async function downloadTicketAttachment(ticket,attachment){ try { await downloadSupportAttachment(ticket.id,attachment); } catch(e){ showToast(e.message,'error'); } }
 async function loadHistory(){ try { historyItems.value=await getAdminHistory(); } catch(e){ showToast(e.message,'error'); } }
 async function sendAlert(){ if(!canSendAlert.value)return; sendingAlert.value=true; try { const result=await createAdminAlert(alertForm); showToast(`Alerta enviado para ${result.delivered} usuário(s).`,'success'); alertForm.title=''; alertForm.message=''; alertForm.type='info'; alertForm.target='all'; alertForm.userId=''; await loadHistory(); } catch(e){ showToast(e.message,'error'); } finally { sendingAlert.value=false; } }
 async function openUser(user){ selectedUser.value=user; detailsLoading.value=true; try { userDetails.value=await getAdminUserWorkspace(user.id); } catch(e){ showToast(e.message,'error'); closeUser(); } finally { detailsLoading.value=false; } }
+async function changeUserAccess(update){ if(!selectedUser.value)return; updatingAccess.value=true; try { const changed=await updateAdminUserAccess(selectedUser.value.id,update); selectedUser.value={...selectedUser.value,...changed}; const index=users.value.findIndex(user=>user.id===changed.id); if(index>=0)users.value[index]={...users.value[index],...changed}; showToast('Acesso atualizado com sucesso.','success'); } catch(e){ showToast(e.message,'error'); } finally { updatingAccess.value=false; } }
+function deviceLabel(userAgent){ const value=String(userAgent||'').toLowerCase(); if(value.includes('iphone')||value.includes('android')||value.includes('mobile'))return 'Dispositivo móvel'; if(value.includes('tablet')||value.includes('ipad'))return 'Tablet'; return 'Computador / navegador'; }
+async function revokeUserSession(sessionId){ if(!selectedUser.value)return; revokingSession.value=true; try { await revokeAdminUserSession(selectedUser.value.id,sessionId); userDetails.value.sessions=userDetails.value.sessions.filter(session=>session.id!==sessionId); showToast('Sessão encerrada.','success'); } catch(e){ showToast(e.message,'error'); } finally { revokingSession.value=false; } }
+async function revokeAllUserSessions(){ if(!selectedUser.value||!window.confirm(`Encerrar todas as sessões de ${selectedUser.value.name}?`))return; revokingSession.value=true; try { await revokeAdminUserSessions(selectedUser.value.id); userDetails.value.sessions=[]; showToast('Todas as sessões foram encerradas.','success'); } catch(e){ showToast(e.message,'error'); } finally { revokingSession.value=false; } }
 function closeUser(){ selectedUser.value=null; userDetails.value=null; }
 function initials(name){ return String(name||'U').split(' ').slice(0,2).map(v=>v[0]).join('').toUpperCase(); }
 function formatDate(value){ if(!value)return 'Sem atividade'; return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(value)); }
@@ -344,4 +407,10 @@ async function removeTemplate(template){ if(!window.confirm(`Excluir o template 
 .btn-admin-visit:hover { background: var(--color-surface-soft); color: var(--color-primary); }
 
 .admin-sidebar{background:#171126!important;border-right-color:#302442!important;color:#fff}.admin-brand strong{color:#fff}.admin-brand small{color:#978ca8}.admin-sidebar nav button{color:#d6cde2}.admin-sidebar nav button:hover,.admin-sidebar nav button.active{background:#6d32f5;color:#fff}.admin-sidebar nav em{background:#34234b;color:#dbcaff}.admin-sidebar .back-button{border-color:#49365f;background:#241832;color:#ddd3ec}.admin-sidebar .back-button:hover{background:#342245;color:#fff}
+.support-filter{min-width:150px;padding:9px 11px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface);color:var(--color-text)}.admin-support-list{display:flex;flex-direction:column;gap:12px}.admin-support-ticket{padding:18px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface)}.admin-support-ticket header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.admin-support-ticket header>div{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:5px 9px}.admin-support-ticket header strong{font-size:14px}.admin-support-ticket header small{grid-column:2;color:var(--color-text-muted);font-size:10px}.admin-support-ticket time{color:var(--color-text-muted);font-size:10px}.admin-support-ticket>p{margin:14px 0;color:var(--color-text-secondary);font-size:12px;line-height:1.55;white-space:pre-wrap}.support-priority{grid-row:1/3;padding:4px 7px;border-radius:7px;background:var(--color-primary-soft);color:var(--color-primary-strong);font-size:9px;font-weight:900}.support-priority.alta{background:#fef3c7;color:#92400e}.support-priority.urgente{background:var(--color-danger-soft);color:var(--color-danger-strong)}.support-ticket-meta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;color:var(--color-text-muted);font-size:10px}.admin-support-ticket textarea{width:100%;resize:vertical;padding:11px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-soft);color:var(--color-text);font:inherit;font-size:12px}.admin-support-ticket footer{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}.admin-support-ticket footer button:disabled{opacity:.5;cursor:not-allowed}
+.drawer-access-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 20px 12px}.drawer-access-actions button{padding:9px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-surface);color:var(--color-text-secondary);font:inherit;font-size:10px;font-weight:800;cursor:pointer}.drawer-access-actions button:hover{border-color:var(--color-primary-border);color:var(--color-primary-strong)}.drawer-access-actions button:disabled{opacity:.5;cursor:not-allowed}
+.admin-session-list{display:flex;flex-direction:column;gap:7px}.admin-session-list article{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:9px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-surface-soft)}.admin-session-list article>i{color:var(--color-primary-strong)}.admin-session-list article>div{display:flex;min-width:0;flex-direction:column}.admin-session-list strong{font-size:10px}.admin-session-list small{overflow:hidden;color:var(--color-text-muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}.admin-session-list article button{width:26px;height:26px;border:0;border-radius:7px;background:var(--color-surface);color:var(--color-text-muted);cursor:pointer}.revoke-all-sessions{align-self:flex-start;margin-top:3px;padding:7px 9px;border:1px solid var(--color-danger-soft);border-radius:8px;background:var(--color-surface);color:var(--color-danger-strong);font:inherit;font-size:9px;font-weight:900;cursor:pointer}.revoke-all-sessions:disabled,.admin-session-list button:disabled{cursor:not-allowed;opacity:.55}
+.admin-ticket-thread{display:flex;flex-direction:column;gap:6px;margin:12px 0}.admin-ticket-thread>div{padding:9px 11px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-surface-soft)}.admin-ticket-thread>div.admin{margin-left:30px;border-color:var(--color-primary-border);background:var(--color-primary-subtle)}.admin-ticket-thread strong{font-size:10px;color:var(--color-primary-strong)}.admin-ticket-thread p{margin:4px 0;color:var(--color-text-secondary);font-size:11px;white-space:pre-wrap}.admin-ticket-thread small{color:var(--color-text-muted);font-size:9px}
+.admin-ticket-attachments{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0}.admin-ticket-attachments button{padding:6px 8px;border:1px solid var(--color-border);border-radius:7px;background:var(--color-surface-soft);color:var(--color-text-secondary);font:inherit;font-size:9px;cursor:pointer}
+.billing-request-list{display:flex;flex-direction:column;gap:10px}.billing-request-card{display:grid;grid-template-columns:minmax(180px,1.4fr) 120px 160px 90px auto;align-items:center;gap:14px;padding:15px 17px;border:1px solid var(--color-border);border-radius:13px;background:var(--color-surface)}.billing-request-card>div:first-child{display:flex;flex-direction:column}.billing-request-card strong{font-size:12px}.billing-request-card small,.billing-request-card time{color:var(--color-text-muted);font-size:10px}.billing-request-card>span{font-size:11px}.billing-request-card>em{width:max-content;padding:4px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-style:normal;font-size:9px;font-weight:900}.billing-request-card>em.approved{background:#dcfce7;color:#166534}.billing-request-card>em.rejected{background:var(--color-danger-soft);color:var(--color-danger-strong)}.billing-actions{display:flex;justify-content:flex-end;gap:7px}.billing-actions button{padding:8px 11px;border-radius:8px;border:1px solid var(--color-border);font:inherit;font-size:10px;font-weight:900;cursor:pointer}.billing-actions button:disabled{opacity:.5}@media(max-width:900px){.billing-request-card{grid-template-columns:1fr 1fr}.billing-actions{grid-column:1/-1;justify-content:flex-start}}
 </style>

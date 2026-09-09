@@ -1,11 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import LandingPageView from '../views/LandingPageView.vue';
-import DashboardView from '../views/DashboardView.vue';
-import AuthView from '../views/AuthView.vue';
-import BuilderView from '../views/BuilderView.vue';
-import AdminView from '../views/AdminView.vue';
-import PageMetricsView from '../views/PageMetricsView.vue';
-import { hasAuthToken } from '../services/api';
+import { getStoredUser, hasAuthToken } from '../services/api';
+const LandingPageView=()=>import('../views/LandingPageView.vue');const DashboardView=()=>import('../views/DashboardView.vue');const AuthView=()=>import('../views/AuthView.vue');const BuilderView=()=>import('../views/BuilderView.vue');const AdminView=()=>import('../views/AdminView.vue');const PageMetricsView=()=>import('../views/PageMetricsView.vue');
 
 const routes = [
   {
@@ -42,7 +37,7 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: AdminView,
-    meta: { title: 'Painel Admin | Astro Builder', requiresAuth: true }
+    meta: { title: 'Painel Admin | Astro Builder', requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -51,7 +46,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 });
 
@@ -64,6 +59,11 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ path: '/auth', query: { redirect: to.fullPath } });
+    return;
+  }
+
+  if (to.meta.requiresAdmin && getStoredUser()?.role !== 'admin') {
+    next('/dashboard');
     return;
   }
 

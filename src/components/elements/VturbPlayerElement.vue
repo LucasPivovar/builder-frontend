@@ -1,14 +1,26 @@
 <template>
   <div class="canvas-vturb-wrapper" :style="wrapperStyle">
+    <video
+      v-if="element.hostedVideoUrl"
+      class="hosted-video"
+      :src="element.hostedVideoUrl"
+      :poster="element.hostedVideoPoster || ''"
+      :controls="element.videoControls !== false"
+      :autoplay="Boolean(element.videoAutoplay)"
+      :muted="Boolean(element.videoMuted || element.videoAutoplay)"
+      :loop="Boolean(element.videoLoop)"
+      playsinline
+      preload="metadata"
+    ></video>
     <div
-      v-if="element.vturbBody && element.vturbBody.trim().length > 0"
+      v-else-if="element.vturbBody && element.vturbBody.trim().length > 0"
       ref="containerRef"
       class="vturb-embed-box"
     ></div>
     <div v-else class="vturb-player-placeholder-box">
       <i class="bi bi-play-circle-fill" style="font-size: 42px;"></i>
-      <span style="font-weight: 800; font-size: 14px; margin-top: 6px;">Player VTurb (VSL)</span>
-      <span style="font-size: 11px; opacity: 0.7;">Insira o embed do VTurb nas configurações do objeto</span>
+      <span style="font-weight: 800; font-size: 14px; margin-top: 6px;">Player de VSL</span>
+      <span style="font-size: 11px; opacity: 0.7;">Envie um vídeo ou insira o embed do VTurb</span>
     </div>
   </div>
 </template>
@@ -151,6 +163,7 @@ watch(
   width: 100%;
   box-sizing: border-box;
 }
+.hosted-video { display:block; width:100%; height:auto; background:#000; }
 
 .vturb-player-placeholder-box {
   display: flex;

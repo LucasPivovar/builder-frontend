@@ -1,6 +1,19 @@
 <template>
   <div class="modal-vturb-container" :style="wrapperStyle">
+    <video
+      v-if="element.hostedVideoUrl"
+      class="modal-hosted-video"
+      :src="element.hostedVideoUrl"
+      :poster="element.hostedVideoPoster || ''"
+      :controls="element.videoControls !== false"
+      :autoplay="Boolean(element.videoAutoplay)"
+      :muted="Boolean(element.videoMuted || element.videoAutoplay)"
+      :loop="Boolean(element.videoLoop)"
+      playsinline
+      preload="metadata"
+    ></video>
     <iframe
+      v-else
       ref="iframeRef"
       class="modal-vturb-iframe"
       frameborder="0"
@@ -111,4 +124,5 @@ onMounted(() => {
   height: 100%;
   border: none;
 }
+.modal-hosted-video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
 </style>

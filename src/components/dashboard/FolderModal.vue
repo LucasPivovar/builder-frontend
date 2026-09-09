@@ -1,19 +1,20 @@
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="modal-backdrop" @click.self="$emit('close')">
-      <div class="folder-modal tour-folder-modal">
+      <section class="folder-modal tour-folder-modal" role="dialog" aria-modal="true" aria-labelledby="folder-modal-title" @keydown.esc="$emit('close')">
         <div class="modal-header">
-          <h3>
+          <h3 id="folder-modal-title">
             <i :class="mode === 'create' ? 'bi bi-folder-plus' : 'bi bi-pencil-square'"></i>
             {{ mode === 'create' ? 'Nova Pasta' : 'Renomear Pasta' }}
           </h3>
-          <button class="btn-close" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
+          <button class="btn-close" type="button" aria-label="Fechar edição da pasta" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
         </div>
 
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nome da Pasta *</label>
+            <label class="form-label" for="folder-name">Nome da Pasta *</label>
             <input
+              id="folder-name"
               type="text"
               class="form-input tour-folder-name"
               v-model="folderName"
@@ -24,27 +25,30 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Domínio da pasta (opcional)</label>
-            <input class="form-input tour-folder-domain" v-model.trim="customDomain" placeholder="ofertas.seudominio.com" />
+            <label class="form-label" for="folder-domain">Domínio da pasta (opcional)</label>
+            <input id="folder-domain" class="form-input tour-folder-domain" v-model.trim="customDomain" placeholder="ofertas.seudominio.com" />
             <small>As páginas serão publicadas em domínio/slug-da-página. Configure o DNS e republique as páginas após alterar.</small>
           </div>
           <div v-if="mode === 'create'" class="form-group">
             <label class="form-label">Cor da Pasta</label>
             <div class="color-picker-row">
-              <div
+              <button
                 v-for="color in colorOptions"
                 :key="color"
+                type="button"
                 class="color-swatch"
                 :class="{ active: selectedColor === color }"
                 :style="{ background: color }"
+                :aria-label="`Selecionar cor ${color}`"
+                :aria-pressed="selectedColor === color"
                 @click="selectedColor = color"
-              ></div>
+              ></button>
             </div>
           </div>
 
           <div v-if="mode === 'create'" class="form-group">
-            <label class="form-label">Pasta Pai (subpasta)</label>
-            <select class="form-select" v-model="parentId">
+            <label class="form-label" for="folder-parent">Pasta Pai (subpasta)</label>
+            <select id="folder-parent" class="form-select" v-model="parentId">
               <option value="">Raiz (sem pasta pai)</option>
               <option v-for="f in foldersRegistry" :key="f.id" :value="f.id">{{ f.name }}</option>
             </select>
@@ -58,7 +62,7 @@
             {{ mode === 'create' ? 'Criar Pasta' : 'Salvar' }}
           </button>
         </div>
-      </div>
+      </section>
     </div>
   </Teleport>
 </template>
@@ -147,7 +151,7 @@ function handleConfirm() {
 
 .color-picker-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .color-swatch {
-  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  width: 28px; height: 28px; padding: 0; border-radius: 50%; cursor: pointer;
   border: 2px solid transparent; transition: all 0.2s; flex-shrink: 0;
 }
 .color-swatch.active { border-color: var(--color-surface); transform: scale(1.15); }

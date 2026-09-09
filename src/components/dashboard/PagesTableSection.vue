@@ -44,10 +44,7 @@
         <time class="row-date">{{ page.date }}</time>
 
         <div class="row-actions">
-          <button v-if="page.isPublished" class="btn-edit-builder" type="button" @click="$emit('assign-dns', page)">
-            <i class="bi bi-globe2"></i><span>Atribuir DNS</span>
-          </button>
-          <button v-else class="btn-edit-builder" type="button" @click="$emit('publish-page', page)">
+          <button class="btn-edit-builder" type="button" @click="$emit('publish-page', page)">
             <i class="bi bi-cloud-arrow-up"></i><span>Publicar</span>
           </button>
           <button class="btn-item-more" type="button" aria-label="Mais opções" @click="$emit('more-options', page)">
@@ -64,7 +61,7 @@ defineProps({
   pages: { type: Array, default: () => [] }
 });
 
-defineEmits(['create-new', 'edit-page', 'more-options', 'publish-page', 'assign-dns']);
+defineEmits(['create-new', 'edit-page', 'more-options', 'publish-page']);
 </script>
 
 <style scoped>

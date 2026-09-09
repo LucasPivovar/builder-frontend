@@ -256,6 +256,12 @@ async function handleNext() {
   const indexAtStart = state.index;
 
   try {
+    if (outcomeReached(currentStep.value) && state.index < steps.length - 1) {
+      goTo(indexAtStart + 1);
+      await nextTick();
+      await locateTarget();
+      return;
+    }
     const targetReady = await locateTarget();
     if (!targetReady || state.index !== indexAtStart) return;
     const actionStarted = await performCurrentAction();
@@ -284,10 +290,6 @@ async function preparePreviousStep(targetIndex) {
     click('.tour-section-item');
   } else if (targetIndex === 10 && !isVisible('.tour-save-modal')) {
     click('.tour-save');
-  } else if (targetIndex === 12 && !isVisible('.tour-version-modal')) {
-    click('.tour-more-menu > .icon-button');
-    await waitFor(() => isVisible('.tour-versions-action'), 1200);
-    click('.tour-versions-action');
   }
 }
 

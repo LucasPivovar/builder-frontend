@@ -10,8 +10,8 @@
       <!-- Brand -->
       <div class="auth-brand">
         
-        <h1>{{ mode === 'login' ? 'Bom ter você de volta.' : 'Sua próxima ideia começa aqui.' }}</h1>
-        <p>{{ mode === 'login' ? 'Entre na sua conta e continue de onde parou.' : 'Crie sua conta e dê forma às suas ideias.' }}</p>
+        <h1>{{ authCopy.title }}</h1>
+        <p>{{ authCopy.description }}</p>
       </div>
 
       <!-- Login Form -->
@@ -46,7 +46,7 @@
           <label class="check-label">
             <input type="checkbox" v-model="rememberMe" /> Lembrar-me
           </label>
-          <a href="#" class="link-forgot" @click.prevent>Esqueceu a senha?</a>
+          <a href="#" class="link-forgot" @click.prevent="switchMode('reset')">Esqueceu a senha?</a>
         </div>
 
         <div v-if="loginError" class="error-message" role="alert">
@@ -64,11 +64,12 @@
           <button type="button" class="btn-switch-link" @click="switchMode('register')">
             Cadastre-se agora
           </button>
+          <button type="button" class="btn-switch-link" @click="switchMode('verify')">Confirmar e-mail</button>
         </div>
       </form>
 
       <!-- Register Form -->
-      <form v-else @submit.prevent="handleRegister" class="auth-form">
+      <form v-else-if="mode === 'register'" @submit.prevent="handleRegister" class="auth-form">
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label">Primeiro nome</label>
@@ -184,6 +185,31 @@
           </button>
         </div>
       </form>
+
+      <form v-else-if="mode === 'reset'" class="auth-form" @submit.prevent="resetRequested ? handleResetConfirm() : handleResetRequest()">
+        <div class="form-group">
+          <label class="form-label">E-mail da conta</label>
+          <div class="input-wrapper"><i class="bi bi-envelope input-icon"></i><input v-model="resetEmail" type="email" class="form-input" required autocomplete="email" placeholder="seu@email.com" :disabled="resetRequested" /></div>
+        </div>
+        <template v-if="resetRequested">
+          <div class="form-group"><label class="form-label">Código de recuperação</label><div class="input-wrapper"><i class="bi bi-key input-icon"></i><input v-model="resetToken" class="form-input" required minlength="32" autocomplete="one-time-code" placeholder="Cole o código recebido" /></div></div>
+          <div class="form-group"><label class="form-label">Nova senha</label><div class="input-wrapper"><i class="bi bi-lock input-icon"></i><input v-model="resetPassword" :type="showPass ? 'text' : 'password'" class="form-input" required minlength="8" autocomplete="new-password" placeholder="Nova senha segura" /></div></div>
+        </template>
+        <div v-if="resetMessage" class="success-message" role="status"><i class="bi bi-check-circle-fill"></i> {{ resetMessage }}</div>
+        <div v-if="resetError" class="error-message" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> {{ resetError }}</div>
+        <button type="submit" class="btn-auth" :disabled="loading"><span><i class="bi bi-shield-lock"></i> {{ loading ? 'Aguarde…' : resetRequested ? 'Definir nova senha' : 'Solicitar recuperação' }}</span></button>
+        <div class="auth-switch-box"><button type="button" class="btn-switch-link" @click="switchMode('login')">Voltar ao login</button></div>
+      </form>
+
+      <form v-else class="auth-form" @submit.prevent="handleEmailVerification">
+        <div class="form-group"><label class="form-label" for="verify-email">E-mail da conta</label><div class="input-wrapper"><i class="bi bi-envelope input-icon"></i><input id="verify-email" v-model.trim="verificationEmail" type="email" class="form-input" required autocomplete="email" placeholder="seu@email.com"></div></div>
+        <div class="form-group"><label class="form-label" for="verify-token">Código de confirmação</label><div class="input-wrapper"><i class="bi bi-shield-check input-icon"></i><input id="verify-token" v-model.trim="verificationToken" class="form-input" required minlength="32" autocomplete="one-time-code" placeholder="Cole o código recebido"></div></div>
+        <div v-if="verificationMessage" class="success-message" role="status"><i class="bi bi-check-circle-fill"></i> {{ verificationMessage }}</div>
+        <div v-if="verificationError" class="error-message" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> {{ verificationError }}</div>
+        <button type="submit" class="btn-auth" :disabled="loading"><span><i class="bi bi-patch-check"></i> {{ loading ? 'Confirmando…' : 'Confirmar e-mail' }}</span></button>
+        <button type="button" class="btn-switch-link verification-resend" :disabled="loading" @click="resendVerification">Reenviar código</button>
+        <div class="auth-switch-box"><button type="button" class="btn-switch-link" @click="switchMode('login')">Voltar ao login</button></div>
+      </form>
     </div>
   </div>
 </template>
@@ -193,7 +219,7 @@ import { ref, computed } from 'vue';
 import AstroMark from '../AstroMark.vue';
 
 import { useRouter, useRoute } from 'vue-router';
-import { login, register, storeAuthSession } from '../../services/api';
+import { confirmEmailVerification, confirmPasswordReset, login, register, requestEmailVerification, requestPasswordReset, storeAuthSession } from '../../services/api';
 import { useBuilderStore } from '../../composables/useBuilderStore';
 
 const router = useRouter();
@@ -204,6 +230,22 @@ const mode = ref(route.query.mode === 'register' ? 'register' : 'login');
 const loading = ref(false);
 const showPass = ref(false);
 const passwordRequirementsOpen = ref(false);
+const resetEmail = ref('');
+const resetToken = ref('');
+const resetPassword = ref('');
+const resetRequested = ref(false);
+const resetMessage = ref('');
+const resetError = ref('');
+const verificationEmail = ref('');
+const verificationToken = ref('');
+const verificationMessage = ref('');
+const verificationError = ref('');
+const authCopy = computed(() => ({
+  login: { title:'Bom ter você de volta.', description:'Entre na sua conta e continue de onde parou.' },
+  register: { title:'Sua próxima ideia começa aqui.', description:'Crie sua conta e dê forma às suas ideias.' },
+  reset: { title:'Recupere seu acesso.', description:'Solicite um código e defina uma nova senha segura.' },
+  verify: { title:'Confirme seu e-mail.', description:'Use o código enviado para liberar seu acesso.' }
+}[mode.value]));
 
 // Login
 const loginEmail = ref('');
@@ -261,6 +303,31 @@ function switchMode(nextMode) {
   loginError.value = '';
   registerError.value = '';
   registerSuccess.value = '';
+  resetError.value = '';
+  resetMessage.value = '';
+  verificationError.value = '';
+  verificationMessage.value = '';
+}
+
+async function handleResetRequest() {
+  loading.value = true; resetError.value = ''; resetMessage.value = '';
+  try {
+    const result = await requestPasswordReset(resetEmail.value.trim().toLowerCase());
+    resetRequested.value = true;
+    if (result.resetToken) resetToken.value = result.resetToken;
+    resetMessage.value = result.resetToken ? 'Código local gerado e preenchido. Defina a nova senha.' : result.message;
+  } catch (error) { resetError.value = error.message; }
+  finally { loading.value = false; }
+}
+
+async function handleResetConfirm() {
+  loading.value = true; resetError.value = ''; resetMessage.value = '';
+  try {
+    await confirmPasswordReset(resetToken.value.trim(), resetPassword.value);
+    resetMessage.value = 'Senha alterada. Você já pode entrar.';
+    setTimeout(() => { switchMode('login'); loginEmail.value = resetEmail.value; resetRequested.value = false; }, 700);
+  } catch (error) { resetError.value = error.message; }
+  finally { loading.value = false; }
 }
 
 const passwordStrength = computed(() => {
@@ -321,7 +388,15 @@ async function handleRegister() {
       password: regPassword.value,
       remember: true
     });
+    if (session.emailVerificationRequired) {
+      verificationEmail.value = session.email || regEmail.value.trim().toLowerCase();
+      verificationToken.value = session.verificationToken || '';
+      verificationMessage.value = session.message || 'Enviamos um código de confirmação para o seu e-mail.';
+      mode.value = 'verify';
+      return;
+    }
     storeAuthSession(session, true);
+    if(session.verificationToken)sessionStorage.setItem('vbs_verification_token',session.verificationToken);
     await hydrateWorkspaceFromBackend();
     registerSuccess.value = 'Conta criada! Abrindo seu painel...';
     setTimeout(() => router.push(redirectTarget.value), 350);
@@ -330,6 +405,26 @@ async function handleRegister() {
   } finally {
     loading.value = false;
   }
+}
+
+async function resendVerification() {
+  verificationError.value = ''; verificationMessage.value = ''; loading.value = true;
+  try {
+    const result = await requestEmailVerification(verificationEmail.value);
+    if (result.verificationToken) verificationToken.value = result.verificationToken;
+    verificationMessage.value = result.message;
+  } catch (error) { verificationError.value = error.message || 'Não foi possível reenviar o código.'; }
+  finally { loading.value = false; }
+}
+
+async function handleEmailVerification() {
+  verificationError.value = ''; verificationMessage.value = ''; loading.value = true;
+  try {
+    await confirmEmailVerification(verificationToken.value);
+    verificationMessage.value = 'E-mail confirmado. Você já pode entrar.';
+    setTimeout(() => { loginEmail.value = verificationEmail.value; switchMode('login'); }, 550);
+  } catch (error) { verificationError.value = error.message || 'Não foi possível confirmar o e-mail.'; }
+  finally { loading.value = false; }
 }
 </script>
 
@@ -589,4 +684,3 @@ async function handleRegister() {
 button:focus-visible, a:focus-visible { outline: 3px solid var(--color-primary-border); outline-offset: 3px; }
 @media (max-width: 380px) { .form-row-2 { grid-template-columns: 1fr; gap: 0; } }
 </style>
-
