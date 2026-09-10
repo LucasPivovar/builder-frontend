@@ -68,7 +68,7 @@
         :key="row.id"
         class="builder-row"
         :class="{ 'has-top-banner': row.columns.some(c => c.elements.some(e => e.type === 'top-banner')), 'quiz-step-row': state.builderMode === 'quiz' }"
-        :style="{ marginBottom: row.columns.some(c => c.elements.some(e => e.type === 'top-banner')) ? '0px !important' : ((state.pageSettings?.sectionGap !== undefined ? state.pageSettings.sectionGap : 0) + 'px !important') }"
+        :style="{ marginBottom: row.columns.some(c => c.elements.some(e => e.type === 'top-banner')) ? '0px !important' : ((state.pageSettings?.sectionGap !== undefined ? state.pageSettings.sectionGap : 12) + 'px !important') }"
       >
         <div
           v-for="col in row.columns"

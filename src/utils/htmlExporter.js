@@ -190,7 +190,7 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
     }
     const rowHasTopBanner = row.columns.some(c => c.elements.some(e => e.type === 'top-banner'));
     const rowClass = rowHasTopBanner ? 'builder-row has-top-banner' : `builder-row${isQuizMode ? ' quiz-step' : ''}`;
-    const rowGap = pageSettings.sectionGap !== undefined ? Number(pageSettings.sectionGap) : 0;
+    const rowGap = pageSettings.sectionGap !== undefined ? Number(pageSettings.sectionGap) : 12;
     const rowMarginStyle = rowHasTopBanner ? 'margin-bottom: 0px;' : `margin-bottom: ${rowGap}px;`;
     const progress = Math.round(((rowIndex + 1) / Math.max(1, rows.length)) * 100);
     const progressHTML = isQuizMode ? `<div class="quiz-progress" style="height:${Number(pageSettings.quizProgressHeight)||6}px"><span style="width:${progress}%;background:${pageSettings.quizProgressColor || '#0ea5e9'}"></span></div><div class="quiz-step-label">Etapa ${rowIndex + 1} de ${rows.length}</div>` : '';

@@ -334,7 +334,7 @@ const state = reactive({
   currentTemplateId: null,
   templateDraftMeta: { name: '', description: '', type: 'funil' },
   pageSettings: {
-    bgColor: '#191919', fontFamily: 'Roboto', fontSize: 14, sectionGap: 0,
+    bgColor: '#191919', fontFamily: 'Roboto', fontSize: 14, sectionGap: 12,
     pageTitle: 'Página de Vendas - VSL', metaDesc: 'Página oficial de vendas e conversão VSL.',
     metaPixel: '', gtmCode: '', faviconUrl: '', trackingKey: 'draft'
     , quizCardBg:'#ffffff', quizOptionBg:'#ffffff', quizOptionBorder:'#bae6fd', quizAccent:'#0ea5e9'
@@ -778,7 +778,7 @@ export function useBuilderStore() {
     } else {
       setRows([]);
       state.viewportMode = '100%';
-      state.pageSettings = { ...state.pageSettings, bgColor: '#191919', fontFamily: 'Roboto', fontSize: 14, sectionGap: 0, pageTitle: name || 'Nova página VSL', metaDesc: '', metaPixel: '', gtmCode: '', faviconUrl: '', trackingKey: 'draft' };
+      state.pageSettings = { ...state.pageSettings, bgColor: '#191919', fontFamily: 'Roboto', fontSize: 14, sectionGap: 12, pageTitle: name || 'Nova página VSL', metaDesc: '', metaPixel: '', gtmCode: '', faviconUrl: '', trackingKey: 'draft' };
     }
   }
 
@@ -957,7 +957,7 @@ export function useBuilderStore() {
       state.builderMode = 'funil';
       syncViewportForMode('funil');
       state.currentPageId = null;
-      state.pageSettings = { ...state.pageSettings, bgColor: '#191919', fontFamily: 'Roboto', pageTitle: 'Página de Vendas VSL' };
+      state.pageSettings = { ...state.pageSettings, bgColor: '#191919', fontFamily: 'Roboto', pageTitle: 'Página de Vendas VSL', sectionGap: 12 };
       setRows(defaultFunilRows);
       showToast('Template VSL carregado!', 'success');
       return;

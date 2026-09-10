@@ -51,7 +51,7 @@
                 v-for="row in state.rows"
                 :key="row.id"
                 class="mini-builder-row"
-                :style="{ marginBottom: (state.pageSettings.sectionGap !== undefined ? state.pageSettings.sectionGap : 16) + 'px' }"
+                :style="{ marginBottom: (state.pageSettings.sectionGap !== undefined ? state.pageSettings.sectionGap : 12) + 'px' }"
               >
                 <div v-for="col in row.columns" :key="col.id" class="mini-builder-col" :style="{ flex: col.flex || 1 }">
                   <div v-for="e in col.elements" :key="e.id" class="mini-canvas-elem">
@@ -124,7 +124,7 @@
             </div>
             <div class="em-field">
               <label class="em-lbl">Espaçamento entre Seções (px)</label>
-              <input v-model.number="state.pageSettings.sectionGap" class="em-input" type="number" min="0" max="100" placeholder="16" />
+              <input v-model.number="state.pageSettings.sectionGap" class="em-input" type="number" min="0" max="100" placeholder="12" />
             </div>
             <div v-if="state.builderMode === 'quiz'" class="quiz-progress-settings em-full">
               <div class="quiz-progress-settings-copy">

@@ -44,9 +44,12 @@ describe('requested visual adjustments', () => {
     wrapper.unmount();
   });
 
-  it('keeps section spacing configurable in exported pages', () => {
-    const output = exported([{ id: 'title', type: 'heading', content: 'QA', style: {} }], { sectionGap: 37 });
-    expect(output.querySelector('.builder-row').style.marginBottom).toBe('37px');
+  it('keeps section spacing configurable in exported pages with 12px default', () => {
+    const defaultOutput = exported([{ id: 'title1', type: 'heading', content: 'QA1', style: {} }]);
+    expect(defaultOutput.querySelector('.builder-row').style.marginBottom).toBe('12px');
+
+    const customOutput = exported([{ id: 'title2', type: 'heading', content: 'QA2', style: {} }], { sectionGap: 37 });
+    expect(customOutput.querySelector('.builder-row').style.marginBottom).toBe('37px');
   });
 
   it('applies edited plan content and typography in the quiz', async () => {
