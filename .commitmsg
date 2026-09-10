@@ -1,1 +1,1 @@
-fix: remove botao Entrar da landing, mantém apenas Acessar Painel
+fix: descricoes dos botoes do modal sempre visiveis com flex layout
