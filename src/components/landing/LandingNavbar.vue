@@ -15,7 +15,6 @@
 
       <!-- Desktop Actions -->
       <div class="nav-actions">
-        <button class="btn-outline" @click="navigate('auth')">Entrar</button>
         <button class="btn-primary" @click="navigate('dashboard')">
           <span>Acessar Painel</span>
           <i class="bi bi-arrow-right-short"></i>
@@ -43,7 +42,6 @@
           <a href="#faq" @click="closeMobileMenu"><i class="bi bi-question-circle"></i> FAQ</a>
         </div>
         <div class="mobile-actions">
-          <button class="btn-outline mobile-btn" @click="navigate('auth')">Entrar na Conta</button>
           <button class="btn-primary mobile-btn" @click="navigate('dashboard')">
             <span>Acessar Meu Painel</span>
             <i class="bi bi-arrow-right-short"></i>
