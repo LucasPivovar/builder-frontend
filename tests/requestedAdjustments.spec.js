@@ -13,17 +13,24 @@ function exported(elements, settings = {}) {
 }
 
 describe('requested visual adjustments', () => {
-  it('caps legacy and new video players at 320px in the editor and export', () => {
-    const element = { id: 'video', type: 'vturb-player', hostedVideoUrl: '/media/test.mp4', style: { maxWidth: '900px', marginTop: 28, marginBottom: 12 } };
-    const wrapper = mount(VturbPlayerElement, { props: { element } });
+  it('defaults video players to 320px when unset and respects custom maxWidth in editor and export', () => {
+    const defaultElement = { id: 'video1', type: 'vturb-player', hostedVideoUrl: '/media/test.mp4', style: { marginTop: 28, marginBottom: 12 } };
+    const wrapper = mount(VturbPlayerElement, { props: { element: defaultElement } });
     const node = wrapper.element;
-    const output = exported([element]).querySelector('.canvas-vturb-wrapper');
+    const output = exported([defaultElement]).querySelector('.canvas-vturb-wrapper');
     expect(node.style.maxWidth).toBe('320px');
     expect(output.style.maxWidth).toBe('320px');
     expect(node.style.marginTop).toBe('28px');
     expect(output.style.marginTop).toBe('28px');
     expect(output.style.marginBottom).toBe('12px');
     wrapper.unmount();
+
+    const customElement = { id: 'video2', type: 'vturb-player', hostedVideoUrl: '/media/test2.mp4', style: { maxWidth: '480px' } };
+    const customWrapper = mount(VturbPlayerElement, { props: { element: customElement } });
+    expect(customWrapper.element.style.maxWidth).toBe('480px');
+    const customOutput = exported([customElement]).querySelector('.canvas-vturb-wrapper');
+    expect(customOutput.style.maxWidth).toBe('480px');
+    customWrapper.unmount();
   });
 
   it('renders default viewers without a background and with a white count', () => {
