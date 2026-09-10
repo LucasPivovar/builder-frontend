@@ -5,30 +5,43 @@
     </div>
 
     <nav class="sidebar-menu">
-      <!-- Página Inicial -->
+      <!-- Visão Geral -->
       <a
         class="menu-item"
         :class="{ active: activeTab === 'home' }"
         @click="$emit('select-tab', 'home')"
       >
-        <i class="bi bi-house-door-fill"></i>
-        <span>Página Inicial</span>
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Visão Geral</span>
       </a>
 
-      <!-- Label de Categoria: SISTEMA -->
+      <!-- SISTEMA -->
       <div class="menu-group-title" style="margin-top: 18px;">
         <span>SISTEMA</span>
       </div>
 
+      <a class="menu-item" :class="{ active: activeTab === 'plans' }" @click="$emit('select-tab', 'plans')">
+        <i class="bi bi-credit-card-fill"></i>
+        <span>Planos</span>
+      </a>
+
+      <a class="menu-item" :class="{ active: activeTab === 'email-campaigns' }" @click="$emit('select-tab', 'email-campaigns')">
+        <i class="bi bi-send"></i>
+        <span>Campanhas</span>
+      </a>
+
+      <a class="menu-item" :class="{ active: activeTab === 'backups' }" @click="$emit('select-tab', 'backups')">
+        <i class="bi bi-clock-history"></i>
+        <span>Backups</span>
+      </a>
+
       <a
-        v-if="currentUser?.role === 'admin'"
-        class="menu-item admin-item"
-        :class="{ active: activeTab === 'admin' }"
-        @click="$emit('select-tab', 'admin')"
+        class="menu-item"
+        :class="{ active: activeTab === 'support' }"
+        @click="$emit('select-tab', 'support')"
       >
-        <i class="bi bi-shield-lock-fill"></i>
-        <span>Painel Admin</span>
-        <span class="admin-badge-sm">ADMIN</span>
+        <i class="bi bi-headset"></i>
+        <span>Tickets</span>
       </a>
 
       <a
@@ -40,21 +53,15 @@
         <span>Configurações</span>
       </a>
 
-      <a class="menu-item" :class="{ active: activeTab === 'plans' }" @click="$emit('select-tab', 'plans')">
-        <i class="bi bi-credit-card-fill"></i>
-        <span>Planos</span>
-      </a>
-
-      <a class="menu-item" :class="{ active: activeTab === 'backups' }" @click="$emit('select-tab', 'backups')"><i class="bi bi-clock-history"></i><span>Backups</span></a>
-      <a class="menu-item" :class="{ active: activeTab === 'email-campaigns' }" @click="$emit('select-tab', 'email-campaigns')"><i class="bi bi-send"></i><span>Campanhas</span></a>
-
       <a
-        class="menu-item"
-        :class="{ active: activeTab === 'support' }"
-        @click="$emit('select-tab', 'support')"
+        v-if="currentUser?.role === 'admin'"
+        class="menu-item admin-item"
+        :class="{ active: activeTab === 'admin' }"
+        @click="$emit('select-tab', 'admin')"
       >
-        <i class="bi bi-headset"></i>
-        <span>Tickets</span>
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Painel Admin</span>
+        <span class="admin-badge-sm">ADMIN</span>
       </a>
     </nav>
 

@@ -81,8 +81,8 @@ input::placeholder{font-family:var(--font-ui)!important;font-size:13px;color:var
 input:focus-visible{outline:none;border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-focus-ring)}
 .account-field{display:flex;flex-direction:column;gap:6px;margin:18px 0}
 .account-field label{margin:0}
-.field-action{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 15px;border-radius:9px;background:var(--color-primary-soft);border:1px solid var(--color-border-strong);color:var(--color-primary-strong);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .15s ease}
-.field-action:hover{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+.field-action{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 20px;border-radius:10px;background:var(--color-primary);border:1px solid var(--color-primary);color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:all .18s ease;box-shadow:0 2px 8px rgba(97,43,244,.25)}
+.field-action:hover{background:var(--color-primary-hover);border-color:var(--color-primary-hover);color:#fff}
 .password-row{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:22px;padding-top:20px;border-top:1px solid var(--color-border)}
 .password-row div{display:flex;flex-direction:column;gap:4px}
 .password-row strong,.status-line strong{font-size:13.5px;color:var(--color-text)}
@@ -117,11 +117,11 @@ input:focus-visible{outline:none;border-color:var(--color-primary);box-shadow:0 
 .privacy-card h2{font-size:16px}
 .privacy-card p{margin:4px 0;font-size:12px}
 .privacy-actions{display:flex;align-items:center;gap:10px}
-.privacy-actions input{width:230px;min-height:40px;padding:9px 12px;font-family:var(--font-ui)!important;font-size:13px}
+.privacy-actions input{width:230px;min-height:42px;padding:10px 14px;font-family:var(--font-ui)!important;font-size:13.5px;border-radius:10px}
 .privacy-actions input::placeholder{font-family:var(--font-ui)!important;font-size:12.5px;color:var(--color-text-muted);opacity:1}
-.privacy-actions button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:9px 16px;border:1px solid var(--color-border-strong);border-radius:10px;background:var(--color-primary-soft);color:var(--color-primary-strong);font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s ease}
-.privacy-actions button:hover:not(:disabled){background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
-.privacy-actions .danger{border-color:#fca5a5;background:var(--color-danger-soft);color:var(--color-danger-strong)}
+.privacy-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 20px;border:1px solid var(--color-primary);border-radius:10px;background:var(--color-primary);color:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .18s ease;box-shadow:0 2px 8px rgba(97,43,244,.25)}
+.privacy-actions button:hover:not(:disabled){background:var(--color-primary-hover);border-color:var(--color-primary-hover)}
+.privacy-actions .danger{border-color:#fca5a5;background:var(--color-danger-soft);color:var(--color-danger-strong);box-shadow:none}
 .privacy-actions .danger:hover:not(:disabled){background:#dc2626;color:#fff;border-color:#dc2626}
 .privacy-actions button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:860px){.profile-grid{grid-template-columns:1fr}.privacy-card,.privacy-actions{align-items:stretch;flex-direction:column}.privacy-actions input{width:100%}}
