@@ -42,7 +42,7 @@ const wrapperStyle = computed(() => {
   const padTopRatio = match ? parseFloat(match[1]) / 100 : 0.5625;
   const padTop = match ? match[1] + '%' : '56.25%';
   const isVertical = padTopRatio > 1.0;
-  const mw = (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim() : (e.vturbWidth || '100%');
+  const mw = (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim() : '320px';
 
   const mt = getNum(s.marginTop, 0);
   const mb = getNum(s.marginBottom, 0);

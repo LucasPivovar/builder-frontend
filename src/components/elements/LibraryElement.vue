@@ -5,7 +5,7 @@
       class="library-image"
       :src="element.imageUrl || element.content"
       :alt="element.altText || 'Imagem da página'"
-      :style="{ borderRadius: `${style.borderRadius || 12}px` }"
+      :style="imageStyle"
     />
 
     <div v-else-if="element.type === 'divider'" class="library-divider" :style="{ borderColor: style.textColor || '#38bdf8' }"></div>
@@ -19,7 +19,7 @@
       </figcaption>
     </figure>
 
-    <details v-else-if="element.type === 'faq'" class="library-card faq-card" open>
+    <details v-else-if="element.type === 'faq'" class="library-card faq-card" open :style="cardStyle">
       <summary :style="textStyle">{{ element.content }}</summary>
       <p :style="textStyle">{{ element.answer || 'Adicione aqui a resposta para esta pergunta frequente.' }}</p>
     </details>
@@ -37,7 +37,7 @@
     <form v-else-if="element.type === 'form'" class="library-card form-card" :style="cardStyle" @submit.prevent="submitForm">
       <h3 :style="textStyle">{{ element.formTitle || 'Receba as novidades' }}</h3>
       <p :style="textStyle">{{ element.description || 'Deixe seus dados para receber o próximo passo.' }}</p>
-      <input aria-label="Nome" type="text" :placeholder="element.namePlaceholder || 'Seu nome'" required />
+      <input aria-label="Nome" type="text" :placeholder="element.namePlaceholder || 'Nome'" required />
       <input aria-label="E-mail" type="email" :placeholder="element.emailPlaceholder || 'Seu melhor e-mail'" required />
       <button type="submit" :style="buttonStyle">{{ element.content || 'Quero receber' }}</button>
       <small v-if="submitted" class="form-success">Dados enviados com sucesso.</small>
@@ -49,6 +49,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { getNum } from '../../utils/astrotags';
 
 const props = defineProps({ element: { type: Object, required: true } });
 const now = ref(Date.now());
@@ -56,18 +57,71 @@ const submitted = ref(false);
 let timer;
 
 const style = computed(() => props.element.style || {});
+
+function normalizeSize(val) {
+  if (!val) return undefined;
+  const str = String(val).trim();
+  if (!str) return undefined;
+  if (/^\d+(\.\d+)?$/.test(str)) return `${str}px`;
+  return str;
+}
+
 const wrapperStyle = computed(() => ({
   marginTop: `${style.value.marginTop || 0}px`,
   marginBottom: `${style.value.marginBottom || 0}px`,
-  textAlign: style.value.align || 'center'
+  textAlign: style.value.align || 'center',
+  maxWidth: normalizeSize(style.value.maxWidth) || '100%',
+  width: '100%',
+  boxSizing: 'border-box'
 }));
-const textStyle = computed(() => ({ color: style.value.textColor || '#0f172a', fontSize: style.value.fontSize || '16px' }));
-const cardStyle = computed(() => ({
-  backgroundColor: style.value.hasTransparentBg ? 'transparent' : (style.value.bgColor || '#ffffff'),
-  borderRadius: `${style.value.borderRadius || 12}px`,
-  borderColor: style.value.borderColor || '#cbd5e1'
+
+const imageStyle = computed(() => {
+  const s = style.value;
+  const maxW = normalizeSize(s.maxWidth);
+  const maxH = normalizeSize(s.maxHeight);
+  return {
+    borderRadius: `${s.borderRadius !== undefined ? s.borderRadius : 12}px`,
+    maxWidth: maxW || '100%',
+    maxHeight: maxH || undefined,
+    width: maxW ? '100%' : '100%',
+    height: maxH ? 'auto' : 'auto',
+    objectFit: 'cover'
+  };
+});
+
+const textStyle = computed(() => ({
+  color: style.value.textColor || '#0f172a',
+  fontSize: style.value.fontSize || '16px',
+  fontWeight: style.value.fontWeight || undefined,
+  lineHeight: style.value.lineHeight || undefined
 }));
-const buttonStyle = computed(() => ({ backgroundColor: style.value.bgColor || '#612bf4', color: style.value.textColor || '#ffffff' }));
+
+const cardStyle = computed(() => {
+  const s = style.value;
+  const py = s.paddingVertical !== undefined && s.paddingVertical !== null && s.paddingVertical !== ''
+    ? getNum(s.paddingVertical, 24)
+    : 24;
+  const px = s.paddingHorizontal !== undefined && s.paddingHorizontal !== null && s.paddingHorizontal !== ''
+    ? getNum(s.paddingHorizontal, 24)
+    : 24;
+  const maxH = normalizeSize(s.maxHeight);
+  return {
+    backgroundColor: s.hasTransparentBg ? 'transparent' : (s.bgColor || '#ffffff'),
+    borderRadius: `${s.borderRadius !== undefined ? s.borderRadius : 12}px`,
+    borderColor: s.borderColor || '#cbd5e1',
+    padding: `${py}px ${px}px`,
+    maxHeight: maxH || undefined
+  };
+});
+
+const buttonStyle = computed(() => ({
+  backgroundColor: style.value.bgColor || '#612bf4',
+  color: style.value.textColor || '#ffffff',
+  fontSize: style.value.fontSize || undefined,
+  fontWeight: style.value.fontWeight || undefined,
+  borderRadius: `${style.value.borderRadius !== undefined ? style.value.borderRadius : 8}px`
+}));
+
 const timeParts = computed(() => {
   const target = new Date(props.element.targetDate || Date.now() + 86400000).getTime();
   let seconds = Math.max(0, Math.floor((target - now.value) / 1000));
@@ -88,7 +142,7 @@ onBeforeUnmount(() => window.clearInterval(timer));
 
 <style scoped>
 .library-element { width: 100%; box-sizing: border-box; }
-.library-image { display: block; width: 100%; max-width: 760px; height: auto; margin: 0 auto; object-fit: cover; }
+.library-image { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 auto; object-fit: cover; }
 .library-divider { width: 100%; border-top: 2px solid; opacity: .8; }
 .library-card { width: min(100%, 680px); margin: 0 auto; padding: 24px; border: 1px solid; text-align: left; box-sizing: border-box; }
 .testimonial-card { position: relative; }

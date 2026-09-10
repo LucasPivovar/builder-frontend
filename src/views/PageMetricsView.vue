@@ -101,11 +101,10 @@
                 <button
                   class="btn-hero-action refresh-btn"
                   type="button"
-                  :class="{ spinning: refreshing }"
                   title="Atualizar dados agora"
                   @click="refreshMetrics"
                 >
-                  <i class="bi bi-arrow-clockwise"></i>
+                  <i class="bi bi-arrow-clockwise" :class="{ spinning: refreshing }"></i>
                 </button>
               </div>
             </div>
@@ -157,19 +156,9 @@
                   <span class="kpi-footer">cliques / visualizações</span>
                 </div>
                 <div class="hero-kpi-item">
-                  <div class="kpi-header"><i class="bi bi-arrow-down-circle-fill"></i><span>Rolagem Máxima</span></div>
-                  <strong class="kpi-value">{{ metric('maxScroll') }}%</strong>
-                  <span class="kpi-footer">profundidade média</span>
-                </div>
-                <div class="hero-kpi-item">
                   <div class="kpi-header"><i class="bi bi-stopwatch-fill"></i><span>Tempo Médio</span></div>
                   <strong class="kpi-value">{{ formatDuration(metric('avgTimeSeconds')) }}</strong>
                   <span class="kpi-footer">tempo ativo</span>
-                </div>
-                <div class="hero-kpi-item">
-                  <div class="kpi-header"><i class="bi bi-play-btn-fill"></i><span>Plays de Vídeo</span></div>
-                  <strong class="kpi-value">{{ metric('videoPlays') }}</strong>
-                  <span class="kpi-footer">{{ videoCompletionRate }}% conclusão</span>
                 </div>
               </template>
 
@@ -270,16 +259,6 @@
                   <strong>{{ clickRate }}%</strong>
                   <div><em :style="{ width: `${clickRate}%` }"></em></div>
                 </div>
-                <div class="bar-row">
-                  <span>Rolagem máxima</span>
-                  <strong>{{ metric('maxScroll') }}%</strong>
-                  <div><em :style="{ width: `${metric('maxScroll')}%` }"></em></div>
-                </div>
-                <div class="bar-row">
-                  <span>Conclusão de vídeo</span>
-                  <strong>{{ videoCompletionRate }}%</strong>
-                  <div><em :style="{ width: `${videoCompletionRate}%` }"></em></div>
-                </div>
               </div>
             </article>
 
@@ -319,42 +298,17 @@
               </div>
             </div>
             <p v-if="!pageButtons.length" class="empty-line">Nenhum clique registrado até o momento.</p>
-            <table v-else class="metric-table">
-              <thead><tr><th>Botão</th><th>Destino</th><th>Cliques</th></tr></thead>
-              <tbody>
-                <tr v-for="(button, index) in pageButtons" :key="index">
-                  <td><strong>Botão — {{ button.label }}</strong></td>
-                  <td>{{ button.target || '—' }}</td>
-                  <td><b>{{ button.clicks }}</b></td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-
-          <!-- Videos Breakdown -->
-          <section v-if="pageType === 'Funil'" class="panel">
-            <div class="panel-title">
-              <div>
-                <h2>Vídeos desta página</h2>
-                <span class="panel-sub">{{ pageVideos.length }} {{ pageVideos.length === 1 ? 'vídeo rastreado' : 'vídeos rastreados' }}</span>
-              </div>
-            </div>
-            <div v-if="!pageVideos.length" class="empty-line">
-              Os vídeos aparecem depois que uma página publicada receber plays rastreáveis.
-            </div>
-            <div v-else class="video-table">
-              <div class="video-head">
-                <span>Vídeo</span>
-                <span>Plays</span>
-                <span>Média assistida</span>
-                <span>Conclusões</span>
-              </div>
-              <article v-for="video in pageVideos" :key="`${video.pageId}-${video.target}`">
-                <strong>{{ video.target }}</strong>
-                <span>{{ video.plays || 0 }}</span>
-                <span>{{ formatDuration(video.avgWatchedSeconds || 0) }}</span>
-                <span>{{ video.completions || 0 }}</span>
-              </article>
+            <div v-else class="metric-table-wrap">
+              <table class="metric-table">
+                <thead><tr><th>Botão</th><th>Destino</th><th>Cliques</th></tr></thead>
+                <tbody>
+                  <tr v-for="(button, index) in pageButtons" :key="index">
+                    <td><strong>Botão — {{ button.label }}</strong></td>
+                    <td>{{ button.target || '—' }}</td>
+                    <td><b>{{ button.clicks }}</b></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
         </template>
@@ -427,7 +381,6 @@ const quizTemplatesCount = computed(() => (customTemplatesRegistry.value || []).
 const pageId = computed(() => String(route.params.pageId || ''));
 const page = computed(() => pagesRegistry.find(item => item.id === pageId.value));
 const pageMetrics = computed(() => analytics.value.pages?.find(item => item.pageId === pageId.value) || {});
-const pageVideos = computed(() => (analytics.value.videos || []).filter(video => video.pageId === pageId.value));
 const pageButtons = computed(() => (analytics.value.buttons || []).filter(button => button.pageId === pageId.value));
 const quizSteps = computed(() => (analytics.value.quizSteps || []).filter(item => item.pageId === pageId.value).sort((a,b) => a.label.localeCompare(b.label, 'pt-BR', { numeric: true })));
 const quizAnswers = computed(() => (analytics.value.quizAnswers || []).filter(item => item.pageId === pageId.value));
@@ -487,12 +440,6 @@ const clickRate = computed(() => {
   const views = metric('views');
   if (!views) return 0;
   return Math.min(100, Math.round((metric('clicks') / views) * 100));
-});
-
-const videoCompletionRate = computed(() => {
-  const plays = metric('videoPlays');
-  if (!plays) return 0;
-  return Math.min(100, Math.round((metric('videoCompletions') / plays) * 100));
 });
 
 const lastSyncText = computed(() => {
@@ -1261,10 +1208,15 @@ function exportEmailMetrics() {
 }
 
 .empty-line {
-  padding: 24px;
+  padding: 24px 20px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
   color: var(--color-text-muted);
   text-align: center;
   font-size: 13px;
+  font-weight: 600;
+  margin: 4px 0 0;
 }
 
 .state-box {

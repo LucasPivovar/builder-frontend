@@ -35,21 +35,15 @@ const props = defineProps({
 
 const wrapperStyle = computed(() => {
   const s = props.element.style || {};
-  const body = props.element.vturbBody || '';
-  const match = body.match(/padding[^:]*:[^\d]*(\d+(?:\.\d+)?)%/);
-  const padTopRatio = match ? parseFloat(match[1]) / 100 : 0.5625;
-  const isVertical = padTopRatio > 1.0;
 
-  let w = (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim()
-           : (props.element.vturbWidth && props.element.vturbWidth.trim()) ? props.element.vturbWidth.trim()
-           : (isVertical ? '400px' : '640px');
+  const w = (s.maxWidth && s.maxWidth.trim()) ? s.maxWidth.trim() : '320px';
 
   const h = (s.maxHeight && s.maxHeight.trim()) ? s.maxHeight.trim()
            : (props.element.vturbHeight && props.element.vturbHeight.trim()) ? props.element.vturbHeight.trim()
            : '';
 
-  const mt = getNum(s.marginTop, 16);
-  const mb = getNum(s.marginBottom, 16);
+  const mt = getNum(s.marginTop, 6);
+  const mb = getNum(s.marginBottom, 6);
   const py = getNum(s.paddingVertical, 0);
   const px = getNum(s.paddingHorizontal, 0);
 

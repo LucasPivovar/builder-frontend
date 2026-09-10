@@ -45,13 +45,13 @@
       </div>
 
       <button class="action-button save-button tour-save" :title="state.isTemplateBuilder ? 'Publicar template' : 'Salvar página'" @click="$emit('open-save')"><i :class="state.isTemplateBuilder ? 'bi bi-cloud-arrow-up-fill' : 'bi bi-floppy-fill'"></i><span>{{ state.isTemplateBuilder ? (state.currentTemplateId ? 'Atualizar template' : 'Publicar template') : 'Salvar' }}</span></button>
-      <button class="action-button export-button tour-export" title="Publicar página" @click="$emit('open-export')"><i class="bi bi-cloud-arrow-up-fill"></i><span>Publicar</span></button>
+      <button class="action-button export-button tour-export" :title="exportButtonTitle" @click="$emit('open-export')"><i :class="exportButtonIcon"></i><span>{{ exportButtonLabel }}</span></button>
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBuilderStore } from '../composables/useBuilderStore';
 
@@ -59,6 +59,10 @@ const emit = defineEmits(['open-export', 'open-save', 'open-preview', 'open-vers
 const router = useRouter();
 const isMoreMenuOpen = ref(false);
 const { state, undoStack, redoStack, undo, redo, setViewport, clearCanvas, openSummaryModal, closeTemplateBuilder } = useBuilderStore();
+const isEmailBuilder = computed(() => state.builderMode === 'email');
+const exportButtonLabel = computed(() => isEmailBuilder.value ? 'Exportar' : 'Publicar');
+const exportButtonTitle = computed(() => isEmailBuilder.value ? 'Exportar e-mail' : 'Publicar página');
+const exportButtonIcon = computed(() => isEmailBuilder.value ? 'bi bi-download' : 'bi bi-cloud-arrow-up-fill');
 
 function goToDashboard() {
   if (state.isTemplateBuilder) {

@@ -190,9 +190,11 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
     }
     const rowHasTopBanner = row.columns.some(c => c.elements.some(e => e.type === 'top-banner'));
     const rowClass = rowHasTopBanner ? 'builder-row has-top-banner' : `builder-row${isQuizMode ? ' quiz-step' : ''}`;
+    const rowGap = pageSettings.sectionGap !== undefined ? Number(pageSettings.sectionGap) : 0;
+    const rowMarginStyle = rowHasTopBanner ? 'margin-bottom: 0px;' : `margin-bottom: ${rowGap}px;`;
     const progress = Math.round(((rowIndex + 1) / Math.max(1, rows.length)) * 100);
     const progressHTML = isQuizMode ? `<div class="quiz-progress" style="height:${Number(pageSettings.quizProgressHeight)||6}px"><span style="width:${progress}%;background:${pageSettings.quizProgressColor || '#0ea5e9'}"></span></div><div class="quiz-step-label">Etapa ${rowIndex + 1} de ${rows.length}</div>` : '';
-    bodyContentHTML += `<div class="${rowClass}"${isQuizMode ? ` data-quiz-step="${rowIndex}"` : ''}>${progressHTML}${colsHTML}</div>`;
+    bodyContentHTML += `<div class="${rowClass}" style="${rowMarginStyle}"${isQuizMode ? ` data-quiz-step="${rowIndex}"` : ''}>${progressHTML}${colsHTML}</div>`;
   }
 
   const fullDocHTML = `<!DOCTYPE html>
@@ -232,7 +234,7 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
       flex-wrap: wrap;
       width: 100%;
       max-width: 1200px;
-      margin: 0 auto clamp(20px, 3vh, 36px) auto;
+      margin: 0 auto;
       padding: 0 16px;
       clear: both;
       box-sizing: border-box;
@@ -240,17 +242,17 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
     .builder-row.has-top-banner {
       max-width: 100%;
       width: 100%;
-      margin: 0 0 clamp(16px, 2.5vh, 28px) 0;
+      margin: 0 0 0 0 !important;
       padding: 0;
     }
-    .builder-row.has-top-banner:first-child, .builder-row.has-top-banner .canvas-top-banner { margin-top: 0 !important; }
+    .builder-row.has-top-banner:first-child, .builder-row.has-top-banner .canvas-top-banner { margin-top: 0 !important; margin-bottom: 0 !important; }
     ${isQuizMode ? `
     body,html{background:#f5fbff!important;color:#0f172a!important}
     .vsl-container{width:min(100%,480px)!important;min-height:100vh;margin:0 auto!important;padding:24px 12px 48px!important;background:#f5fbff!important;display:flex;align-items:flex-start}
-    .quiz-step{display:none;flex-direction:column;width:100%;margin:0!important;padding:28px 20px!important;border:1px solid ${quizOptionBorder};border-radius:24px;background:${quizCardBg};box-shadow:0 12px 34px rgba(14,116,144,.13)}
+    .quiz-step{display:none;flex-direction:column;width:100%;min-height:fit-content;height:fit-content;margin:0!important;padding:28px 20px!important;border:1px solid ${quizOptionBorder};border-radius:24px;background:${quizCardBg};box-shadow:0 12px 34px rgba(14,116,144,.13)}
     .quiz-step.active{display:flex;animation:quizIn .3s ease}.quiz-step .builder-col{gap:14px}
     .quiz-progress{border-radius:999px;background:#e0f2fe;overflow:hidden}.quiz-progress span{display:block;height:100%;border-radius:inherit;background:#0ea5e9}.quiz-step-label{text-align:right;margin:7px 0 12px;color:#7890a8;font-size:9px;font-weight:800;text-transform:uppercase}
-    .quiz-options{display:flex;flex-direction:column;gap:9px}.quiz-option{min-height:58px;display:grid;grid-template-columns:32px 1fr 18px;gap:10px;align-items:center;width:100%;padding:11px 14px;border:1px solid ${quizOptionBorder};border-radius:14px;background:${quizOptionBg};color:#0f172a;font:inherit;font-size:15px;text-align:left;cursor:pointer}.quiz-option:hover,.quiz-option.selected{border-color:${quizAccent};filter:brightness(.98)}.quiz-options.quiz-required .quiz-option{border-color:${quizAccent};box-shadow:0 0 0 2px rgba(14,165,233,.12)}.quiz-option-mark{width:29px;height:29px;border:1px solid ${quizOptionBorder};border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900}.quiz-option-copy{display:flex;min-width:0;flex-direction:column;gap:2px}.quiz-option-copy strong{font-size:15px;line-height:1.25;overflow-wrap:anywhere}.quiz-option-copy small{color:#64748b;font-size:12px;line-height:1.25;overflow-wrap:anywhere}.quiz-option.selected .quiz-option-mark{background:${quizAccent};color:#fff}
+    .quiz-options{display:flex;flex-direction:column;gap:9px}.quiz-option{min-height:58px;display:grid;grid-template-columns:32px 1fr 18px;gap:10px;align-items:center;width:100%;padding:11px 14px;border:1px solid ${quizOptionBorder};border-radius:14px;background:${quizOptionBg};color:#0f172a;font:inherit;font-size:15px;text-align:left;cursor:pointer}.quiz-option:hover,.quiz-option.selected{border-color:${quizAccent};filter:brightness(.98)}.quiz-options.quiz-required .quiz-option{border-color:${quizAccent};box-shadow:0 0 0 2px rgba(14,165,233,.12)}.quiz-option-mark{width:29px;height:29px;border:1px solid ${quizOptionBorder};border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:900;flex-shrink:0;line-height:1}.quiz-option-mark.quiz-option-mark-cross{font-size:19px!important;line-height:1;font-weight:900}.quiz-option-copy{display:flex;min-width:0;flex-direction:column;gap:2px}.quiz-option-copy strong{font-size:15px;line-height:1.25;overflow-wrap:anywhere}.quiz-option-copy small{color:#64748b;font-size:12px;line-height:1.25;overflow-wrap:anywhere}.quiz-option.selected .quiz-option-mark{background:${quizAccent};color:#fff}
     .quiz-loading{display:flex;flex-direction:column;gap:9px;padding:12px 2px}.quiz-loading-header{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#0f172a;font-size:13px;font-weight:700}.quiz-loading-header strong{color:#0369a1}.quiz-loading-bar{height:12px;border-radius:999px;background:#e0f2fe;overflow:hidden}.quiz-loading-bar span{position:relative;display:block;height:100%;background:#0ea5e9;transform-origin:left;animation:quizLoadGrow 1.15s cubic-bezier(.22,1,.36,1) both}.quiz-loading-bar span:after{content:'';position:absolute;inset:0;width:45%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-120%);animation:quizLoadShimmer 1.45s ease-in-out .35s infinite}.quiz-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.quiz-metrics article{min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #bae6fd;border-radius:14px;animation:quizMetricIn .35s cubic-bezier(.22,1,.36,1) both}.quiz-metrics strong{font-size:22px;color:#0369a1}.quiz-metrics span{margin-top:8px;color:#64748b;font-size:12px;text-align:center}
     .quiz-price{border:2px solid #0ea5e9;border-radius:15px;overflow:hidden}.quiz-price>small{display:block;padding:6px;text-align:center;background:#0ea5e9;color:#fff;font-weight:800}.quiz-price>div{display:flex;justify-content:space-between;align-items:center;padding:16px}.quiz-price span{display:flex;flex-direction:column}.quiz-price em{font-style:normal;color:#64748b;font-size:11px}.quiz-price b{font-size:20px;color:#0369a1}
     @keyframes quizIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}@keyframes quizLoadGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes quizLoadShimmer{0%{transform:translateX(-120%)}70%,100%{transform:translateX(320%)}}@keyframes quizMetricIn{from{opacity:0;transform:translateY(9px) scale(.98)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.quiz-step,.quiz-loading-bar span,.quiz-loading-bar span:after,.quiz-metrics article{animation:none!important}}
@@ -258,7 +260,7 @@ export function generateFullHTML(stateOrRows, pageSettingsParam) {
     .builder-col {
       display: flex;
       flex-direction: column;
-      gap: clamp(16px, 2.5vh, 24px);
+      gap: 0px;
       width: 100%;
       flex: 1;
       box-sizing: border-box;
@@ -721,7 +723,7 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     cityName: elem.cityName,
     minViewers: elem.minViewers,
     maxViewers: elem.maxViewers,
-    countColor: style.countColor || '#38bdf8'
+    countColor: (style.countColor && style.countColor !== '#38bdf8') ? style.countColor : '#ffffff'
   };
 
   if (type === 'top-banner') {
@@ -771,32 +773,9 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
         ${subTextHTML}
       </a>
     </div>`;
-  } else if (type === 'upsell-buttons') {
-    const py = getNum(style.paddingVertical, 14);
-    const px = getNum(style.paddingHorizontal, 24);
-    const mt = getNum(style.marginTop, 20);
-    const mb = getNum(style.marginBottom, 20);
-    const br = getNum(style.borderRadius, 12);
-    const bg = style.bgColor || '#10B981';
-    const color = style.textColor || '#ffffff';
-    const acceptContent = parseAtomitags(elem.acceptText || 'SIM! ADQUIRA AGORA POR APENAS R$ 97,00', style.altColor, style.bgColor, parseOpts);
-    const subContent = elem.acceptSubtext ? `<span style="font-size: 12px; opacity: 0.9; display: block; margin-top: 4px;">${parseAtomitags(elem.acceptSubtext, style.altColor, style.bgColor, parseOpts)}</span>` : '';
-    const declineText = elem.declineText || 'Não, obrigado. Prefiro continuar operando manualmente.';
-    const targetAttr = elem.acceptOpenInNewTab ? ' target="_blank"' : '';
-    const decTargetAttr = elem.declineOpenInNewTab ? ' target="_blank"' : '';
-
-    innerHTML = `<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: ${mt}px; margin-bottom: ${mb}px; width: 100%;">
-      <a href="${elem.acceptUrl || '#'}"${targetAttr} class="canvas-pitch-btn is-pulsing" style="background: ${bg}; color: ${color}; max-width: 420px; border-radius: ${br}px; padding: ${py}px ${px}px; text-align: center; text-decoration: none; width: 100%; font-weight: 700; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); display: inline-block;">
-        <span style="font-size: 16px; display: block;">${acceptContent}</span>
-        ${subContent}
-      </a>
-      <a href="${elem.declineUrl || '#'}"${decTargetAttr} style="background: rgba(220,38,38,0.1); color: #DC2626; border: 1px solid rgba(220,38,38,0.3); border-radius: 8px; padding: 10px 20px; font-size: 13px; text-decoration: none; display: inline-block;">
-        ${declineText}
-      </a>
-    </div>`;
   } else if (type === 'vturb-player') {
-    const mt = getNum(style.marginTop, 16);
-    const mb = getNum(style.marginBottom, 16);
+    const mt = getNum(style.marginTop, 6);
+    const mb = getNum(style.marginBottom, 6);
     const py = getNum(style.paddingVertical, 0);
     const px = getNum(style.paddingHorizontal, 0);
     const body = elem.vturbBody || '';
@@ -804,9 +783,7 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const padTopRatio = match ? parseFloat(match[1]) / 100 : 0.5625;
     const isVertical = padTopRatio > 1.0;
 
-    let mw = (style.maxWidth && style.maxWidth.trim()) ? style.maxWidth.trim()
-             : (elem.vturbWidth && elem.vturbWidth.trim()) ? elem.vturbWidth.trim()
-             : (isVertical ? '320px' : '640px');
+    const mw = (style.maxWidth && style.maxWidth.trim()) ? style.maxWidth.trim() : '320px';
 
     const mh = (style.maxHeight && style.maxHeight.trim()) ? style.maxHeight.trim() : (elem.vturbHeight || '');
     const br = style.borderRadius !== undefined && style.borderRadius !== null && style.borderRadius !== '' ? `border-radius: ${typeof style.borderRadius === 'number' ? style.borderRadius + 'px' : style.borderRadius}; overflow: hidden;` : '';
@@ -846,12 +823,13 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const initialCount = Math.floor(Math.random() * (realMax - realMin + 1)) + realMin;
     const py = getNum(style.paddingVertical, 0);
     const px = getNum(style.paddingHorizontal, 0);
-    const mt = getNum(style.marginTop, 16);
-    const mb = getNum(style.marginBottom, 12);
+    const mt = getNum(style.marginTop, 6);
+    const mb = getNum(style.marginBottom, 6);
     const bg = style.hasTransparentBg ? 'transparent' : (style.bgColor || 'transparent');
+    const viewersCountColor = (style.countColor && style.countColor !== '#38bdf8') ? style.countColor : '#ffffff';
 
     innerHTML = `<div class="canvas-live-viewers-widget" data-min="${realMin}" data-max="${realMax}" style="color: ${style.textColor || '#ffffff'}; text-align: ${style.align || 'center'}; font-size: ${style.fontSize || '18px'}; margin-top: ${mt}px; margin-bottom: ${mb}px; background-color: ${bg}; padding: ${py}px ${px}px; width: 100%; box-sizing: border-box;">
-      <strong class="vsl-viewer-count" style="color:${style.countColor || '#38bdf8'}">${initialCount}</strong> ${parseAtomitags(elem.content || 'espectadores estão vendo este conteúdo simultaneamente com você', style.altColor, style.bgColor, parseOpts)}
+      <strong class="vsl-viewer-count" style="color:${viewersCountColor}">${initialCount}</strong> ${parseAtomitags(elem.content || 'espectadores estão vendo este conteúdo simultaneamente com você', style.altColor, style.bgColor, parseOpts)}
     </div>`;
   } else if (type === 'email-header') {
     const py = getNum(style.paddingVertical, 26);
@@ -884,22 +862,68 @@ function renderExportElement(elem, fontFamily = 'Poppins') {
     const radius = getNum(style.borderRadius, 999);
     innerHTML = `<div style="display:inline-block;background:${tagBg};border:1px solid ${borderCol};border-radius:${radius}px;color:${textCol};font-family:'${fontFamily}',sans-serif!important;font-size:${style.fontSize || '11px'};font-weight:${style.fontWeight || '500'};letter-spacing:.6px;padding:${py}px ${px}px;margin-top:${mt}px;margin-bottom:${mb}px">${parseAtomitags(elem.content || 'ARTES PRONTAS', style.altColor, style.bgColor, parseOpts)}</div>`;
   } else if (type === 'quiz-progress') {
-    innerHTML = `<div class="quiz-progress"><span style="width:${Math.max(0,Math.min(100,Number(elem.progress)||0))}%"></span></div>`;
+    const progressH = style.paddingVertical ? getNum(style.paddingVertical, 5) : 5;
+    const progressR = style.borderRadius !== undefined ? getNum(style.borderRadius, 999) : 999;
+    const progressCol = style.altColor || style.countColor || style.bgColor || '#0ea5e9';
+    innerHTML = `<div class="quiz-progress" style="height:${progressH}px;border-radius:${progressR}px"><span style="width:${Math.max(0,Math.min(100,Number(elem.progress)||0))}%;background:${progressCol}"></span></div>`;
   } else if (['quiz-single','quiz-multiple','quiz-yes-no'].includes(type)) {
     const optionSource = Array.isArray(elem.options) ? elem.options : String(elem.optionsText || 'Opção 1\nOpção 2').split('\n');
     const options = optionSource.map(normalizeQuizOption).filter(option => option.label);
-    innerHTML = `<div class="quiz-options" data-multiple="${type === 'quiz-multiple'}">${options.map((option,index)=>`<button type="button" class="quiz-option" data-value="${escapeHtml(option.label)}"><span class="quiz-option-mark">${escapeHtml(option.icon || (type === 'quiz-multiple' ? String.fromCharCode(65+index) : ''))}</span><span class="quiz-option-copy"><strong>${escapeHtml(option.label)}</strong>${option.description ? `<small>${escapeHtml(option.description)}</small>` : ''}</span><span>›</span></button>`).join('')}</div>`;
+    const optBg = style.hasTransparentBg ? 'transparent' : (style.bgColor || '#ffffff');
+    const optBorder = style.hasBorder && style.borderColor ? style.borderColor : '#bae6fd';
+    const optRadius = style.borderRadius !== undefined ? getNum(style.borderRadius, 14) : 14;
+    const optPy = style.paddingVertical !== undefined ? getNum(style.paddingVertical, 11) : 11;
+    const optPx = style.paddingHorizontal !== undefined ? getNum(style.paddingHorizontal, 14) : 14;
+    const optTextCol = style.textColor || '#0f172a';
+    const optFontSize = style.fontSize || '15px';
+    const optFontWeight = style.fontWeight || '700';
+    const optMaxH = style.maxHeight ? `max-height:${style.maxHeight};` : '';
+    innerHTML = `<div class="quiz-options" data-multiple="${type === 'quiz-multiple'}">${options.map((option,index)=>{
+      const isCross = ['×', 'x', 'X', '✕', '✖', '✗'].includes(String(option.icon || '').trim());
+      const crossClass = isCross ? ' quiz-option-mark-cross' : '';
+      return `<button type="button" class="quiz-option" data-value="${escapeHtml(option.label)}" style="background:${optBg};border-color:${optBorder};border-radius:${optRadius}px;padding:${optPy}px ${optPx}px;${optMaxH}"><span class="quiz-option-mark${crossClass}">${escapeHtml(option.icon || (type === 'quiz-multiple' ? String.fromCharCode(65+index) : ''))}</span><span class="quiz-option-copy"><strong style="color:${optTextCol};font-size:${optFontSize};font-weight:${optFontWeight}">${escapeHtml(option.label)}</strong>${option.description ? `<small style="color:${optTextCol};opacity:0.75">${escapeHtml(option.description)}</small>` : ''}</span><span>›</span></button>`;
+    }).join('')}</div>`;
   } else if (type === 'quiz-loading') {
-    const progress=Math.max(0,Math.min(100,Number(elem.progress)||0)); innerHTML=`<div class="quiz-loading"><div class="quiz-loading-header"><span>${elem.content || 'Analisando suas respostas...'}</span><strong>${progress}%</strong></div><div class="quiz-loading-bar"><span style="width:${progress}%"></span></div></div>`;
+    const progress=Math.max(0,Math.min(100,Number(elem.progress)||0));
+    const titleCol = style.textColor || '#0f172a';
+    const titleFont = style.fontSize || '13px';
+    const titleWeight = style.fontWeight || '700';
+    const pctCol = style.altColor || style.countColor || '#0369a1';
+    innerHTML=`<div class="quiz-loading"><div class="quiz-loading-header"><span style="color:${titleCol};font-size:${titleFont};font-weight:${titleWeight}">${elem.content || 'Analisando suas respostas...'}</span><strong style="color:${pctCol}">${progress}%</strong></div><div class="quiz-loading-bar"><span style="width:${progress}%;background:${pctCol}"></span></div></div>`;
   } else if (type === 'quiz-metric') {
-    const metrics=String(elem.metricsText || '72%|Conversão').split('\n').map(line=>{const parts=line.split('|');return{value:(parts.shift()||'').trim(),label:parts.join('|').trim()}}).filter(metric=>metric.value||metric.label); innerHTML=`<div class="quiz-metrics">${metrics.map(({value,label})=>`<article><strong>${value||''}</strong><span>${label||''}</span></article>`).join('')}</div>`;
+    const metrics=String(elem.metricsText || '72%|Conversão').split('\n').map(line=>{const parts=line.split('|');return{value:(parts.shift()||'').trim(),label:parts.join('|').trim()}}).filter(metric=>metric.value||metric.label);
+    const cardBg = style.hasTransparentBg ? 'transparent' : (style.bgColor || '#ffffff');
+    const cardBorder = style.hasBorder && style.borderColor ? style.borderColor : (style.altColor || '#bae6fd');
+    const cardRadius = style.borderRadius !== undefined ? getNum(style.borderRadius, 14) : 14;
+    const cardPy = style.paddingVertical !== undefined ? getNum(style.paddingVertical, 16) : 16;
+    const cardPx = style.paddingHorizontal !== undefined ? getNum(style.paddingHorizontal, 12) : 12;
+    const valCol = style.altColor || style.countColor || '#0369a1';
+    const valFont = style.fontSize || '22px';
+    const valWeight = style.fontWeight || '800';
+    const lblCol = style.textColor || '#64748b';
+    const cardMaxH = style.maxHeight ? `max-height:${style.maxHeight};` : '';
+    innerHTML=`<div class="quiz-metrics">${metrics.map(({value,label})=>`<article style="background:${cardBg};border-color:${cardBorder};border-radius:${cardRadius}px;padding:${cardPy}px ${cardPx}px;${cardMaxH}"><strong style="color:${valCol};font-size:${valFont};font-weight:${valWeight}">${value||''}</strong><span style="color:${lblCol}">${label||''}</span></article>`).join('')}</div>`;
   } else if (type === 'quiz-price') {
-    innerHTML=`<div class="quiz-price"><small>${elem.badge || 'Recomendado'}</small><div><span><strong>${elem.content || 'Plano PRO'}</strong><em>${elem.description || 'Acesso completo'}</em></span><b>${elem.price || 'R$ 197,00'}</b></div></div>`;
+    const cardBg = style.hasTransparentBg ? 'transparent' : (style.bgColor || '#ffffff');
+    const cardBorder = style.hasBorder && style.borderColor ? style.borderColor : (style.altColor || style.countColor || '#0ea5e9');
+    const badgeBg = style.altColor || style.countColor || '#0ea5e9';
+    const cardRadius = style.borderRadius !== undefined ? getNum(style.borderRadius, 15) : 15;
+    const cardPy = style.paddingVertical !== undefined ? getNum(style.paddingVertical, 16) : 16;
+    const cardPx = style.paddingHorizontal !== undefined ? getNum(style.paddingHorizontal, 16) : 16;
+    const titleCol = style.textColor || 'inherit';
+    const titleFont = style.fontSize || '17px';
+    const titleWeight = style.fontWeight || '700';
+    const priceCol = style.altColor || style.countColor || '#0369a1';
+    const cardMaxH = style.maxHeight ? `max-height:${style.maxHeight};` : '';
+    innerHTML=`<div class="quiz-price" style="background:${cardBg};border-color:${cardBorder};border-radius:${cardRadius}px;${cardMaxH}"><small style="background:${badgeBg}">${elem.badge || 'Recomendado'}</small><div style="padding:${cardPy}px ${cardPx}px"><span><strong style="color:${titleCol};font-size:${titleFont};font-weight:${titleWeight}">${elem.content || 'Plano PRO'}</strong><em style="color:${titleCol};opacity:0.75">${elem.description || 'Acesso completo'}</em></span><b style="color:${priceCol}">${elem.price || 'R$ 197,00'}</b></div></div>`;
   } else if (type === 'quiz-spacer') {
-    innerHTML=`<div style="height:${Math.max(4,Number(elem.height)||32)}px"></div>`;
+    const spacerH = style.maxHeight || `${Math.max(4,Number(elem.height)||32)}px`;
+    innerHTML=`<div style="height:${spacerH}"></div>`;
   } else if (type === 'image') {
     const url = elem.imageUrl || elem.content || '';
-    innerHTML = `<img src="${url}" alt="${elem.altText || ''}" style="display:block;width:100%;max-width:${style.maxWidth || '760px'};height:auto;margin:${getNum(style.marginTop, 10)}px auto ${getNum(style.marginBottom, 10)}px;border-radius:${getNum(style.borderRadius, 12)}px;">`;
+    const maxW = style.maxWidth || '760px';
+    const maxH = style.maxHeight ? `max-height:${style.maxHeight};` : '';
+    innerHTML = `<img src="${url}" alt="${elem.altText || ''}" style="display:block;width:100%;max-width:${maxW};${maxH}height:auto;margin:${getNum(style.marginTop, 10)}px auto ${getNum(style.marginBottom, 10)}px;border-radius:${getNum(style.borderRadius, 12)}px;object-fit:cover;">`;
   } else if (type === 'divider') {
     innerHTML = `<div style="border-top:2px solid ${style.textColor || '#38bdf8'};margin:${getNum(style.marginTop, 18)}px 0 ${getNum(style.marginBottom, 18)}px;opacity:.8"></div>`;
   } else if (type === 'testimonial') {

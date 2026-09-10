@@ -9,7 +9,7 @@ export const productTourSteps = [
     actionSelector: '.tour-create-folder',
     placement: 'bottom',
     title: 'Organize por projeto',
-    body: 'As páginas ficam dentro de pastas. Se você já tiver uma pasta, o tour abre ela automaticamente; se não tiver, crie a primeira agora.',
+    body: 'As páginas ficam dentro de pastas. Crie uma pasta para organizar o projeto deste tour.',
     action: 'open-folder-create',
     readySelector: '.tour-folder-modal'
   },
@@ -88,7 +88,7 @@ export const productTourSteps = [
   {
     route: '/builder',
     selector: '.tour-element-modal',
-    actionSelector: '.tour-element-modal .em-close',
+    actionSelector: '.tour-element-modal .btn-em-save',
     placement: 'left',
     title: 'Ajuste o elemento',
     body: 'Aqui ficam textos, cores, tipografia, alinhamento, margens, dimensões e configurações específicas.',

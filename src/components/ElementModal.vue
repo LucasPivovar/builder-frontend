@@ -170,7 +170,7 @@
                 <i class="bi bi-lightning-charge-fill"></i> Meta Pixel (ID ou Script Completo)
                 <span v-if="state.pageSettings.metaPixel" class="em-pixel-badge"><i class="bi bi-check-circle-fill"></i> Pixel Configurado</span>
               </label>
-              <textarea v-model="state.pageSettings.metaPixel" class="em-input em-ta-sm" placeholder="Insira o ID (ex: 1234567890) ou cole o código <script> completo do Meta Pixel..."></textarea>
+              <textarea v-model="state.pageSettings.metaPixel" class="em-input em-ta-sm" placeholder="Insira o ID (ex: 1234567890) ou cole o código &lt;script&gt; completo do Meta Pixel..."></textarea>
             </div>
             <div class="em-field em-full">
               <label class="em-lbl">Meta Description (SEO)</label>
@@ -183,7 +183,7 @@
             </div>
             <div class="em-field em-full">
               <label class="em-lbl">Código Google Tag Manager (GTM)</label>
-              <textarea v-model="state.pageSettings.gtmCode" class="em-input em-ta-sm" placeholder="<script>...</script>"></textarea>
+              <textarea v-model="state.pageSettings.gtmCode" class="em-input em-ta-sm" placeholder="&lt;script&gt;...&lt;/script&gt;"></textarea>
             </div>
           </div>
         </template>
@@ -229,7 +229,6 @@
               <ButtonElement v-else-if="elem.type === 'button' || elem.type === 'quiz-next'" :element="elem" />
               <VturbModalPreview v-else-if="elem.type === 'vturb-player'" :element="elem" />
               <PitchButtonElement v-else-if="elem.type === 'pitch-button'" :element="elem" />
-              <UpsellButtonsElement v-else-if="elem.type === 'upsell-buttons'" :element="elem" />
               <LiveViewersElement v-else-if="elem.type === 'live-viewers'" :element="elem" />
               <LibraryElement v-else-if="libraryElementTypes.includes(elem.type)" :element="elem" />
               <QuizElement v-else-if="quizElementTypes.includes(elem.type)" :element="elem" />
@@ -337,7 +336,7 @@
                       <textarea
                         v-model="elem.pixelCode"
                         class="em-input em-ta-main"
-                        placeholder="<!-- Meta Pixel Code -->&#10;<script>&#10;!function(f,b,e,v,n,t,s)...&#10;fbq('init', '426292223103034');&#10;fbq('track', 'PageView');&#10;</script>&#10;<noscript><img ... /></noscript>&#10;<!-- End Meta Pixel Code -->"
+                        placeholder="&lt;!-- Meta Pixel Code --&gt;&#10;&lt;script&gt;&#10;!function(f,b,e,v,n,t,s)...&#10;fbq('init', '1234567890');&#10;fbq('track', 'PageView');&#10;&lt;/script&gt;&#10;&lt;noscript&gt;&lt;img ... /&gt;&lt;/noscript&gt;&#10;&lt;!-- End Meta Pixel Code --&gt;"
                         @input="onPixelCodeInput"
                       ></textarea>
                     </div>
@@ -619,7 +618,7 @@
                         <label class="em-lbl"><i class="bi bi-palette-fill"></i> Cor do Número</label>
                         <div class="em-color-row">
                           <input v-model="elemStyle.countColor" class="em-color-dot" type="color" />
-                          <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#38bdf8" />
+                          <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#ffffff" />
                         </div>
                       </div>
                     </div>
@@ -689,7 +688,7 @@
                   <div class="em-style-2col">
                     <div class="em-field">
                       <label class="em-lbl">Largura Máxima</label>
-                      <input v-model="elemStyle.maxWidth" class="em-input" type="text" placeholder="320px ou 100%" />
+                      <input v-model="elemStyle.maxWidth" class="em-input" type="text" :readonly="elem.type === 'vturb-player'" placeholder="320px ou 100%" />
                     </div>
                     <div class="em-field">
                       <label class="em-lbl">Altura Máxima</label>
@@ -726,7 +725,7 @@
                   <label class="em-lbl"><i class="bi bi-123"></i> Cor do Número</label>
                   <div class="em-color-row">
                     <input v-model="elemStyle.countColor" class="em-color-dot" type="color" />
-                    <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#38bdf8" />
+                    <input v-model="elemStyle.countColor" class="em-input em-c-input" type="text" placeholder="#ffffff" />
                   </div>
                 </div>
                 <div class="em-color-field">
@@ -847,7 +846,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useBuilderStore } from '../composables/useBuilderStore';
 import { getNum } from '../utils/astrotags';
 import { deleteHostedVideo, getHostedVideos, getHostedVideoUsage, uploadHostedAsset, uploadHostedVideo } from '../services/api';
@@ -859,7 +858,6 @@ import ButtonElement from './elements/ButtonElement.vue';
 import VturbPlayerElement from './elements/VturbPlayerElement.vue';
 import VturbModalPreview from './elements/VturbModalPreview.vue';
 import PitchButtonElement from './elements/PitchButtonElement.vue';
-import UpsellButtonsElement from './elements/UpsellButtonsElement.vue';
 import LiveViewersElement from './elements/LiveViewersElement.vue';
 import LibraryElement from './elements/LibraryElement.vue';
 import QuizElement from './elements/QuizElement.vue';
@@ -875,7 +873,26 @@ const quizElementTypes = ['quiz-progress', 'quiz-single', 'quiz-multiple', 'quiz
 
 const elem = computed(() => state.selectedElement);
 const popupEditor = ref(null);
-const elemStyle = computed(() => elem.value?.style || {});
+const elemStyle = computed(() => {
+  return elem.value?.style || {};
+});
+
+watch(
+  () => elem.value,
+  (val) => {
+    if (val?.type === 'vturb-player') {
+      if (!val.style) val.style = {};
+      val.style.maxWidth = '320px';
+    }
+    if (val?.type === 'live-viewers') {
+      if (!val.style) val.style = {};
+      if (!val.style.countColor || val.style.countColor === '#38bdf8') {
+        val.style.countColor = '#ffffff';
+      }
+    }
+  },
+  { immediate: true }
+);
 const metricItems = computed(() => parseMetricItems(elem.value?.metricsText));
 const quizOptions = computed(() => getQuizOptions(elem.value));
 const minQuizOptions = computed(() => elem.value?.type === 'quiz-yes-no' ? 2 : 1);
@@ -1049,9 +1066,10 @@ const marginVerticalValue = computed(() => {
 
 function onMarginVerticalInput(val) {
   const parsed = (val === '' || val === null || isNaN(Number(val))) ? 0 : Number(val);
-  if (elemStyle.value) {
-    elemStyle.value.marginTop = parsed;
-    elemStyle.value.marginBottom = parsed;
+  if (elem.value) {
+    if (!elem.value.style) elem.value.style = {};
+    elem.value.style.marginTop = parsed;
+    elem.value.style.marginBottom = parsed;
   }
 }
 
@@ -1155,7 +1173,7 @@ function hasTextContent(e) {
 
 function hasDelayOption(e) {
   if (!e || e.isGlobalSettings) return false;
-  return ['heading', 'quiz-question', 'paragraph', 'button', 'quiz-next', 'top-banner', 'pitch-button', 'upsell-buttons', 'live-viewers'].includes(e.type);
+  return ['heading', 'quiz-question', 'paragraph', 'button', 'quiz-next', 'top-banner', 'pitch-button', 'live-viewers'].includes(e.type);
 }
 
 function hasVariableTags(e) {
@@ -1654,7 +1672,6 @@ const filteredIcons = computed(() => {
 @keyframes emMetricIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
 @media(max-width:720px){.em-metric-row{grid-template-columns:24px 1fr 34px}.em-metric-name{grid-column:2}.em-remove-metric{grid-column:3;grid-row:1/3;align-self:center}}
 
-.em-upsell-tabs { display:flex; gap:6px; }
 .em-tab-btn {
   background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
   color:var(--color-primary-deep); padding:5px 10px; border-radius:6px; font-size:12px; cursor:pointer;

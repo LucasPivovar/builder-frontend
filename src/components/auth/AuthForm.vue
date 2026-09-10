@@ -1,10 +1,12 @@
 <template>
   <div class="auth-wrapper">
-    <!-- Brand Logo: Canto esquerdo superior no desktop, centro acima do conteúdo no mobile -->
-    <router-link to="/" class="auth-home" aria-label="Astro Builder">
-      <AstroMark class="auth-logo" />
-      <span class="auth-brand-name">Astro<span class="brand-light">Builder</span></span>
-    </router-link>
+    <!-- Brand Logo Navigation -->
+    <div class="auth-nav-header">
+      <router-link to="/" class="auth-home" aria-label="Astro Builder">
+        <AstroMark class="auth-logo" />
+        <span class="auth-brand-name">Astro<span class="brand-light">Builder</span></span>
+      </router-link>
+    </div>
 
     <div class="auth-card">
       <!-- Brand -->
@@ -60,11 +62,16 @@
 
         <!-- Switch to Register -->
         <div class="auth-switch-box">
-          <span>Não tem uma conta?</span>
-          <button type="button" class="btn-switch-link" @click="switchMode('register')">
-            Cadastre-se agora
-          </button>
-          <button type="button" class="btn-switch-link" @click="switchMode('verify')">Confirmar e-mail</button>
+          <div class="switch-row">
+            <span>Não tem uma conta?</span>
+            <button type="button" class="btn-switch-link" @click="switchMode('register')">
+              Cadastre-se agora
+            </button>
+          </div>
+          <div class="switch-row verify-row">
+            <span>Recebeu um código?</span>
+            <button type="button" class="btn-switch-link" @click="switchMode('verify')">Confirmar e-mail</button>
+          </div>
         </div>
       </form>
 
@@ -179,10 +186,18 @@
 
         <!-- Switch to Login -->
         <div class="auth-switch-box">
-          <span>Já tem uma conta?</span>
-          <button type="button" class="btn-switch-link" @click="switchMode('login')">
-            Fazer login
-          </button>
+          <div class="switch-row">
+            <span>Já tem uma conta?</span>
+            <button type="button" class="btn-switch-link" @click="switchMode('login')">
+              Fazer login
+            </button>
+          </div>
+          <div class="switch-row verify-row">
+            <span>Recebeu um código?</span>
+            <button type="button" class="btn-switch-link" @click="switchMode('verify')">
+              Confirmar e-mail
+            </button>
+          </div>
         </div>
       </form>
 
@@ -198,7 +213,11 @@
         <div v-if="resetMessage" class="success-message" role="status"><i class="bi bi-check-circle-fill"></i> {{ resetMessage }}</div>
         <div v-if="resetError" class="error-message" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> {{ resetError }}</div>
         <button type="submit" class="btn-auth" :disabled="loading"><span><i class="bi bi-shield-lock"></i> {{ loading ? 'Aguarde…' : resetRequested ? 'Definir nova senha' : 'Solicitar recuperação' }}</span></button>
-        <div class="auth-switch-box"><button type="button" class="btn-switch-link" @click="switchMode('login')">Voltar ao login</button></div>
+        <div class="auth-switch-box">
+          <div class="switch-row">
+            <button type="button" class="btn-switch-link" @click="switchMode('login')">Voltar ao login</button>
+          </div>
+        </div>
       </form>
 
       <form v-else class="auth-form" @submit.prevent="handleEmailVerification">
@@ -208,7 +227,11 @@
         <div v-if="verificationError" class="error-message" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> {{ verificationError }}</div>
         <button type="submit" class="btn-auth" :disabled="loading"><span><i class="bi bi-patch-check"></i> {{ loading ? 'Confirmando…' : 'Confirmar e-mail' }}</span></button>
         <button type="button" class="btn-switch-link verification-resend" :disabled="loading" @click="resendVerification">Reenviar código</button>
-        <div class="auth-switch-box"><button type="button" class="btn-switch-link" @click="switchMode('login')">Voltar ao login</button></div>
+        <div class="auth-switch-box">
+          <div class="switch-row">
+            <button type="button" class="btn-switch-link" @click="switchMode('login')">Voltar ao login</button>
+          </div>
+        </div>
       </form>
     </div>
   </div>
@@ -431,22 +454,28 @@ async function handleEmailVerification() {
 <style scoped>
 .auth-wrapper {
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: var(--color-primary-subtle);
-  padding: 40px 24px;
-  box-sizing: border-box;
   width: 100%;
+  padding: 32px 32px 40px;
+  box-sizing: border-box;
+  background: transparent;
+  overflow-y: auto;
+}
+
+.auth-nav-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .auth-home {
-  position: absolute;
-  top: 32px;
-  left: 36px;
+  position: static;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -456,7 +485,6 @@ async function handleEmailVerification() {
   font-weight: 800;
   letter-spacing: -0.8px;
   font-family: var(--font-display, var(--font-sans));
-  z-index: 20;
   transition: opacity 0.15s ease;
 }
 
@@ -482,16 +510,12 @@ async function handleEmailVerification() {
 
 @media (max-width: 800px) {
   .auth-wrapper {
-    padding: 32px 20px 24px;
-    justify-content: center;
+    padding: 24px 20px 32px;
   }
 
-  .auth-home {
-    position: static;
-    margin: 0 auto 24px auto;
-    align-self: center;
+  .auth-nav-header {
     justify-content: center;
-    display: inline-flex;
+    margin-bottom: 20px;
   }
 
   .auth-card {
@@ -637,10 +661,18 @@ async function handleEmailVerification() {
 
 /* Switch Links Underneath the Button */
 .auth-switch-box {
-  margin-top: 20px;
+  margin-top: 24px;
   text-align: center;
   font-size: 13.5px;
   color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.switch-row {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -656,29 +688,37 @@ async function handleEmailVerification() {
   font-weight: 700;
   cursor: pointer;
   padding: 0;
-  text-decoration: underline;
+  text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .btn-switch-link:hover {
   color: var(--color-primary-hover);
+  text-decoration: underline;
 }
+
 /* Layout editorial da autenticação */
-.auth-wrapper { min-height: 0; flex: 1; width: 100%; padding: 48px 0; background: transparent; }
-.auth-card { width: 100%; max-width: 400px; margin: 0 auto; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
-.auth-brand { text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 34px; }
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  margin: auto auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.auth-brand { text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
 .auth-eyebrow { display: block; font-size: 10px; letter-spacing: 1.8px; font-weight: 700; color: var(--color-primary); margin-bottom: 16px; text-align: center; }
-.auth-brand h1 { font-family: var(--font-display); font-size: clamp(30px, 2.5vw, 38px); letter-spacing: -0.035em; font-weight: 600; line-height: 1.18; margin-bottom: 12px; text-align: center; }
-.auth-brand p { font-family: var(--font-sans); font-size: 14px; line-height: 1.65; font-weight: 400; text-align: center; }
+.auth-brand h1 { font-family: var(--font-display); font-size: clamp(26px, 2.3vw, 34px); letter-spacing: -0.035em; font-weight: 700; line-height: 1.2; margin-bottom: 10px; text-align: center; }
+.auth-brand p { font-family: var(--font-sans); font-size: 14px; line-height: 1.6; font-weight: 400; text-align: center; }
 .form-label { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--color-text); margin-bottom: 8px; font-weight: 500; }
-.form-group { margin-bottom: 20px; }
-.form-input { padding-top: 14px; padding-bottom: 14px; background: var(--color-surface); border-radius: 8px; }
-.form-row-between { margin: 0 0 26px; gap: 12px; flex-wrap: wrap; }
-.btn-auth { background: var(--color-primary); border-radius: 8px; padding: 15px; font-family: var(--font-sans); font-weight: 600; box-shadow: none; }
+.form-group { margin-bottom: 18px; }
+.form-input { padding-top: 13px; padding-bottom: 13px; background: var(--color-surface); border-radius: 8px; }
+.form-row-between { margin: 0 0 24px; gap: 12px; flex-wrap: wrap; }
+.btn-auth { background: var(--color-primary); border-radius: 8px; padding: 14px; font-family: var(--font-sans); font-weight: 600; box-shadow: none; }
 .btn-auth span { display: inline-flex; align-items: center; justify-content: center; gap: 9px; }
 .btn-auth .bi { font-size: 17px; }
-.auth-switch-box { margin-top: 27px; gap: 5px; }
-.btn-switch-link { text-decoration: none; }
 .error-message, .error-inline { color: var(--color-danger-strong); background: var(--color-danger-soft); border-color: var(--color-danger-border); }
 .btn-toggle-pass { min-width: 32px; min-height: 32px; }
 button:focus-visible, a:focus-visible { outline: 3px solid var(--color-primary-border); outline-offset: 3px; }

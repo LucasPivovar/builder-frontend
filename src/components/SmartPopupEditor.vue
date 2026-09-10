@@ -24,7 +24,7 @@
               <input
                 v-model="form.badgeText"
                 :disabled="!form.showBadge"
-                placeholder="🔴 CONTEÚDO EXCLUSIVO"
+                placeholder="CONTEÚDO EXCLUSIVO"
                 maxlength="80"
                 class="sp-input"
               />
@@ -66,7 +66,7 @@
               <label>Texto de Segurança (Rodapé)</label>
               <label class="sp-toggle-inline"><input type="checkbox" v-model="form.showFooter" /> Ativo</label>
             </div>
-            <input v-model="form.footerText" :disabled="!form.showFooter" placeholder="🛡️ Seus dados estão protegidos" maxlength="100" class="sp-input" />
+            <input v-model="form.footerText" :disabled="!form.showFooter" placeholder="Seus dados estão protegidos" maxlength="100" class="sp-input" />
           </div>
         </div>
 
@@ -261,6 +261,7 @@
 <script setup>
 import { reactive, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { popupAppearanceDefaults } from '../utils/popupAppearance';
+import { stripSmartPopupPrefix } from '../utils/smartPopup';
 import SmartPopupElement from './elements/SmartPopupElement.vue';
 
 const props = defineProps({
@@ -284,19 +285,19 @@ const form = reactive({
   videoDelay: raw.videoDelay ?? 60,
   maxWidth: raw.maxWidth || 500,
   showBadge: raw.showBadge ?? true,
-  badgeText: raw.badgeText ?? '🔴 CONTEÚDO EXCLUSIVO',
+  badgeText: stripSmartPopupPrefix(raw.badgeText, 'CONTEÚDO EXCLUSIVO', 'badge'),
   icon: raw.icon || 'lock',
   title: raw.title ?? 'DESBLOQUEIE O VÍDEO',
   subtitle: raw.subtitle ?? 'Preencha os dados abaixo para continuar assistindo o vídeo.',
   submitText: raw.submitText ?? 'LIBERAR ACESSO',
   showFooter: raw.showFooter ?? true,
-  footerText: raw.footerText ?? '🛡️ Seus dados estão protegidos',
+  footerText: stripSmartPopupPrefix(raw.footerText, 'Seus dados estão protegidos', 'footer'),
   fields: Array.isArray(raw.fields)
     ? raw.fields
     : (Array.isArray(raw.blocks) && raw.blocks.some(b => b.type === 'field'))
       ? raw.blocks.filter(b => b.type === 'field').map(b => ({ id: b.id, inputType: b.inputType || 'text', placeholder: b.placeholder || b.label || 'Digite aqui', required: !!b.required }))
       : [
-          { id: genId(), inputType: 'text', placeholder: 'Seu Nome', required: true },
+          { id: genId(), inputType: 'text', placeholder: 'Nome', required: true },
           { id: genId(), inputType: 'tel', placeholder: 'Whatsapp', required: true }
         ]
 });

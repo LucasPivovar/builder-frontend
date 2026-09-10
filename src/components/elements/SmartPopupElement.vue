@@ -25,8 +25,8 @@
   <!-- PREVIEW MODE: Visualização fiel e idêntica ao design do popup modal -->
   <div v-else class="sp-modal-preview-wrapper smart-popup-theme" :style="{ ...popupVariables(element), maxWidth: (element.maxWidth || 500) + 'px' }">
     <!-- Faixa Destaque Topo -->
-    <div v-if="element.showBadge !== false && (element.badgeText || '').trim()" class="sp-top-badge">
-      <span class="sp-badge-dot">●</span> {{ element.badgeText || 'CONTEÚDO EXCLUSIVO' }}
+    <div v-if="element.showBadge !== false && (displayBadgeText || '').trim()" class="sp-top-badge">
+      <span class="sp-badge-dot">●</span> {{ displayBadgeText }}
     </div>
 
     <div class="sp-modal-card-body">
@@ -63,8 +63,8 @@
         </button>
 
         <!-- Selo de Segurança / Rodapé -->
-        <div v-if="element.showFooter !== false && (element.footerText || '').trim()" class="sp-footer-trust">
-          <i class="bi bi-shield-check"></i> {{ element.footerText || 'Seus dados estão protegidos' }}
+        <div v-if="element.showFooter !== false && (displayFooterText || '').trim()" class="sp-footer-trust">
+          <i class="bi bi-shield-check"></i> {{ displayFooterText }}
         </div>
       </div>
     </div>
@@ -74,10 +74,19 @@
 <script setup>
 import { computed } from 'vue';
 import { popupVariables } from '../../utils/popupAppearance';
+import { stripSmartPopupPrefix } from '../../utils/smartPopup';
 
 const props = defineProps({
   element: { type: Object, required: true },
   mode: { type: String, default: 'preview' } // 'canvas' | 'preview'
+});
+
+const displayBadgeText = computed(() => {
+  return stripSmartPopupPrefix(props.element.badgeText, 'CONTEÚDO EXCLUSIVO', 'badge');
+});
+
+const displayFooterText = computed(() => {
+  return stripSmartPopupPrefix(props.element.footerText, 'Seus dados estão protegidos', 'footer');
 });
 
 const renderedFields = computed(() => {
@@ -95,7 +104,7 @@ const renderedFields = computed(() => {
       }));
   }
   return [
-    { id: 'f1', inputType: 'text', placeholder: 'Seu Nome', required: true },
+    { id: 'f1', inputType: 'text', placeholder: 'Nome', required: true },
     { id: 'f2', inputType: 'tel', placeholder: 'Whatsapp', required: true }
   ];
 });

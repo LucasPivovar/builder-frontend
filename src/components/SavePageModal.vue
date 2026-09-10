@@ -1,13 +1,13 @@
 <template>
   <Teleport to="body">
-    <div v-if="isOpen" class="modal-backdrop" @click.self="$emit('close')">
-      <section class="save-modal tour-save-modal" role="dialog" aria-modal="true" aria-labelledby="save-page-title" @keydown.esc="$emit('close')">
+    <div v-if="isOpen" class="modal-backdrop" @click.self="!saving && $emit('close')">
+      <section class="save-modal tour-save-modal" role="dialog" aria-modal="true" aria-labelledby="save-page-title" @keydown.esc="!saving && $emit('close')">
         <div class="modal-header">
           <div>
             <h3 id="save-page-title"><i class="bi bi-floppy-fill"></i> Salvar Página</h3>
             <p>Salve sua página para acessar e editar depois</p>
           </div>
-          <button class="btn-close" type="button" aria-label="Fechar salvamento da página" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
+          <button class="btn-close" type="button" :disabled="saving" aria-label="Fechar salvamento da página" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
         </div>
 
         <div class="modal-body">
@@ -42,10 +42,11 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn-cancel" @click="$emit('close')">Cancelar</button>
-          <button class="btn-save tour-save-modal-submit" :disabled="!pageName.trim()" @click="handleSave">
+          <p v-if="saveError" role="alert">{{ saveError }}</p>
+          <button class="btn-cancel" :disabled="saving" @click="$emit('close')">Cancelar</button>
+          <button class="btn-save tour-save-modal-submit" :disabled="saving || !pageName.trim()" @click="handleSave">
             <i class="bi bi-floppy-fill"></i>
-            {{ currentPageId ? 'Atualizar Página' : 'Salvar Página' }}
+            {{ saving ? 'Salvando...' : currentPageId ? 'Atualizar Página' : 'Salvar Página' }}
           </button>
         </div>
       </section>
@@ -60,7 +61,9 @@ import { useBuilderStore } from '../composables/useBuilderStore';
 const props = defineProps({ isOpen: Boolean });
 const emit = defineEmits(['close', 'saved']);
 
-const { state, foldersRegistry, savePage } = useBuilderStore();
+const { state, foldersRegistry, savePage, flushWorkspaceToBackend } = useBuilderStore();
+const saving = ref(false);
+const saveError = ref('');
 
 const pageName = ref('');
 const folderId = ref('');
@@ -83,12 +86,21 @@ watch(() => props.isOpen, (open) => {
   }
 });
 
-function handleSave() {
-  if (!pageName.value.trim()) return;
-  state.pageSettings.publicationSlug = cleanSlug(slug.value || pageName.value);
-  const page = savePage(pageName.value.trim(), folderId.value || null);
-  emit('saved', page);
-  emit('close');
+async function handleSave() {
+  if (saving.value || !pageName.value.trim()) return;
+  saving.value = true;
+  saveError.value = '';
+  try {
+    state.pageSettings.publicationSlug = cleanSlug(slug.value || pageName.value);
+    const page = savePage(pageName.value.trim(), folderId.value || null);
+    if (!await flushWorkspaceToBackend()) throw new Error('Não foi possível confirmar o salvamento. Tente novamente.');
+    emit('saved', page);
+    emit('close');
+  } catch (error) {
+    saveError.value = error.message;
+  } finally {
+    saving.value = false;
+  }
 }
 
 function cleanSlug(value) {

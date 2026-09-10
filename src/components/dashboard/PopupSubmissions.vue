@@ -4,7 +4,7 @@
     <p v-if="error" role="alert">{{ error }} <button @click="load">Tentar novamente</button></p>
     <p v-if="loading">Carregando respostas...</p>
     <p v-else-if="!items.length && !error">Os envios de popups e formulários publicados aparecerão aqui.</p>
-    <div v-else class="table-scroll"><table><thead><tr><th>Data</th><th>Popup</th><th>Respostas</th></tr></thead><tbody><tr v-for="item in items" :key="item.id"><td>{{ new Date(item.createdAt).toLocaleString('pt-BR') }}</td><td>{{ item.popupId }}</td><td><dl><template v-for="field in item.fields" :key="field.id"><dt>{{ field.label }}</dt><dd>{{ formatPopupResponse(field) }}</dd></template></dl></td></tr></tbody></table></div>
+    <div v-else class="table-scroll"><table><thead><tr><th>Data</th><th>Popup</th><th>Respostas</th></tr></thead><tbody><tr v-for="item in items" :key="item.id"><td>{{ new Date(item.createdAt).toLocaleString('pt-BR') }}</td><td>{{ item.popupId }}</td><td><dl><template v-for="field in item.fields" :key="field.id"><dt>{{ formatPopupFieldLabel(field.label) }}</dt><dd>{{ formatPopupResponse(field) }}</dd></template></dl></td></tr></tbody></table></div>
     <p v-for="item in items.filter(item => item.webhookStatus && item.webhookStatus !== 'none')" :key="'webhook-' + item.id" :role="item.webhookStatus === 'failed' ? 'alert' : undefined">
       Sellflux · {{ new Date(item.createdAt).toLocaleString('pt-BR') }}: {{ item.webhookStatus === 'sent' ? 'Enviado' : 'Falha na integração. A resposta está salva; confira a URL e o mapeamento no popup.' }}
     </p>
@@ -14,7 +14,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { getPopupSubmissions, exportPopupSubmissions } from '../../services/api';
-import { formatPopupResponse } from '../../utils/popupResponseDisplay';
+import { formatPopupResponse, formatPopupFieldLabel } from '../../utils/popupResponseDisplay';
 const props = defineProps({ pageId: { type: String, required: true } });
 const items = ref([]), total = ref(0), page = ref(1), loading = ref(false), exporting = ref(false), error = ref('');
 let requestVersion = 0;
@@ -29,7 +29,16 @@ function navigate(delta) { page.value += delta; load(); }
 watch(() => props.pageId, () => { page.value = 1; items.value = []; total.value = 0; load(); }, { immediate: true });
 async function exportAll() {
   exporting.value = true;
-  try { const result = await exportPopupSubmissions(props.pageId); const url = URL.createObjectURL(new Blob([result.csv], { type: 'text/csv;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = 'respostas-popup.csv'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+  try {
+    const result = await exportPopupSubmissions(props.pageId);
+    const cleanedCsv = (result.csv || '').replace(/Seu Nome/g, 'Nome').replace(/seu nome/gi, 'Nome');
+    const url = URL.createObjectURL(new Blob([cleanedCsv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'respostas-popup.csv';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   catch (err) { error.value = err.message || 'Não foi possível exportar.'; }
   finally { exporting.value = false; }
 }

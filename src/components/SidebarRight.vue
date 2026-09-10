@@ -155,7 +155,8 @@
           >
             <div class="section-header-box">
               <span class="section-header-title">
-                <span class="drag-handle" title="Arraste para reordenar esta seção">═</span> {{ getSectionTitle(row, rowIndex) }}
+                <span class="drag-handle" title="Arraste para reordenar esta seção">═</span>
+                <span class="section-header-text">{{ getSectionTitle(row, rowIndex) }}</span>
               </span>
               <div class="section-header-actions">
                 <button
@@ -191,9 +192,11 @@
                   @click.stop="openModalForElement(elem)"
                 >
                   <span class="section-item-label" :title="getElementSummary(elem)">
-                    <i class="bi bi-grip-vertical" style="color:var(--text-dim); margin-right:4px;"></i>
-                    <i :class="getElementIcon(elem)" style="color:var(--accent-primary);"></i>
-                    <strong>{{ getElementTypeLabel(elem) }}:</strong> {{ getElementSummary(elem) }}
+                    <i class="bi bi-grip-vertical section-item-grip"></i>
+                    <i :class="getElementIcon(elem)" class="section-item-icon"></i>
+                    <span class="section-item-text">
+                      <strong>{{ getElementTypeLabel(elem) }}:</strong> {{ getElementSummary(elem) }}
+                    </span>
                   </span>
                   <div class="section-item-actions" style="position: relative;">
                     <button
@@ -415,7 +418,6 @@ function getElementIcon(elem) {
     'vturb-player': 'bi bi-play-circle-fill',
     'pitch-button': 'bi bi-lightning-charge-fill',
     'smart-popup': 'bi bi-window-stack',
-    'upsell-buttons': 'bi bi-bag-check-fill',
     'live-viewers': 'bi bi-eye-fill',
     'meta-pixel': 'bi bi-lightning-fill',
     'email-header': 'bi bi-card-heading',
@@ -441,7 +443,7 @@ function getSectionTitle(row, index) {
         return `${txt.length > 20 ? txt.substring(0, 20) + '...' : txt}`;
       }
       if (elem.type === 'vturb-player') return `Vídeo VSL`;
-      if (elem.type === 'pitch-button' || elem.type === 'upsell-buttons') return `Botão / CTA`;
+      if (elem.type === 'pitch-button') return `Botão / CTA`;
       if (elem.type === 'live-viewers') return `Espectadores Ao Vivo`;
       if (elem.type === 'meta-pixel') return `Meta Pixel`;
       if (elem.type === 'email-header') return `Cabeçalho E-mail`;
@@ -461,7 +463,6 @@ function getElementTypeLabel(elem) {
     'button': 'Botão',
     'vturb-player': 'VTurb',
     'pitch-button': 'CTA Pitch',
-    'upsell-buttons': 'Upsell',
     'live-viewers': 'Viewers',
     'meta-pixel': 'Meta Pixel',
     'email-header': 'Cabeçalho',
@@ -510,6 +511,60 @@ function getElementSummary(elem) {
 }
 .section-item-row {
   cursor: grab;
+}
+.section-header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+  margin-right: 2px;
+}
+.section-item-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+.section-item-grip {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+.section-item-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}
+.section-item-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 2px;
 }
 
 .global-page-settings-card {

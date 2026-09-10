@@ -195,7 +195,6 @@ function parseSimple(text) {
 .sm-btn-block{ background: var(--color-primary-soft); border-color: var(--color-primary-bright); }
 .sm-vturb    { background: rgba(200,160,69,0.08); border-color: #c8a045; }
 .sm-pitch    { background: rgba(16,185,129,0.08); border-color: #10b981; }
-.sm-upsell   { background: rgba(16,185,129,0.05); border-color: #10b981; }
 .sm-viewers  { background: var(--color-surface-soft); border-color: var(--color-primary-bright); }
 .sm-pixel    { background: var(--color-primary-soft); border-color: var(--color-primary); }
 
@@ -219,9 +218,4 @@ function parseSimple(text) {
 .sm-code-wrap { margin-top: 6px; }
 .sm-code-label { font-size: 10px; color: var(--color-primary-deep); margin-bottom: 3px; }
 .sm-code { font-size: 11px; color: var(--color-primary-strong); font-family: var(--font-mono); background: var(--color-primary-subtle); padding: 6px 8px; border-radius: 6px; word-break: break-all; }
-
-.sm-upsell-row { display: flex; flex-direction: column; gap: 8px; }
-.sm-upsell-btn { padding: 8px 12px; border-radius: 6px; font-size: 13px; }
-.sm-accept { background: rgba(16,185,129,0.1); color: #34d399; border-left: 2px solid #10b981; }
-.sm-decline { background: rgba(220,38,38,0.08); color: #f87171; border-left: 2px solid #dc2626; }
 </style>

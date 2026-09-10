@@ -52,7 +52,8 @@ export function parseAstrotags(text, altColor = '#f1c232', bgColor = '#00ff0b', 
   const minViewers = options.minViewers || 140;
   const maxViewers = options.maxViewers || 200;
   const randomViewers = Math.floor(Math.random() * (maxViewers - minViewers + 1)) + minViewers;
-  const countColor = options.countColor || (options.style && options.style.countColor) || '#38bdf8';
+  const rawCountColor = options.countColor || (options.style && options.style.countColor);
+  const countColor = (rawCountColor && rawCountColor !== '#38bdf8' && rawCountColor !== 'rgb(56, 189, 248)') ? rawCountColor : '#ffffff';
 
   // 1. Suporte a quebra de linha com \n e <br>
   html = html.replace(/\r?\n/g, '<br>');

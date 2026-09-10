@@ -1,6 +1,30 @@
 import { popupThemeCss, popupVariables } from './popupAppearance.js';
 const escape = value => String(value || '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
+export function formatBrazilPhone(value) {
+  let digits = String(value || '').replace(/\D/g, '');
+  if (digits.startsWith('55') && (String(value).trim().startsWith('+') || digits.length > 11)) digits = digits.slice(2);
+  digits = digits.slice(0, 11);
+  if (!digits) return '';
+
+  let formatted = '+55 ';
+  if (digits.length <= 2) return `${formatted}(${digits}`;
+
+  formatted += `(${digits.slice(0, 2)}) `;
+  const split = digits.length > 10 ? 7 : 6;
+  formatted += digits.slice(2, split);
+  if (digits.length > split) formatted += `-${digits.slice(split)}`;
+  return formatted;
+}
+
+export function stripSmartPopupPrefix(value, fallback, kind = 'badge') {
+  const text = String(value ?? fallback ?? '').trim();
+  const icons = kind === 'footer'
+    ? /^(?:\s|🛡️|🔒|✔|✅|•|\*)+/u
+    : /^(?:\s|🔴|●|•|\*)+/u;
+  return text.replace(icons, '').trim() || fallback || text;
+}
+
 // Runtime autossuficiente executado no navegador do visitante
 function popupRuntime() {
   const script = document.currentScript;
@@ -13,7 +37,7 @@ function popupRuntime() {
   let hasOpened = false;
   let previousFocus;
   const seenKey = 'ab_popup_seen_' + (window.__builderPopupPageId || location.pathname) + '_' + root.dataset.popupId;
-  try { hasOpened = localStorage.getItem(seenKey) === '1'; } catch (_) { /* Storage indisponível: mantém funcionamento nesta visita. */ }
+  try { localStorage.removeItem(seenKey); } catch (_) { /* Remove chave legada para permitir abertura em toda visita */ }
 
   function open() {
     if (hasOpened || dialog.open) return;
@@ -24,7 +48,6 @@ function popupRuntime() {
     } else {
       dialog.setAttribute('open', '');
     }
-    try { localStorage.setItem(seenKey, '1'); } catch (_) { /* Storage indisponível. */ }
   }
 
   function close() {
@@ -88,11 +111,30 @@ function popupRuntime() {
   }
 
   for (const input of form.querySelectorAll('input[type="tel"]')) {
+    input.setAttribute('maxlength', '19');
     const formatPhone = () => {
-      const digits = input.value.replace(/\D/g, '');
-      const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8), digits.slice(8)];
-      input.value = digits ? '+' + parts.filter(Boolean).join(' ') : '';
-      input.setCustomValidity(digits && digits.length !== 12 ? 'Informe 12 dígitos, incluindo o código do país e o DDD.' : '');
+      let digits = input.value.replace(/\D/g, '');
+      if (digits.startsWith('55') && (input.value.trim().startsWith('+') || digits.length > 11)) digits = digits.slice(2);
+      digits = digits.slice(0, 11);
+      if (!digits) {
+        input.value = '';
+        input.setCustomValidity('');
+        return;
+      }
+
+      let formatted = '+55 ';
+      if (digits.length <= 2) {
+        input.value = formatted + '(' + digits;
+        input.setCustomValidity('Informe o DDD e o número completo (ex: +55 (11) 98765-4321).');
+        return;
+      }
+
+      formatted += '(' + digits.slice(0, 2) + ') ';
+      const split = digits.length > 10 ? 7 : 6;
+      formatted += digits.slice(2, split);
+      if (digits.length > split) formatted += '-' + digits.slice(split);
+      input.value = formatted;
+      input.setCustomValidity(digits.length >= 10 ? '' : 'Informe o DDD e o número completo (ex: +55 (11) 98765-4321).');
     };
     input.addEventListener('input', formatPhone);
     input.addEventListener('change', formatPhone);
@@ -109,7 +151,11 @@ function popupRuntime() {
     const fields = inputs.map(input => ({
       id: input.name,
       label: input.dataset.label || input.placeholder || 'Campo',
-      value: input.type === 'tel' ? input.value.replace(/\D/g, '') : input.value.trim()
+      value: input.type === 'tel' ? (() => {
+        const d = input.value.replace(/\D/g, '');
+        const national = d.startsWith('55') ? d.slice(2) : d;
+        return national.length >= 10 ? '55' + national.slice(0, 11) : d;
+      })() : input.value.trim()
     }));
 
     if (!fields.length) {
@@ -189,14 +235,16 @@ export function renderSmartPopup(element) {
   const trigger = ['exit', 'time', 'entry'].includes(element.trigger) ? element.trigger : element.trigger === 'video' ? 'time' : 'exit';
   const openDelay = Math.min(3600, Math.max(0, Number(element.openDelay) || 0));
 
+  const rawBadge = stripSmartPopupPrefix(element.badgeText, 'CONTEÚDO EXCLUSIVO', 'badge');
   const showBadge = element.showBadge !== false && (element.badgeText || '').trim();
-  const badgeText = escape(element.badgeText || '🔴 CONTEÚDO EXCLUSIVO');
+  const badgeText = escape(rawBadge);
   const iconSvg = element.icon && element.icon !== 'none' ? getIconSvg(element.icon) : '';
   const title = escape(element.title || 'DESBLOQUEIE O VÍDEO');
   const subtitle = escape(element.subtitle || 'Preencha os dados abaixo para continuar assistindo o vídeo.');
   const submitText = escape(element.submitText || 'LIBERAR ACESSO');
+  const rawFooter = stripSmartPopupPrefix(element.footerText, 'Seus dados estão protegidos', 'footer');
   const showFooter = element.showFooter !== false && (element.footerText || '').trim();
-  const footerText = escape(element.footerText || '🛡️ Seus dados estão protegidos');
+  const footerText = escape(rawFooter);
 
   // Campos com suporte tanto ao novo formato .fields quanto ao legado .blocks
   let fieldsList = [];
@@ -206,27 +254,28 @@ export function renderSmartPopup(element) {
     fieldsList = element.blocks.filter(b => b.type === 'field');
   } else {
     fieldsList = [
-      { id: 'name', inputType: 'text', placeholder: 'Seu Nome', required: true },
-      { id: 'whatsapp', inputType: 'tel', placeholder: 'Whatsapp', required: true }
+      { id: 'name', inputType: 'text', placeholder: 'Nome', required: true },
+      { id: 'whatsapp', inputType: 'tel', placeholder: 'WhatsApp', required: true }
     ];
   }
 
   const fieldsHtml = fieldsList.slice(0, 20).map(f => {
     const fId = escape(f.id);
     const type = ['text', 'email', 'tel', 'number'].includes(f.inputType) ? f.inputType : 'text';
+    const rawLabel = (f.placeholder || f.label || 'Campo').replace(/^seu\s+/i, '');
     const placeholder = escape(f.placeholder || f.label || 'Digite aqui');
     const req = f.required ? 'required' : '';
     return `<div style="width:100%;margin-bottom:12px">
       <input
         type="${type}"
-        ${type === 'tel' ? 'inputmode="tel" autocomplete="tel" title="12 dígitos com código do país e DDD: +55 41 1234 5678"' : ''}
+        ${type === 'tel' ? 'inputmode="tel" autocomplete="tel" title="WhatsApp com DDD: +55 (11) 98765-4321"' : ''}
         id="${id}-${fId}"
         name="${fId}"
         aria-label="${placeholder}"
-        data-label="${escape((f.placeholder || f.label || 'Campo').slice(0, 100))}"
+        data-label="${escape(rawLabel.slice(0, 100))}"
         placeholder="${placeholder}${f.required ? ' *' : ''}"
         ${req}
-        maxlength="2000"
+        maxlength="${type === 'tel' ? 19 : 2000}"
         style="display:block;width:100%;box-sizing:border-box;background:#17181c;border:1px solid #282932;border-radius:10px;padding:15px 18px;color:#ffffff;font-size:15px;font-family:inherit;outline:none;"
       />
     </div>`;

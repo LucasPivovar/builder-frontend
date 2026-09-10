@@ -31,8 +31,8 @@ const computedStyle = computed(() => {
 
   const py = getNum(s.paddingVertical, 0);
   const px = getNum(s.paddingHorizontal, 0);
-  const mt = getNum(s.marginTop, 10);
-  const mb = getNum(s.marginBottom, 10);
+  const mt = getNum(s.marginTop, 6);
+  const mb = getNum(s.marginBottom, 6);
   const br = getNum(s.borderRadius, 0);
 
   return {

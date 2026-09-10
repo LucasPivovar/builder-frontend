@@ -107,13 +107,19 @@ export function parseHTMLToBuilderState(htmlString) {
             const maxV = parseInt(widget?.getAttribute('data-max') || '1000', 10);
             const content = 'espectadores estão vendo este conteúdo simultaneamente com você';
 
+            const countNode = widget?.querySelector('.vsl-viewer-count');
+            const extractedCountColor = countNode?.style?.color;
+            const finalCountColor = (extractedCountColor && extractedCountColor !== '#38bdf8' && extractedCountColor !== 'rgb(56, 189, 248)')
+              ? extractedCountColor
+              : '#ffffff';
+
             elements.push({
               id: `elem-imp-${Date.now()}-${rIdx}-${cIdx}-${eIdx}`,
               type: 'live-viewers',
               content,
               minViewers: minV,
               maxViewers: maxV,
-              style: { fontSize: '18px', textColor: '#ffffff', countColor: '#38bdf8', align: 'center' }
+              style: { fontSize: '18px', textColor: '#ffffff', countColor: finalCountColor, align: 'center' }
             });
           }
         });

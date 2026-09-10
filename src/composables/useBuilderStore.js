@@ -70,7 +70,7 @@ const defaultFunilRows = [
       id: 'elem-5', type: 'live-viewers',
       content: 'espectadores estão vendo este conteúdo simultaneamente com você',
       minViewers: 500, maxViewers: 1000,
-      style: { fontSize: '18px', textColor: '#ffffff', countColor: '#38bdf8', marginTop: 4, marginBottom: 4, align: 'center' }
+      style: { fontSize: '18px', textColor: '#ffffff', countColor: '#ffffff', hasTransparentBg: true, bgColor: 'transparent', marginTop: 4, marginBottom: 4, align: 'center' }
     }]}]
   }
 ];
@@ -261,20 +261,21 @@ function flushWorkspaceToBackend() {
     .catch(() => false)
     .then(() => persistWorkspaceNow())
     .catch(async (error) => {
-      if (error.status === 409) {
+      if (error.status === 409 && Number.isInteger(error.payload?.currentRevision)) {
         const localSnapshot = workspaceSnapshot();
         const keepLocal = window.confirm('Este workspace foi alterado em outra sessão. Pressione OK para manter suas alterações locais ou Cancelar para carregar a versão do servidor.');
         if (keepLocal && Number.isInteger(error.payload?.currentRevision)) {
           const response = await saveWorkspaceRequest({ revision:error.payload.currentRevision, ...localSnapshot });
           backendRevision = response.revision;
           showToast('Suas alterações locais foram mantidas sobre a versão mais recente.', 'success');
+          return true;
         } else {
           await hydrateWorkspaceFromBackend();
           showToast('A versão mais recente do servidor foi carregada.', 'info');
         }
       } else if (!syncErrorShown) {
         syncErrorShown = true;
-        showToast('Não foi possível sincronizar com o backend.', 'error');
+        showToast(error.message || 'Não foi possível sincronizar com o backend.', 'error');
       }
       return false;
     });
@@ -310,6 +311,7 @@ async function hydrateWorkspaceFromBackend() {
 
 // ─── Main State ──────────────────────────────────────────────────────────────
 const state = reactive({
+  activeQuizStepIndex: 0,
   rows: defaultFunilRows.map(r => JSON.parse(JSON.stringify(r))),
   selectedElement: null,
   isElementModalOpen: false,
@@ -497,7 +499,9 @@ export function useBuilderStore() {
 
   function addElementToCanvas(elementType) {
     pushSnapshot();
-    let targetRow = state.rows[state.rows.length - 1];
+    let targetRow = state.builderMode === 'quiz'
+      ? state.rows[state.activeQuizStepIndex] || state.rows[0]
+      : state.rows[state.rows.length - 1];
     if (!targetRow || !targetRow.columns.length) targetRow = addRow('1-col');
     targetRow.columns[0].elements.push(createDefaultElement(elementType));
     pushSnapshot();
@@ -532,15 +536,15 @@ export function useBuilderStore() {
         videoDelay: 60,
         maxWidth: 500,
         showBadge: true,
-        badgeText: '🔴 CONTEÚDO EXCLUSIVO',
+        badgeText: 'CONTEÚDO EXCLUSIVO',
         icon: 'lock',
         title: 'DESBLOQUEIE O VÍDEO',
         subtitle: 'Preencha os dados abaixo para continuar assistindo o vídeo.',
         submitText: 'LIBERAR ACESSO',
         showFooter: true,
-        footerText: '🛡️ Seus dados estão protegidos',
+        footerText: 'Seus dados estão protegidos',
         fields: [
-          { id: genUid('f-'), inputType: 'text', placeholder: 'Seu Nome', required: true },
+          { id: genUid('f-'), inputType: 'text', placeholder: 'Nome', required: true },
           { id: genUid('f-'), inputType: 'tel', placeholder: 'Whatsapp', required: true }
         ],
         blocks: [],
@@ -552,16 +556,16 @@ export function useBuilderStore() {
     if (type === 'paragraph') return { ...base, content: 'Texto do parágrafo...', style: { ...baseStyle, fontSize: '15px', fontWeight: '400', textColor: '#ccc', hasTransparentBg: true } };
     if (type === 'button') return { ...base, content: 'CLIQUE AQUI', url: '', openInNewTab: true, subtext: '', style: { ...baseStyle, bgColor: '#fff', textColor: '#000', paddingVertical: 14, paddingHorizontal: 28, borderRadius: 10 } };
     if (type === 'top-banner') return { ...base, content: 'ATENÇÃO: NÃO FECHE ESTA PÁGINA', style: { ...baseStyle, bgColor: '#dc2626', textColor: '#fff', fontSize: '15px' } };
-    if (type === 'vturb-player') return { ...base, content: '', vturbBody: '', vturbHead: '', hostedVideoId: '', hostedVideoUrl: '', hostedVideoName: '', hostedVideoPoster: '', videoControls: true, videoAutoplay: false, videoMuted: false, videoLoop: false, style: { ...baseStyle, maxWidth: '640px', marginTop: 6, marginBottom: 6 } };
+    if (type === 'vturb-player') return { ...base, content: '', vturbBody: '', vturbHead: '', hostedVideoId: '', hostedVideoUrl: '', hostedVideoName: '', hostedVideoPoster: '', videoControls: true, videoAutoplay: false, videoMuted: false, videoLoop: false, style: { ...baseStyle, maxWidth: '320px', marginTop: 6, marginBottom: 6 } };
     if (type === 'pitch-button') return { ...base, content: 'QUERO MEU ACESSO AGORA', url: '', openInNewTab: true, subtext: 'Acesso imediato', style: { ...baseStyle, bgColor: '#fff', textColor: '#000', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, isGlow: false } };
-    if (type === 'live-viewers') return { ...base, content: 'espectadores estão assistindo', minViewers: 100, maxViewers: 250, style: { ...baseStyle, textColor: '#fff', countColor: '#38bdf8', fontSize: '18px', marginTop: 4, marginBottom: 4 } };
+    if (type === 'live-viewers') return { ...base, content: 'espectadores estão assistindo', minViewers: 100, maxViewers: 250, style: { ...baseStyle, textColor: '#fff', countColor: '#ffffff', hasTransparentBg: true, bgColor: 'transparent', fontSize: '18px', marginTop: 4, marginBottom: 4 } };
     if (type === 'meta-pixel') return { ...base, pixelId: '', pixelEvent: 'PageView', content: 'Meta Pixel', style: baseStyle };
     if (type === 'image') return { ...base, content: '', imageUrl: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=80', altText: 'Imagem de destaque', style: { ...baseStyle, hasTransparentBg: true, borderRadius: 14, marginTop: 10, marginBottom: 10 } };
     if (type === 'divider') return { ...base, content: '', style: { ...baseStyle, textColor: '#38bdf8', hasTransparentBg: true, marginTop: 18, marginBottom: 18 } };
     if (type === 'testimonial') return { ...base, content: '“A página ficou pronta muito mais rápido do que eu imaginava.”', author: 'Mariana Silva', role: 'Cliente verificada', style: { ...baseStyle, bgColor: '#ffffff', textColor: '#0f172a', borderColor: '#bae6fd', borderRadius: 14, fontSize: '16px', marginTop: 12, marginBottom: 12, align: 'left' } };
     if (type === 'faq') return { ...base, content: 'Como recebo o acesso?', answer: 'Assim que o pagamento for confirmado, o acesso será enviado para o seu e-mail.', style: { ...baseStyle, bgColor: '#ffffff', textColor: '#0f172a', borderColor: '#bae6fd', borderRadius: 12, fontSize: '16px', marginTop: 8, marginBottom: 8, align: 'left' } };
     if (type === 'countdown') return { ...base, content: 'Esta condição termina em:', targetDate: new Date(Date.now() + 86400000).toISOString(), style: { ...baseStyle, bgColor: '#ffffff', textColor: '#0f172a', borderColor: '#bae6fd', borderRadius: 14, fontSize: '16px', marginTop: 12, marginBottom: 12 } };
-    if (type === 'form') return { ...base, content: 'Quero receber', formTitle: 'Receba o material gratuito', description: 'Preencha seus dados e receba o próximo passo.', namePlaceholder: 'Seu nome', emailPlaceholder: 'Seu melhor e-mail', submitUrl: '', style: { ...baseStyle, bgColor: '#0ea5e9', textColor: '#ffffff', borderColor: '#bae6fd', borderRadius: 14, fontSize: '16px', marginTop: 12, marginBottom: 12, align: 'left' } };
+    if (type === 'form') return { ...base, content: 'Quero receber', formTitle: 'Receba o material gratuito', description: 'Preencha seus dados e receba o próximo passo.', namePlaceholder: 'Nome', emailPlaceholder: 'Seu melhor e-mail', submitUrl: '', style: { ...baseStyle, bgColor: '#0ea5e9', textColor: '#ffffff', borderColor: '#bae6fd', borderRadius: 14, fontSize: '16px', marginTop: 12, marginBottom: 12, align: 'left' } };
     if (type === 'quiz-question') return { ...base, content:'Escreva a pergunta desta etapa', style:{...baseStyle,fontSize:'28px',fontWeight:'900',textColor:'#0f172a',hasTransparentBg:true,align:'center',marginBottom:14} };
     if (type === 'quiz-next') return { ...base, content:'Continuar', url:'#quiz-next', openInNewTab:false, style:{...baseStyle,bgColor:'#0ea5e9',textColor:'#ffffff',fontSize:'16px',fontWeight:'800',paddingVertical:16,paddingHorizontal:28,borderRadius:12,align:'center',marginTop:10} };
     if (type === 'quiz-progress') return { ...base, content:'Progresso', progress:25, style:{...baseStyle,hasTransparentBg:true,marginBottom:18} };
@@ -728,6 +732,7 @@ export function useBuilderStore() {
   function loadPage(pageId) {
     const page = pagesRegistry.find(p => p.id === pageId);
     if (!page) return false;
+    state.activeQuizStepIndex = 0;
     state.isTemplateBuilder = false;
     state.currentTemplateId = null;
     setRows(page.rows || []);
@@ -753,6 +758,7 @@ export function useBuilderStore() {
   }
 
   function newBlankCanvas(mode = 'funil', { name = '', folderId = null } = {}) {
+    state.activeQuizStepIndex = 0;
     const normalizedMode = normalizeBuilderMode(mode);
     state.isTemplateBuilder = false;
     state.currentTemplateId = null;

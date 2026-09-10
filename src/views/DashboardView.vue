@@ -205,6 +205,10 @@
       @edit="handleEditFromOptions"
       @delete="handleDeletePage"
       @unpublish="handleUnpublishPage"
+      @open-publication="handleOpenPublicationFromOptions"
+      @open-metrics="handleOpenMetricsFromOptions"
+      @open-dns="handleOpenDnsFromOptions"
+      @publish-page="handlePublishFromOptions"
     />
 
     <DnsModal
@@ -290,11 +294,11 @@ const selectedFolder = ref(null);
 
 async function startTour() {
   activeTab.value = 'home';
-  selectedFolder.value = foldersRegistry[0] || null;
+  selectedFolder.value = null;
   showCreateModal.value = false;
   showFolderModal.value = false;
   await nextTick();
-  beginTour(foldersRegistry.length ? 2 : 0);
+  beginTour(0);
 }
 const showCreateModal = ref(false);
 const creationFolderId = ref('');
@@ -457,7 +461,8 @@ function handleEditPage(pageId) {
 function showPageOptions(page) {
   const pageId = page?.id || page?.templateId;
   const source = pagesRegistry.find(item => item.id === pageId) || null;
-  pageOptionsTarget.value = source ? { ...source, publication: findPublication(source.id) } : null;
+  const publication = source ? findPublication(source.id) : null;
+  pageOptionsTarget.value = source ? { ...source, publication, isPublished: Boolean(publication) } : null;
   if (!pageOptionsTarget.value) showToast('Página não encontrada', 'error');
 }
 
@@ -588,6 +593,42 @@ function handleFolderDomainById(folderId) {
   handleFolderDomain(folder);
 }
 
+function handleOpenPublicationFromOptions(page) {
+  pageOptionsTarget.value = null;
+  openPublicationUrl(page);
+}
+
+function handleOpenMetricsFromOptions(page) {
+  pageOptionsTarget.value = null;
+  openPageMetrics(page);
+}
+
+function handleOpenDnsFromOptions(page) {
+  const target = page;
+  pageOptionsTarget.value = null;
+  const source = pagesRegistry.find(item => item.id === (target?.id || target?.templateId)) || target;
+  if (source?.folderId) {
+    handleFolderDomainById(source.folderId);
+  } else {
+    const publication = findPublication(source.id);
+    dnsTargetPage.value = {
+      id: source.id,
+      templateId: source.id,
+      title: source.name || source.title || 'Página',
+      folderId: null,
+      folderName: 'Raiz',
+      customDomain: publication?.customDomain || '',
+      publication
+    };
+  }
+}
+
+function handlePublishFromOptions(page) {
+  const target = page;
+  pageOptionsTarget.value = null;
+  handlePublishPage(target);
+}
+
 function handleFolderDomain(folder) {
   if (!folder?.id) {
     showToast('Pasta não encontrada.', 'error');
@@ -693,10 +734,6 @@ async function publishFolderPages(folderId) {
   for (const page of targets) results.push(await publishSavedPage(page));
   await loadPublications();
   return results;
-}
-
-function folderDomainForPage(page) {
-  return foldersRegistry.find(folder => folder.id === page?.folderId)?.customDomain || '';
 }
 
 function updateFolderDomain(folderId, domain) {

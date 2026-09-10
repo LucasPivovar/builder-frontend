@@ -20,8 +20,8 @@
           <i :style="{ width: `${progress}%` }"></i>
         </div>
 
-        <h2>{{ currentStep.title }}</h2>
-        <p>{{ currentStep.body }}</p>
+        <h2>{{ isEmailExport ? 'Exporte o e-mail' : currentStep.title }}</h2>
+        <p>{{ isEmailExport ? 'Gere o HTML do e-mail para baixar, copiar ou conferir na prévia.' : currentStep.body }}</p>
         <p v-if="statusMessage" class="tour-status" role="status">{{ statusMessage }}</p>
 
         <div class="tour-actions">
@@ -51,10 +51,13 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { emitProductTour, useProductTour } from '../composables/useProductTour';
+import { useBuilderStore } from '../composables/useBuilderStore';
 
 const router = useRouter();
 const route = useRoute();
 const { state, steps, currentStep, progress, stepLabel, close, goTo } = useProductTour();
+const { state: builderState } = useBuilderStore();
+const isEmailExport = computed(() => builderState.builderMode === 'email' && currentStep.value.action === 'open-export');
 
 const targetRect = ref(null);
 const isTransitioning = ref(false);

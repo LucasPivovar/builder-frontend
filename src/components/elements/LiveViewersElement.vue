@@ -3,7 +3,7 @@
     class="canvas-viewer-widget"
     :style="computedStyle"
   >
-    <strong :style="{ color: element.style?.countColor || '#38bdf8' }">{{ count }}</strong>
+    <strong :style="{ color: (element.style?.countColor && element.style.countColor !== '#38bdf8') ? element.style.countColor : '#ffffff' }">{{ count }}</strong>
     <span v-html="parsedContent"></span>
   </div>
 </template>
@@ -20,7 +20,7 @@ const computedStyle = computed(() => {
   const s = props.element.style || {};
 
   let bg = 'transparent';
-  if (s.bgColor && !s.hasTransparentBg) {
+  if (s.bgColor && !s.hasTransparentBg && s.bgColor !== 'transparent') {
     bg = s.bgOpacity !== undefined && s.bgOpacity !== null && s.bgOpacity !== '' && Number(s.bgOpacity) < 1 
       ? hexToRgba(s.bgColor, Number(s.bgOpacity)) 
       : s.bgColor;
@@ -33,8 +33,8 @@ const computedStyle = computed(() => {
 
   const py = getNum(s.paddingVertical, 0);
   const px = getNum(s.paddingHorizontal, 0);
-  const mt = getNum(s.marginTop, 16);
-  const mb = getNum(s.marginBottom, 12);
+  const mt = getNum(s.marginTop, 6);
+  const mb = getNum(s.marginBottom, 6);
   const br = getNum(s.borderRadius, 0);
 
   return {
@@ -113,7 +113,7 @@ const parsedContent = computed(() => {
       cityName: props.element.cityName,
       minViewers: currentMin.value,
       maxViewers: currentMax.value,
-      countColor: props.element.style?.countColor || '#38bdf8'
+      countColor: (props.element.style?.countColor && props.element.style.countColor !== '#38bdf8') ? props.element.style.countColor : '#ffffff'
     }
   );
 });

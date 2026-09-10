@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://127.0.0.1:3000/api')).replace(/\/$/, '');
 const TOKEN_KEY = 'vbs_access_token';
 const REFRESH_TOKEN_KEY = 'vbs_refresh_token';
 const USER_KEY = 'vbs_current_user';

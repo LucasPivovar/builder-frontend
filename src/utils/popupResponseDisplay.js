@@ -1,3 +1,10 @@
+export function formatPopupFieldLabel(label) {
+  const str = String(label || '').trim();
+  if (!str) return 'Campo';
+  const cleaned = str.replace(/^(seu|sua)\s+/i, '');
+  return cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : str;
+}
+
 export function formatPopupResponse(field) {
   const value = String(field.value ?? '');
   if (!value) return '—';

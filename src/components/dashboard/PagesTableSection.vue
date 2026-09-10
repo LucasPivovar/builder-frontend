@@ -44,9 +44,6 @@
         <time class="row-date">{{ page.date }}</time>
 
         <div class="row-actions">
-          <button class="btn-edit-builder" type="button" @click="$emit('publish-page', page)">
-            <i class="bi bi-cloud-arrow-up"></i><span>Publicar</span>
-          </button>
           <button class="btn-item-more" type="button" aria-label="Mais opções" @click="$emit('more-options', page)">
             <i class="bi bi-three-dots-vertical"></i>
           </button>
@@ -68,7 +65,8 @@ defineEmits(['create-new', 'edit-page', 'more-options', 'publish-page']);
 .pages-table-section { width:100%; }
 .pages-table-wrap { overflow:auto; border:1px solid var(--color-border); border-radius:18px; background:var(--color-surface); box-shadow:var(--shadow-sm); }
 .pages-table-head,
-.pages-table-row { min-width:980px; display:grid; grid-template-columns:132px minmax(240px,1.7fr) 150px minmax(120px,.75fr) minmax(132px,.8fr) 174px; align-items:center; gap:16px; }
+.pages-table-head,
+.pages-table-row { min-width:760px; display:grid; grid-template-columns:120px minmax(220px,1.8fr) 140px minmax(110px,.8fr) minmax(110px,.8fr) 44px; align-items:center; gap:14px; }
 .pages-table-head { min-height:48px; padding:0 20px; border-bottom:1px solid var(--color-border); color:var(--color-text-muted); font-size:10px; font-weight:900; letter-spacing:.5px; text-transform:uppercase; }
 .pages-table-row { min-height:78px; padding:0 20px; border-bottom:1px solid var(--color-border); transition:background .18s ease; }
 .pages-table-row:last-child { border-bottom:0; }
@@ -84,13 +82,11 @@ defineEmits(['create-new', 'edit-page', 'more-options', 'publish-page']);
 .row-metrics{display:flex;align-items:center;gap:8px;color:var(--color-text-muted);font-size:11px;font-weight:900}.row-metrics span{display:inline-flex;align-items:center;gap:4px}.row-metrics i{color:var(--color-primary)}
 .row-date { color:var(--color-text-muted); font-size:12px; }
 .row-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; }
-.btn-edit-builder { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap; background:var(--color-primary-soft); color:var(--color-primary-strong); border:1px solid var(--color-border-strong); padding:7px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; }
-.btn-edit-builder:hover { border-color:var(--color-primary); background:var(--color-primary); color:#fff; }
-.btn-item-more { width:30px; height:30px; border-radius:8px; background:var(--color-surface-soft); border:1px solid var(--color-border); color:var(--color-text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.btn-item-more { width:32px; height:32px; border-radius:8px; background:var(--color-surface-soft); border:1px solid var(--color-border); color:var(--color-text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .btn-item-more:hover { border-color:var(--color-primary-border); color:var(--color-primary-strong); }
 .empty-pages { min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; border:1px dashed var(--color-border-strong); border-radius:18px; background:var(--color-surface); color:var(--color-text-muted); text-align:center; }
 .empty-pages i { font-size:32px; color:var(--color-primary); }
 .empty-pages strong { color:var(--color-text); font-size:16px; }
 .empty-pages button { margin-top:8px; display:inline-flex; align-items:center; gap:7px; border:0; border-radius:10px; padding:10px 14px; background:var(--color-primary); color:#fff; font:inherit; font-size:13px; font-weight:800; cursor:pointer; }
-@media(max-width:720px){.pages-table-head,.pages-table-row{min-width:900px;grid-template-columns:116px minmax(220px,1.8fr) 130px 110px 118px 164px}.pages-table-row{padding:0 14px}.pages-table-head{padding:0 14px}}
+@media(max-width:720px){.pages-table-head,.pages-table-row{min-width:680px;grid-template-columns:104px minmax(180px,1.8fr) 120px 96px 100px 40px}.pages-table-row{padding:0 14px}.pages-table-head{padding:0 14px}}
 </style>

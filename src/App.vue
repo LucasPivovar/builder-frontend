@@ -30,7 +30,7 @@ const router = useRouter();
 const { loadTemplate, hydrateWorkspaceFromBackend, closeTemplateBuilder } = useBuilderStore();
 
 onMounted(() => {
-  if (hasAuthToken()) hydrateWorkspaceFromBackend().catch(() => {});
+  if (hasAuthToken() && router.currentRoute.value.path !== '/builder') hydrateWorkspaceFromBackend().catch(() => {});
 });
 
 function handleNavigate(routeName) {

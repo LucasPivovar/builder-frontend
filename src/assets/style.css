@@ -437,9 +437,23 @@ body.landing-scroll #app {
   font-size: 12px;
   font-weight: 700;
   color: var(--text-main);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+  margin-right: 2px;
 }
 
 .section-header-actions {
@@ -488,6 +502,9 @@ body.landing-scroll #app {
 }
 
 .section-item-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 11px;
   color: var(--text-main);
   white-space: nowrap;
@@ -496,11 +513,34 @@ body.landing-scroll #app {
   max-width: 220px;
 }
 
+.section-item-grip {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.section-item-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.section-item-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
 /* Canvas Rows and Columns - Strictly Block Document Flow (No Position Relative/Absolute Overlaps) */
 .builder-row {
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto clamp(20px, 3vh, 36px) auto !important;
+  margin: 0 auto;
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: wrap !important;
@@ -515,7 +555,7 @@ body.landing-scroll #app {
 .builder-row.has-top-banner {
   max-width: 100% !important;
   width: 100% !important;
-  margin: 0 0 clamp(16px, 2.5vh, 28px) 0 !important;
+  margin: 0 !important;
   padding: 0 !important;
 }
 
@@ -525,7 +565,7 @@ body.landing-scroll #app {
   height: auto !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
+  gap: 0px !important;
   box-sizing: border-box !important;
   clear: both !important;
   float: none !important;

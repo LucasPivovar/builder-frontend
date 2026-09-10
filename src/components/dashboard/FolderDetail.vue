@@ -79,38 +79,6 @@
           <div><span class="row-category">{{ page.category }}</span></div>
           <time class="row-date">{{ page.date }}</time>
           <div class="row-actions">
-            <button
-              v-if="page.isPublished"
-              class="btn-open-page"
-              title="Abrir página publicada"
-              @click="$emit('open-publication', page)"
-            >
-              <i class="bi bi-box-arrow-up-right"></i><span>Abrir</span>
-            </button>
-            <button
-              class="btn-open-page"
-              type="button"
-              title="Ver métricas da página"
-              @click="$emit('open-metrics', page)"
-            >
-              <i class="bi bi-graph-up-arrow"></i><span>Métricas</span>
-            </button>
-            <button
-              v-if="page.isPublished"
-              class="btn-edit-builder"
-              title="Configurar slug"
-              @click="$emit('more-options', page)"
-            >
-              <i class="bi bi-link-45deg"></i><span>Slug</span>
-            </button>
-            <button
-              v-else
-              class="btn-edit-builder"
-              title="Publicar página"
-              @click="$emit('publish-page', page)"
-            >
-              <i class="bi bi-cloud-arrow-up"></i><span>Publicar</span>
-            </button>
             <button class="btn-item-more" title="Mais opções" @click="$emit('more-options', page)"><i class="bi bi-three-dots-vertical"></i></button>
           </div>
         </article>
@@ -251,11 +219,11 @@ function displayUrl(page) {
 
 .folder-table-head,
 .folder-page-row {
-  min-width: 960px;
+  min-width: 760px;
   display: grid;
-  grid-template-columns: 112px minmax(170px, 1.1fr) minmax(180px, 1fr) 76px 104px minmax(230px, 250px);
+  grid-template-columns: 112px minmax(200px, 1.4fr) minmax(180px, 1.2fr) 80px 104px 44px;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .folder-table-head {
@@ -292,29 +260,15 @@ function displayUrl(page) {
 .row-category { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-strong); font-size: 11px; font-weight: 800; }
 .row-date { color: var(--color-text-muted); font-size: 12px; }
 .row-actions { min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-.row-actions button span { display: inline; }
-.row-actions .btn-open-page,
-.row-actions .btn-edit-builder { flex: 0 0 auto; }
-.row-actions .btn-open-page:first-child,
-.row-actions .btn-open-page:nth-child(2) { min-width: 76px; }
-.row-actions .btn-edit-builder { min-width: 62px; }
-.row-actions .btn-item-more { flex: 0 0 30px; }
+.row-actions .btn-item-more { flex: 0 0 32px; width: 32px; height: 32px; }
 
 @media (max-width: 1180px) {
   .folder-table-head,
   .folder-page-row {
-    min-width: 900px;
-    grid-template-columns: 104px minmax(150px, 1fr) minmax(150px, .9fr) 68px 96px 218px;
+    min-width: 680px;
+    grid-template-columns: 104px minmax(170px, 1.2fr) minmax(160px, 1fr) 74px 96px 40px;
     gap: 10px;
   }
-  .row-actions .btn-open-page,
-  .row-actions .btn-edit-builder {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    padding: 0;
-  }
-  .row-actions button span { display: none; }
 }
 
 .empty-folder-box {

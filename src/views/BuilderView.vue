@@ -25,8 +25,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { getAdminUserWorkspace, saveAdminPage } from '../services/api';
 import Header from '../components/Header.vue';
 import SidebarRight from '../components/SidebarRight.vue';
@@ -43,10 +43,31 @@ import { useBuilderStore } from '../composables/useBuilderStore';
 const { state, showToast, openExportModal, openPreviewModal, openVersionModal, openMetricsModal, saveTemplateFromBuilder, flushWorkspaceToBackend } = useBuilderStore();
 const isSaveModalOpen = ref(false);
 const route = useRoute();
+const router = useRouter();
+const { loadPage, hydrateWorkspaceFromBackend } = useBuilderStore();
+watch(() => state.currentPageId, id => {
+  if (id && !route.query.adminUser) router.replace({ path: '/builder', query: { ...route.query, page: id } });
+});
 const adminOwner = ref(''), adminMessage = ref('');
 let adminRevision, adminPage, previousState;
 onMounted(async () => {
-  if (!route.query.adminUser || !route.query.page) return;
+  if (!route.query.adminUser) {
+    if (route.query.page && state.currentPageId !== route.query.page) {
+      try {
+        await hydrateWorkspaceFromBackend();
+        if (!loadPage(route.query.page)) throw new Error('Página não encontrada.');
+      } catch (error) {
+        showToast(error.message, 'error');
+        await router.replace('/dashboard');
+      }
+    } else if (state.currentPageId) {
+      await router.replace({ path: '/builder', query: { page: state.currentPageId } });
+    } else {
+      await hydrateWorkspaceFromBackend().catch(error => showToast(error.message, 'error'));
+    }
+    return;
+  }
+  if (!route.query.page) return;
   adminOwner.value = 'Carregando…';
   try {
     const result = await getAdminUserWorkspace(route.query.adminUser);
