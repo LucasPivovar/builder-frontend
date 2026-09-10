@@ -143,13 +143,13 @@ input, select { width: 100%; border: 1px solid var(--color-border); border-radiu
 input:focus, select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
 
 .actions-group { display: grid; gap: 8px; margin-top: 4px; }
-.action-btn { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); cursor: pointer; text-align: left; transition: all 0.15s ease; font: inherit; width: 100%; }
+.action-btn { display: grid; grid-template-columns: 24px 1fr auto; align-items: start; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); cursor: pointer; text-align: left; transition: all 0.15s ease; font: inherit; width: 100%; }
 .action-btn:hover { background: var(--color-surface-soft); border-color: var(--color-primary-border); }
-.action-btn > i:first-child { font-size: 18px; color: var(--color-primary-strong); display: flex; align-items: center; justify-content: center; }
+.action-btn > i:first-child { font-size: 18px; color: var(--color-primary-strong); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
 .action-btn span { display: grid; gap: 2px; min-width: 0; }
 .action-btn strong { color: var(--color-text); font-size: 12.5px; font-weight: 800; }
-.action-btn small { color: var(--color-text-muted); font-size: 11px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.action-btn > i:last-child { color: var(--color-text-muted); font-size: 13px; }
+.action-btn small { color: var(--color-text-muted); font-size: 11px; font-weight: 500; white-space: normal; line-height: 1.4; }
+.action-btn > i:last-child { color: var(--color-text-muted); font-size: 13px; margin-top: 3px; }
 
 .action-btn.open-page { background: var(--color-surface); }
 .action-btn.open-page:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
