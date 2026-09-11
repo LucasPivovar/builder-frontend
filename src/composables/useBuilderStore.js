@@ -15,6 +15,7 @@ let backendRevision = 0;
 let workspaceSyncTimer = null;
 let workspaceSyncChain = Promise.resolve();
 let syncErrorShown = false;
+let lastWorkspaceSyncError = '';
 
 // ─── LocalStorage Helpers ────────────────────────────────────────────────────
 function lsGet(key, fallback) {
@@ -249,14 +250,17 @@ function hasMeaningfulLocalWorkspace() {
 }
 
 async function persistWorkspaceNow() {
-  if (!hasAuthToken() || !workspaceReady) return false;
+  if (!hasAuthToken()) return false;
+  if (!workspaceReady) throw new Error('Seu workspace ainda não foi carregado do servidor. Recarregue a página antes de salvar.');
   const response = await saveWorkspaceRequest({ revision: backendRevision, ...workspaceSnapshot() });
   backendRevision = response.revision;
   syncErrorShown = false;
+  lastWorkspaceSyncError = '';
   return true;
 }
 
 function flushWorkspaceToBackend() {
+  clearTimeout(workspaceSyncTimer);
   workspaceSyncChain = workspaceSyncChain
     .catch(() => false)
     .then(() => persistWorkspaceNow())
@@ -267,15 +271,20 @@ function flushWorkspaceToBackend() {
         if (keepLocal && Number.isInteger(error.payload?.currentRevision)) {
           const response = await saveWorkspaceRequest({ revision:error.payload.currentRevision, ...localSnapshot });
           backendRevision = response.revision;
+          lastWorkspaceSyncError = '';
           showToast('Suas alterações locais foram mantidas sobre a versão mais recente.', 'success');
           return true;
         } else {
           await hydrateWorkspaceFromBackend();
+          lastWorkspaceSyncError = 'A versão mais recente do servidor foi carregada.';
           showToast('A versão mais recente do servidor foi carregada.', 'info');
         }
       } else if (!syncErrorShown) {
         syncErrorShown = true;
+        lastWorkspaceSyncError = error.message || 'Não foi possível sincronizar com o backend.';
         showToast(error.message || 'Não foi possível sincronizar com o backend.', 'error');
+      } else {
+        lastWorkspaceSyncError = error.message || 'Não foi possível sincronizar com o backend.';
       }
       return false;
     });
@@ -697,8 +706,7 @@ export function useBuilderStore() {
           lastEditedAt: now
         };
         lsSet('pages_registry_v1', pagesRegistry);
-        createVersion('Salvamento automático');
-        showToast(`"${name}" atualizada!`, 'success');
+        createVersion('Salvamento automático', false);
         return pagesRegistry[idx];
       }
     }
@@ -724,9 +732,47 @@ export function useBuilderStore() {
     state.currentPageId = newPage.id;
     state.currentPageName = newPage.name;
     state.currentPageFolderId = newPage.folderId;
-    createVersion('Primeira versão');
-    showToast(`"${newPage.name}" salva com sucesso!`, 'success');
+    createVersion('Primeira versão', false);
     return newPage;
+  }
+
+  function capturePageSaveState() {
+    return {
+      pages: JSON.parse(JSON.stringify(pagesRegistry)),
+      versions: JSON.parse(JSON.stringify(versionsRegistry)),
+      currentPageId: state.currentPageId,
+      currentPageName: state.currentPageName,
+      currentPageFolderId: state.currentPageFolderId,
+      pageSettings: JSON.parse(JSON.stringify(state.pageSettings)),
+      versionRevision: state.versionRevision
+    };
+  }
+
+  function restorePageSaveState(snapshot) {
+    if (!snapshot) return;
+    clearTimeout(workspaceSyncTimer);
+    suppressBackendSync = true;
+    try {
+      replaceRegistry(pagesRegistry, snapshot.pages);
+      replaceRegistry(versionsRegistry, snapshot.versions);
+      state.currentPageId = snapshot.currentPageId;
+      state.currentPageName = snapshot.currentPageName;
+      state.currentPageFolderId = snapshot.currentPageFolderId;
+      state.pageSettings = JSON.parse(JSON.stringify(snapshot.pageSettings));
+      state.versionRevision = snapshot.versionRevision;
+      lsSet('pages_registry_v1', pagesRegistry);
+      lsSet('page_versions_v1', versionsRegistry);
+    } finally {
+      suppressBackendSync = false;
+    }
+  }
+
+  async function savePageToBackend(name, folderId) {
+    const snapshot = capturePageSaveState();
+    const page = savePage(name, folderId);
+    if (await flushWorkspaceToBackend()) return page;
+    restorePageSaveState(snapshot);
+    throw new Error(lastWorkspaceSyncError || 'Não foi possível confirmar o salvamento. Tente novamente.');
   }
 
   function loadPage(pageId) {
@@ -1125,7 +1171,7 @@ export function useBuilderStore() {
     return state.currentPageId || state.pageSettings.trackingKey || 'draft';
   }
 
-  function createVersion(label = 'Versão manual') {
+  function createVersion(label = 'Versão manual', announce = true) {
     const pageKey = getActivePageKey();
     const version = {
       id: `version-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -1146,7 +1192,7 @@ export function useBuilderStore() {
     }
     lsSet('page_versions_v1', versionsRegistry);
     state.versionRevision++;
-    showToast('Versão salva no histórico.', 'success');
+    if (announce) showToast('Versão salva no histórico.', 'success');
     return version;
   }
 
@@ -1215,7 +1261,7 @@ export function useBuilderStore() {
     openModalForElement, openExportModal, openPreviewModal, closePreviewModal, openGlobalSettings, closeModal,
     deleteSelectedElement, duplicateElement, deleteElement, clearCanvas,
     moveElementUp, moveElementDown, applyGlobalColorTheme,
-    savePage, loadPage, deletePage, newBlankCanvas, movePage, updatePageDetails,
+    savePageToBackend, loadPage, deletePage, newBlankCanvas, movePage, updatePageDetails,
     createFolder, renameFolder, deleteFolder, moveFolder,
     registerCustomTemplate, deleteCustomTemplate, loadTemplate, loadPlatformTemplates,
     startTemplateBuilder, saveTemplateFromBuilder, closeTemplateBuilder,

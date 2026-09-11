@@ -61,7 +61,7 @@ import { useBuilderStore } from '../composables/useBuilderStore';
 const props = defineProps({ isOpen: Boolean });
 const emit = defineEmits(['close', 'saved']);
 
-const { state, foldersRegistry, savePage, flushWorkspaceToBackend } = useBuilderStore();
+const { state, foldersRegistry, savePageToBackend } = useBuilderStore();
 const saving = ref(false);
 const saveError = ref('');
 
@@ -92,8 +92,7 @@ async function handleSave() {
   saveError.value = '';
   try {
     state.pageSettings.publicationSlug = cleanSlug(slug.value || pageName.value);
-    const page = savePage(pageName.value.trim(), folderId.value || null);
-    if (!await flushWorkspaceToBackend()) throw new Error('Não foi possível confirmar o salvamento. Tente novamente.');
+    const page = await savePageToBackend(pageName.value.trim(), folderId.value || null);
     emit('saved', page);
     emit('close');
   } catch (error) {

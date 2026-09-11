@@ -112,7 +112,7 @@ async function publishCurrentPage() {
 
   publishing.value = true;
   try {
-    await flushWorkspaceToBackend();
+    if (!await flushWorkspaceToBackend()) throw new Error('As alterações não foram salvas no servidor. Salve a página antes de publicar.');
     state.exportedHTML = generateExportedHTML(state.rows, {
       ...state.pageSettings,
       builderMode: state.builderMode,
