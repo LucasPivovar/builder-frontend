@@ -11,6 +11,15 @@
     </div>
 
     <div class="header-actions">
+      <span
+        v-if="maxPages"
+        class="plan-usage"
+        :class="{ 'plan-usage-full': pagesCount >= maxPages }"
+        :title="pagesCount >= maxPages ? 'Limite do plano atingido. Editar e excluir continuam liberados; criar uma nova página exige upgrade.' : 'Páginas usadas na conta inteira, somando todas as pastas e a raiz.'"
+      >
+        <i class="bi bi-file-earmark-text"></i>
+        {{ pagesCount }} de {{ maxPages }} páginas
+      </span>
       <button class="btn-tour tour-guided-launch" @click="$emit('start-tour')" title="Iniciar tour guiado">
         <i class="bi bi-compass"></i><span>Tour guiado</span>
       </button>
@@ -25,7 +34,9 @@
 <script setup>
 defineProps({
   searchQuery: String,
-  unreadCount: { type: Number, default: 0 }
+  unreadCount: { type: Number, default: 0 },
+  pagesCount: { type: Number, default: 0 },
+  maxPages: { type: Number, default: null }
 });
 
 defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth', 'start-tour']);
@@ -72,6 +83,22 @@ defineEmits(['update:searchQuery', 'open-builder', 'notify', 'open-auth', 'start
   align-items: center;
   gap: 12px;
 }
+
+.plan-usage {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--color-border); background: var(--color-surface-soft);
+  color: var(--color-text-secondary); font-size: 12.5px; font-weight: 600;
+  white-space: nowrap; cursor: default;
+}
+
+.plan-usage-full {
+  border-color: var(--color-danger, #dc2626);
+  background: var(--color-danger-soft, rgba(220, 38, 38, 0.12));
+  color: var(--color-danger, #dc2626);
+}
+
+@media (max-width: 900px) { .plan-usage { display: none; } }
 
 .btn-tour {
   display: inline-flex;

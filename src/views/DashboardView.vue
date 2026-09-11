@@ -17,6 +17,8 @@
       <DashboardHeader
         v-model:searchQuery="searchQuery"
         :unreadCount="notificationUnread"
+        :pagesCount="pagesRegistry.length"
+        :maxPages="planUsage.maxPages"
         @open-builder="handleOpenBuilder"
         @notify="openNotifications"
         @start-tour="startTour"
@@ -283,7 +285,8 @@ const router = useRouter();
 const { state: tourState, start: beginTour } = useProductTour();
 const {
   showToast, loadTemplate, loadPage, deleteFolder, newBlankCanvas,
-  pagesRegistry, foldersRegistry, customTemplatesRegistry, flushWorkspaceToBackend, updatePageDetails, closeTemplateBuilder, deletePage
+  pagesRegistry, foldersRegistry, customTemplatesRegistry, flushWorkspaceToBackend, updatePageDetails, closeTemplateBuilder, deletePage,
+  planUsage, loadPlanLimits
 } = useBuilderStore();
 
 const requestedDashboardTab = sessionStorage.getItem('vbs_dashboard_tab');
@@ -321,6 +324,8 @@ const analyticsSummary = ref({ totals: {}, pages: [], videos: [] });
 const profileRevision = ref(0);
 const refreshProfile = () => { profileRevision.value += 1; };
 onMounted(() => window.addEventListener('profile-updated', refreshProfile));
+// O teto do plano pode ter mudado desde o carregamento do workspace.
+onMounted(() => { loadPlanLimits(); });
 onUnmounted(() => window.removeEventListener('profile-updated', refreshProfile));
 const currentUser = computed(() => {
   void profileRevision.value;

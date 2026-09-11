@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { generateExportedHTML } from '../utils/htmlExporter';
-import { getPlatformTemplates, getStoredUser, getWorkspace, hasAuthToken, saveWorkspace as saveWorkspaceRequest } from '../services/api';
+import { getPlatformTemplates, getStoredUser, getSubscription, getWorkspace, hasAuthToken, saveWorkspace as saveWorkspaceRequest } from '../services/api';
 
 const WORKSPACE_SYNC_KEYS = new Set([
   'pages_registry_v1',
@@ -16,6 +16,74 @@ let workspaceSyncTimer = null;
 let workspaceSyncChain = Promise.resolve();
 let syncErrorShown = false;
 let lastWorkspaceSyncError = '';
+
+// ─── Limite do plano ─────────────────────────────────────────────────────────
+// O teto vale para a conta inteira, não para uma pasta. A interface precisa
+// mostrar o consumo para que uma pasta vazia com erro de limite faça sentido.
+const planUsage = reactive({ maxPages: null, planName: '' });
+
+async function loadPlanLimits() {
+  if (!hasAuthToken()) return;
+  try {
+    const subscription = await getSubscription();
+    planUsage.maxPages = Number.isFinite(Number(subscription?.limits?.maxPages)) ? Number(subscription.limits.maxPages) : null;
+    planUsage.planName = String(subscription?.limits?.name || '');
+  } catch {
+    planUsage.maxPages = null;
+    planUsage.planName = '';
+  }
+}
+
+// ─── Conflito entre sessões ──────────────────────────────────────────────────
+// Substitui o window.confirm que só perguntava "manter local ou carregar do
+// servidor?". Quem respondia não via o que estava prestes a sobrescrever, e o
+// caminho destrutivo (manter local) era o mais fácil de clicar. Agora a
+// interface recebe um comparativo e decide com ele à vista.
+const workspaceConflict = reactive({ open: false, local: null, server: null });
+let resolveWorkspaceConflict = null;
+
+function summarizeWorkspace(data = {}) {
+  const pages = Array.isArray(data.pages) ? data.pages : [];
+  const folders = Array.isArray(data.folders) ? data.folders : [];
+  const folderName = (id) => folders.find(folder => folder.id === id)?.name || 'pasta removida';
+  return {
+    pagesCount: pages.length,
+    foldersCount: folders.length,
+    rootPagesCount: pages.filter(page => !page.folderId).length,
+    pageNames: pages.map(page => page.name || 'Página'),
+    pagesByFolder: pages.map(page => ({ id: page.id, name: page.name || 'Página', folder: page.folderId ? folderName(page.folderId) : null })),
+    lastEditedAt: pages
+      .map(page => page.lastEditedAt || page.updatedAt || page.createdAt || '')
+      .filter(Boolean)
+      .sort()
+      .pop() || ''
+  };
+}
+
+let conflictUiMounted = false;
+function registerWorkspaceConflictUi(mounted) {
+  conflictUiMounted = Boolean(mounted);
+}
+
+function askWorkspaceConflict(localData, serverData) {
+  // Sem interface montada (testes, rotas sem o modal) a escolha segura é a do
+  // servidor: nunca sobrescreve em silêncio o que já está persistido.
+  if (!conflictUiMounted) return Promise.resolve('server');
+  workspaceConflict.local = summarizeWorkspace(localData);
+  workspaceConflict.server = summarizeWorkspace(serverData);
+  workspaceConflict.open = true;
+  return new Promise(resolve => {
+    resolveWorkspaceConflict = (choice) => {
+      workspaceConflict.open = false;
+      resolveWorkspaceConflict = null;
+      resolve(choice === 'local' ? 'local' : 'server');
+    };
+  });
+}
+
+function answerWorkspaceConflict(choice) {
+  if (resolveWorkspaceConflict) resolveWorkspaceConflict(choice);
+}
 
 // ─── LocalStorage Helpers ────────────────────────────────────────────────────
 function lsGet(key, fallback) {
@@ -267,7 +335,10 @@ function flushWorkspaceToBackend() {
     .catch(async (error) => {
       if (error.status === 409 && Number.isInteger(error.payload?.currentRevision)) {
         const localSnapshot = workspaceSnapshot();
-        const keepLocal = window.confirm('Este workspace foi alterado em outra sessão. Pressione OK para manter suas alterações locais ou Cancelar para carregar a versão do servidor.');
+        // Sem conseguir ler a versão do servidor não há comparativo para mostrar,
+        // e sobrescrever às cegas é justamente o que se quer evitar.
+        const serverData = await getWorkspace().then(response => response.data || {}).catch(() => null);
+        const keepLocal = serverData ? await askWorkspaceConflict(localSnapshot, serverData) === 'local' : false;
         if (keepLocal && Number.isInteger(error.payload?.currentRevision)) {
           const response = await saveWorkspaceRequest({ revision:error.payload.currentRevision, ...localSnapshot });
           backendRevision = response.revision;
@@ -314,6 +385,7 @@ async function hydrateWorkspaceFromBackend() {
   }
 
   await loadPlatformTemplates();
+  await loadPlanLimits();
   if (user?.id) localStorage.setItem('vbs_workspace_owner', user.id);
   return true;
 }
@@ -1268,6 +1340,8 @@ export function useBuilderStore() {
     createVersion, getVersions, restoreVersion, openVersionModal, closeVersionModal,
     recordMetric, getMetrics, clearMetrics, openMetricsModal, closeMetricsModal,
     openSummaryModal, closeSummaryModal,
-    hydrateWorkspaceFromBackend, flushWorkspaceToBackend
+    hydrateWorkspaceFromBackend, flushWorkspaceToBackend,
+    planUsage, loadPlanLimits,
+    workspaceConflict, answerWorkspaceConflict, registerWorkspaceConflictUi
   };
 }

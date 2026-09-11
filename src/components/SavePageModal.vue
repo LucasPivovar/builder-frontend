@@ -41,6 +41,14 @@
           <div v-if="builderMode !== 'email'" class="form-group"><label class="form-label" for="save-page-slug">Caminho da página</label><input id="save-page-slug" class="form-input" v-model="slug" placeholder="minha-oferta" pattern="[a-z0-9-]+" /><small>Use letras minúsculas, números e hífens. URL final: {{ urlPreview }}</small></div>
         </div>
 
+        <div v-if="planBlocked" class="plan-warning" role="status">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>
+            Você já usa {{ pagesUsed }} de {{ planUsage.maxPages }} páginas do plano, somando todas as pastas e a raiz.
+            Criar mais uma exige um plano maior. Editar as que já existem continua liberado.
+          </span>
+        </div>
+
         <div class="modal-footer">
           <p v-if="saveError" role="alert">{{ saveError }}</p>
           <button class="btn-cancel" :disabled="saving" @click="$emit('close')">Cancelar</button>
@@ -61,7 +69,7 @@ import { useBuilderStore } from '../composables/useBuilderStore';
 const props = defineProps({ isOpen: Boolean });
 const emit = defineEmits(['close', 'saved']);
 
-const { state, foldersRegistry, savePageToBackend } = useBuilderStore();
+const { state, foldersRegistry, pagesRegistry, planUsage, savePageToBackend } = useBuilderStore();
 const saving = ref(false);
 const saveError = ref('');
 
@@ -75,6 +83,10 @@ const pageModeLabel = computed(() => builderMode.value === 'email' ? 'Página de
 const pageModeIcon = computed(() => builderMode.value === 'email' ? 'bi bi-envelope-paper-fill' : builderMode.value === 'quiz' ? 'bi bi-ui-checks-grid' : 'bi bi-play-btn-fill');
 const pagePlaceholder = computed(() => builderMode.value === 'email' ? 'Ex.: E-mail de boas-vindas' : builderMode.value === 'quiz' ? 'Ex.: Quiz de diagnóstico' : 'Ex.: VSL do produto principal');
 const selectedFolder = computed(() => foldersRegistry.find(folder => folder.id === folderId.value));
+// O limite vale para a conta inteira. Só atrapalha quem está criando uma página
+// nova: atualizar uma existente não aumenta a contagem.
+const pagesUsed = computed(() => pagesRegistry.length);
+const planBlocked = computed(() => !currentPageId.value && Boolean(planUsage.maxPages) && pagesUsed.value >= planUsage.maxPages);
 const cleanSlugPreview = computed(() => cleanSlug(slug.value || pageName.value || 'pagina'));
 const urlPreview = computed(() => `${selectedFolder.value?.customDomain || 'dominio-da-pasta.com'}/${cleanSlugPreview.value}`);
 
@@ -134,6 +146,14 @@ function cleanSlug(value) {
 .modal-header h3 { font-size: 17px; font-weight: 800; color: var(--color-surface); margin-bottom: 2px; }
 .modal-header p { font-size: 12.5px; color: var(--color-text-soft); }
 .btn-close { background: none; border: none; color: var(--color-text-soft); font-size: 16px; cursor: pointer; }
+
+.plan-warning {
+  display: flex; gap: 8px; align-items: flex-start;
+  margin: 0 24px 4px; padding: 10px 12px; border-radius: 10px;
+  background: var(--color-danger-soft, rgba(220, 38, 38, 0.12));
+  border: 1px solid var(--color-danger, rgba(220, 38, 38, 0.4));
+  color: var(--color-text); font-size: 12.5px; line-height: 1.45;
+}
 
 .modal-body { padding: 20px 24px; }
 .form-group { margin-bottom: 16px; }

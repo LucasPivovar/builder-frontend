@@ -13,6 +13,7 @@
     <!-- Global Modals -->
     <ToastNotification />
     <PageSummaryModal />
+    <WorkspaceConflictModal />
     <ProductTour />
   </div>
 </template>
@@ -22,6 +23,7 @@ import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import ToastNotification from './components/ToastNotification.vue';
 import PageSummaryModal from './components/PageSummaryModal.vue';
+import WorkspaceConflictModal from './components/WorkspaceConflictModal.vue';
 import ProductTour from './components/ProductTour.vue';
 import { useBuilderStore } from './composables/useBuilderStore';
 import { hasAuthToken } from './services/api';
