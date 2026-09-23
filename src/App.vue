@@ -2,6 +2,7 @@
   <div id="app">
     <!-- Router View for SPA pages -->
     <router-view
+      v-show="!workspaceBlocked"
       @navigate="handleNavigate"
       @open-builder="handleOpenBuilder"
       @open-auth="handleNavigate('auth')"
@@ -9,6 +10,10 @@
       @open-admin="handleNavigate('admin')"
       @go-dashboard="handleNavigate('dashboard')"
     />
+    <section v-if="workspaceBlocked" class="workspace-loading" :role="workspaceStatus.error ? 'alert' : 'status'">
+      <p>{{ workspaceStatus.loading ? 'Carregando suas páginas…' : workspaceStatus.error }}</p>
+      <button v-if="!workspaceStatus.loading" class="btn-primary" @click="reloadWorkspace">Tentar novamente</button>
+    </section>
 
     <!-- Global Modals -->
     <ToastNotification />
@@ -19,7 +24,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import ToastNotification from './components/ToastNotification.vue';
 import PageSummaryModal from './components/PageSummaryModal.vue';
@@ -29,10 +34,14 @@ import { useBuilderStore } from './composables/useBuilderStore';
 import { hasAuthToken } from './services/api';
 
 const router = useRouter();
-const { loadTemplate, hydrateWorkspaceFromBackend, closeTemplateBuilder } = useBuilderStore();
+const { loadTemplate, hydrateWorkspaceFromBackend, closeTemplateBuilder, workspaceStatus } = useBuilderStore();
+const workspaceBlocked = computed(() => router.currentRoute.value.meta.requiresAuth && (workspaceStatus.loading || workspaceStatus.error));
+function reloadWorkspace() {
+  return hydrateWorkspaceFromBackend().catch(() => {});
+}
 
 onMounted(() => {
-  if (hasAuthToken() && router.currentRoute.value.path !== '/builder') hydrateWorkspaceFromBackend().catch(() => {});
+  if (hasAuthToken() && router.currentRoute.value.path !== '/builder') reloadWorkspace();
 });
 
 function handleNavigate(routeName) {
@@ -58,4 +67,5 @@ function handleOpenBuilder(templateKey) {
 
 <style>
 @import './assets/style.css';
+.workspace-loading { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; text-align: center; }
 </style>

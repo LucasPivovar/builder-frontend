@@ -11,6 +11,10 @@ const WORKSPACE_SYNC_KEYS = new Set([
 ]);
 let suppressBackendSync = false;
 let workspaceReady = false;
+let workspaceOwnerId = null;
+let hydrationRequest = null;
+let hydrationGeneration = 0;
+const workspaceStatus = reactive({ loading: false, error: '' });
 let backendRevision = 0;
 let workspaceSyncTimer = null;
 let workspaceSyncChain = Promise.resolve();
@@ -89,6 +93,7 @@ function answerWorkspaceConflict(choice) {
 // ─── LocalStorage Helpers ────────────────────────────────────────────────────
 function lsGet(key, fallback) {
   try {
+    if (WORKSPACE_SYNC_KEYS.has(key) && localStorage.getItem('vbs_workspace_owner') !== getStoredUser()?.id) return fallback;
     const v = localStorage.getItem(key);
     return v ? JSON.parse(v) : fallback;
   } catch { return fallback; }
@@ -96,8 +101,8 @@ function lsGet(key, fallback) {
 function lsSet(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    if (!suppressBackendSync && WORKSPACE_SYNC_KEYS.has(key)) scheduleWorkspaceSync();
   } catch (e) { /* storage unavailable */ }
+  if (!suppressBackendSync && WORKSPACE_SYNC_KEYS.has(key)) scheduleWorkspaceSync();
 }
 
 // ─── Default Canvas (Funil VSL) ──────────────────────────────────────────────
@@ -320,7 +325,7 @@ function hasMeaningfulLocalWorkspace() {
 
 async function persistWorkspaceNow() {
   if (!hasAuthToken()) return false;
-  if (!workspaceReady) throw new Error('Seu workspace ainda não foi carregado do servidor. Recarregue a página antes de salvar.');
+  if (!workspaceReady || workspaceOwnerId !== getStoredUser()?.id) throw new Error('Suas páginas ainda não foram carregadas do servidor. Tente carregar novamente antes de salvar.');
   const response = await saveWorkspaceRequest({ revision: backendRevision, ...workspaceSnapshot() });
   backendRevision = response.revision;
   syncErrorShown = false;
@@ -369,26 +374,49 @@ function scheduleWorkspaceSync() {
   workspaceSyncTimer = setTimeout(() => flushWorkspaceToBackend(), 450);
 }
 
-async function hydrateWorkspaceFromBackend() {
-  if (!hasAuthToken()) return false;
-  const response = await getWorkspace();
-  backendRevision = Number(response.revision || 0);
-  const user = getStoredUser();
-  const ownerId = localStorage.getItem('vbs_workspace_owner');
-  const canMigrateLegacy = (!ownerId || ownerId === user?.id) && hasMeaningfulLocalWorkspace();
-
-  workspaceReady = true;
-  if (!response.initialized && canMigrateLegacy) {
-    await persistWorkspaceNow();
-  } else {
-    applyWorkspaceData(response.data || {});
-    if (!response.initialized) await persistWorkspaceNow();
-  }
-
-  await loadPlatformTemplates();
-  await loadPlanLimits();
-  if (user?.id) localStorage.setItem('vbs_workspace_owner', user.id);
-  return true;
+function hydrateWorkspaceFromBackend() {
+  const userId = getStoredUser()?.id;
+  if (!hasAuthToken() || !userId) return Promise.resolve(false);
+  if (hydrationRequest?.userId === userId) return hydrationRequest.promise;
+  const generation = ++hydrationGeneration;
+  workspaceReady = false;
+  workspaceStatus.loading = true;
+  workspaceStatus.error = '';
+  const promise = (async () => {
+    try {
+      const response = await getWorkspace();
+      if (generation !== hydrationGeneration || getStoredUser()?.id !== userId || !hasAuthToken()) return false;
+      const ownerId = localStorage.getItem('vbs_workspace_owner');
+      const canMigrateLegacy = ownerId === userId && hasMeaningfulLocalWorkspace();
+      backendRevision = Number(response.revision || 0);
+      workspaceOwnerId = userId;
+      if (!response.initialized && canMigrateLegacy) {
+        workspaceReady = true;
+        await persistWorkspaceNow();
+      } else {
+        applyWorkspaceData(response.data || {});
+      }
+      // Abrir uma conta vazia em outro dispositivo não deve inicializá-la por escrita.
+      // O GET é suficiente; a primeira alteração confirmada fará o primeiro PUT.
+      try { localStorage.setItem('vbs_workspace_owner', userId); } catch { /* cache opcional */ }
+      workspaceReady = true;
+      await Promise.all([loadPlatformTemplates(), loadPlanLimits()]);
+      return true;
+    } catch (error) {
+      if (generation === hydrationGeneration) {
+        workspaceReady = false;
+        workspaceStatus.error = 'Não foi possível carregar suas páginas. Verifique a conexão e tente novamente.';
+      }
+      throw error;
+    } finally {
+      if (generation === hydrationGeneration) {
+        workspaceStatus.loading = false;
+        hydrationRequest = null;
+      }
+    }
+  })();
+  hydrationRequest = { userId, promise };
+  return promise;
 }
 
 // ─── Main State ──────────────────────────────────────────────────────────────
@@ -842,9 +870,13 @@ export function useBuilderStore() {
 
   async function savePageToBackend(name, folderId) {
     const snapshot = capturePageSaveState();
+    const revision = backendRevision;
+    const owner = workspaceOwnerId;
     const page = savePage(name, folderId);
     if (await flushWorkspaceToBackend()) return page;
-    restorePageSaveState(snapshot);
+    // Se o conflito carregou a versão de outro dispositivo, não recolocar o cache
+    // antigo sobre essa versão: o próximo salvamento apagaria as páginas remotas.
+    if (revision === backendRevision && owner === workspaceOwnerId) restorePageSaveState(snapshot);
     throw new Error(lastWorkspaceSyncError || 'Não foi possível confirmar o salvamento. Tente novamente.');
   }
 
@@ -1342,7 +1374,7 @@ export function useBuilderStore() {
     recordMetric, getMetrics, clearMetrics, openMetricsModal, closeMetricsModal,
     openSummaryModal, closeSummaryModal,
     hydrateWorkspaceFromBackend, flushWorkspaceToBackend,
-    planUsage, loadPlanLimits,
+      planUsage, loadPlanLimits, workspaceStatus,
     workspaceConflict, answerWorkspaceConflict, registerWorkspaceConflictUi
   };
 }
