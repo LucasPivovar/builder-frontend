@@ -26,7 +26,8 @@ async function loadPlanLimits() {
   if (!hasAuthToken()) return;
   try {
     const subscription = await getSubscription();
-    planUsage.maxPages = Number.isFinite(Number(subscription?.limits?.maxPages)) ? Number(subscription.limits.maxPages) : null;
+    const maxPages = subscription?.limits?.maxPages;
+    planUsage.maxPages = maxPages != null && Number.isFinite(Number(maxPages)) ? Number(maxPages) : null;
     planUsage.planName = String(subscription?.limits?.name || '');
   } catch {
     planUsage.maxPages = null;
