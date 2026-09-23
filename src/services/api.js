@@ -45,12 +45,20 @@ export function clearAuthSession() {
   });
 }
 
-async function refreshAccessToken() {
+let refreshPromise = null;
+function refreshAccessToken() {
+  if (!refreshPromise) refreshPromise = performTokenRefresh().finally(() => { refreshPromise = null; });
+  return refreshPromise;
+}
+
+async function performTokenRefresh() {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
   const response = await fetch(`${API_BASE_URL}/auth/refresh`, { method:'POST', headers:{ Accept:'application/json', 'Content-Type':'application/json' }, body:JSON.stringify({ refreshToken }) });
   if (!response.ok) return false;
   const session = await response.json();
+  // Uma resposta antiga não pode restaurar uma sessão encerrada ou trocada.
+  if (getRefreshToken() !== refreshToken) return false;
   const remember = Boolean(localStorage.getItem(REFRESH_TOKEN_KEY));
   storeAuthSession(session, remember);
   return true;
@@ -60,6 +68,7 @@ async function apiRequest(path, options = {}, retried = false) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeout || 12000);
   const token = getAccessToken();
+  const userId = getStoredUser()?.id;
 
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -74,8 +83,13 @@ async function apiRequest(path, options = {}, retried = false) {
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      if (response.status === 401 && token && !retried && await refreshAccessToken()) return apiRequest(path, options, true);
-      if (response.status === 401 && token) clearAuthSession();
+      if (response.status === 401 && token && !retried && userId === getStoredUser()?.id) {
+        if (getAccessToken() !== token) {
+          // Outra chamada pode já ter renovado o token enquanto esta aguardava.
+          if (getAccessToken()) return apiRequest(path, options, true);
+        } else if (await refreshAccessToken()) return apiRequest(path, options, true);
+      }
+      if (response.status === 401 && token === getAccessToken()) clearAuthSession();
       const message = Array.isArray(payload.message) ? payload.message[0] : payload.message;
       const error = new Error(message || 'Não foi possível concluir a operação.');
       error.status = response.status;
