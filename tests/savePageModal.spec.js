@@ -72,4 +72,17 @@ describe('plan usage warning', () => {
     expect(wrapper.find('.plan-warning').exists()).toBe(false);
     wrapper.unmount();
   });
+
+  it('allows admins with no page cap to save beyond the normal plan limit', async () => {
+    mocks.pages.push(...Array.from({ length: 1001 }, (_, i) => ({ id: `admin-${i}` })));
+    mocks.saveToBackend.mockResolvedValue({ id: 'admin-new', name: 'QA' });
+    const wrapper = mount(SavePageModal, { props: { isOpen: false }, global: { stubs: { teleport: true } } });
+    await wrapper.setProps({ isOpen: true });
+    expect(wrapper.find('.plan-warning').exists()).toBe(false);
+    await wrapper.find('.btn-save').trigger('click');
+    await flushPromises();
+    expect(mocks.saveToBackend).toHaveBeenCalledOnce();
+    expect(wrapper.emitted('saved')).toHaveLength(1);
+    wrapper.unmount();
+  });
 });
